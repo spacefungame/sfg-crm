@@ -7,7 +7,7 @@ interface AuthContextType {
   users: User[];
   login: (username: string, password?: string) => boolean;
   logout: () => void;
-  registerUser: (username: string, role?: string, email?: string, password?: string) => User;
+  registerUser: (username: string, role?: string, email?: string, password?: string, autoLogin?: boolean) => User;
   updateUser: (user: User) => void;
   refreshUsers: () => void;
 }
@@ -68,10 +68,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem(SESSION_USER_KEY);
   };
 
-  const registerUser = (username: string, role: string = 'user', email?: string, password?: string): User => {
+  const registerUser = (username: string, role: string = 'user', email?: string, password?: string, autoLogin: boolean = true): User => {
     const newUser = storageService.addUser(username, role, email, password);
     setUsers(storageService.getUsers());
-    login(newUser.username, password);
+    if (autoLogin) {
+      login(newUser.username, password);
+    }
     return newUser;
   };
 

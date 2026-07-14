@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import type { TagDefinition, User } from '../types/crm';
-import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown, X } from 'lucide-react';
+import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown, X, KeyRound } from 'lucide-react';
 import { TemplatesManager } from './TemplatesManager';
 
 export const SettingsView: React.FC = () => {
@@ -33,7 +33,6 @@ export const SettingsView: React.FC = () => {
   // --- Users State ---
   const [newUsername, setNewUsername] = useState<string>('');
   const [newEmail, setNewEmail] = useState<string>('');
-  const [newPassword, setNewPassword] = useState<string>('');
   const [newRole, setNewRole] = useState<string>('user');
 
   const colorPalette = [
@@ -158,19 +157,18 @@ export const SettingsView: React.FC = () => {
   const handleInviteUser = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUsername.trim()) return;
-    registerUser(newUsername.trim(), newRole, newEmail.trim() || undefined, newPassword.trim() || undefined);
+    registerUser(newUsername.trim(), newRole, newEmail.trim() || undefined, undefined, false);
 
     if (newEmail.trim()) {
       const inviteSubject = encodeURIComponent(`Invitation au CRM Space Fun Games & Share & Fun`);
       const inviteBody = encodeURIComponent(
-        `Bonjour ${newUsername.trim()},\n\nVous avez été invité(e) à rejoindre le CRM de l'établissement Space Fun Games & Share & Fun en tant que ${newRole === 'directrice' ? 'Directrice' : newRole === 'admin' ? 'Administrateur' : 'Collaborateur'}.\n\nAccédez au CRM en ligne ici : https://spacefungame.github.io/sfg-crm/\n\nIdentifiant : ${newUsername.trim()}\n${newPassword ? `Mot de passe provisoire : ${newPassword}\n` : ''}\nÀ très bientôt,\nL'équipe`
+        `Bonjour ${newUsername.trim()},\n\nVous avez été invité(e) à rejoindre le CRM de l'établissement Space Fun Games & Share & Fun en tant que ${newRole === 'directrice' ? 'Directrice' : newRole === 'admin' ? 'Administrateur' : newRole === 'user' ? 'Collaborateur' : newRole}.\n\nAccédez au CRM en ligne ici : https://spacefungame.github.io/sfg-crm/\n\nIdentifiant : ${newUsername.trim()}\n\nLors de votre première connexion sur le site, cliquez sur votre profil et vous pourrez définir et enregistrer vous-même votre mot de passe personnel.\n\nÀ très bientôt,\nL'équipe`
       );
       window.open(`mailto:${newEmail.trim()}?subject=${inviteSubject}&body=${inviteBody}`, '_blank');
     }
 
     setNewUsername('');
     setNewEmail('');
-    setNewPassword('');
     refreshUsers();
   };
 
@@ -705,19 +703,6 @@ export const SettingsView: React.FC = () => {
                 </select>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Mot de passe (optionnel)
-                </label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="Ex: MotDePasse123"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
-              </div>
-
               <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
                 Créer profil & Inviter
               </button>
@@ -798,7 +783,31 @@ export const SettingsView: React.FC = () => {
                             </select>
                           </span>
                           {u.email && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} /> {u.email}</span>}
-                          {u.password && <span style={{ display: 'flex', alignItems: 'center', gap: '3px', opacity: 0.7 }}><Lock size={12} /> Sécurisé</span>}
+                          {u.password ? (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '3px', opacity: 0.7 }}><Lock size={12} /> Sécurisé</span>
+                              {!isDir && !isMe && (currentUser?.role === 'directrice' || currentUser?.role === 'admin') && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (window.confirm(`Réinitialiser le mot de passe de ${u.username} ? À sa prochaine connexion, le collaborateur devra choisir un nouveau mot de passe.`)) {
+                                      u.password = undefined;
+                                      storageService.saveUser(u);
+                                      refreshUsers();
+                                    }
+                                  }}
+                                  style={{ background: 'none', border: 'none', color: '#D97706', fontSize: '11px', cursor: 'pointer', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '3px', padding: 0 }}
+                                  title="Réinitialiser pour que le collaborateur crée un nouveau mot de passe à sa prochaine connexion"
+                                >
+                                  <KeyRound size={11} /> Réinitialiser mdp
+                                </button>
+                              )}
+                            </span>
+                          ) : (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#D97706', fontWeight: 600, fontSize: '11.5px' }}>
+                              <KeyRound size={13} /> En attente de 1ère connexion (créera son mdp)
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

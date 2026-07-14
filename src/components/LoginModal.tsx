@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { storageService } from '../services/storageService';
 import type { User } from '../types/crm';
-import { UserCheck, UserPlus, LogIn, Shield, Users, Lock, Mail, Crown, CheckCircle, X } from 'lucide-react';
+import { UserCheck, UserPlus, LogIn, Shield, Users, Lock, Mail, Crown, CheckCircle, X, KeyRound, CheckCheck } from 'lucide-react';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -14,11 +14,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
+  const [newFirstPassword, setNewFirstPassword] = useState<string>('');
+  const [confirmFirstPassword, setConfirmFirstPassword] = useState<string>('');
+  const [firstPasswordError, setFirstPasswordError] = useState<string>('');
   
   const [isCreatingNew, setIsCreatingNew] = useState<boolean>(false);
   const [newUsername, setNewUsername] = useState<string>('');
   const [newEmail, setNewEmail] = useState<string>('');
-  const [newPassword, setNewPassword] = useState<string>('');
   const [newRole, setNewRole] = useState<string>('user');
 
   // Boîte mail d'envoi de l'utilisateur actif
@@ -31,12 +33,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     setSelectedUser(user);
     setPasswordInput('');
     setPasswordError('');
-    if (!user.password || user.password.trim() === '') {
-      // Pas de mot de passe requis -> connexion immédiate
-      login(user.username);
-      setActiveEmailConfig(user.email || '');
-      onClose();
-    }
+    setNewFirstPassword('');
+    setConfirmFirstPassword('');
+    setFirstPasswordError('');
   };
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
@@ -52,26 +51,49 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleSaveFirstPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+    if (!newFirstPassword.trim()) {
+      setFirstPasswordError('Veuillez entrer un mot de passe.');
+      return;
+    }
+    if (newFirstPassword !== confirmFirstPassword) {
+      setFirstPasswordError('Les deux mots de passe ne correspondent pas.');
+      return;
+    }
+
+    const updated = { ...selectedUser, password: newFirstPassword.trim() };
+    updateUser(updated);
+    login(updated.username, updated.password);
+    setNewFirstPassword('');
+    setConfirmFirstPassword('');
+    setFirstPasswordError('');
+    setActiveEmailConfig(updated.email || '');
+    onClose();
+  };
+
   const handleCreateNew = (e: React.FormEvent) => {
     e.preventDefault();
     if (newUsername.trim()) {
-      registerUser(newUsername.trim(), newRole, newEmail.trim() || undefined, newPassword.trim() || undefined);
+      const isFirstUserOrSelf = !currentUser;
+      registerUser(newUsername.trim(), newRole, newEmail.trim() || undefined, undefined, isFirstUserOrSelf);
       
-      // Si un mail est renseigné et que ce n'est pas le compte actuel, on peut préparer un mail d'invitation
       if (newEmail.trim()) {
         const inviteSubject = encodeURIComponent(`Invitation au CRM Space Fun Games & Share & Fun`);
         const inviteBody = encodeURIComponent(
-          `Bonjour ${newUsername.trim()},\n\nVous avez été invité(e) à rejoindre le CRM de l'établissement Space Fun Games & Share & Fun en tant que ${newRole === 'directrice' ? 'Directrice' : newRole === 'admin' ? 'Administrateur' : 'Collaborateur'}.\n\nAccédez au CRM en ligne ici : https://spacefungame.github.io/sfg-crm/\n\nIdentifiant : ${newUsername.trim()}\n${newPassword ? `Mot de passe provisoire : ${newPassword}\n` : ''}\nÀ très bientôt,\nL'équipe`
+          `Bonjour ${newUsername.trim()},\n\nVous avez été invité(e) à rejoindre le CRM de l'établissement Space Fun Games & Share & Fun en tant que ${newRole === 'directrice' ? 'Directrice' : newRole === 'admin' ? 'Administrateur' : newRole === 'user' ? 'Collaborateur' : newRole}.\n\nAccédez au CRM en ligne ici : https://spacefungame.github.io/sfg-crm/\n\nIdentifiant : ${newUsername.trim()}\n\nLors de votre première connexion sur le site, sélectionnez votre profil et vous pourrez définir vous-même votre mot de passe personnel.\n\nÀ très bientôt,\nL'équipe`
         );
         window.open(`mailto:${newEmail.trim()}?subject=${inviteSubject}&body=${inviteBody}`, '_blank');
       }
 
       setNewUsername('');
       setNewEmail('');
-      setNewPassword('');
       setIsCreatingNew(false);
       setSelectedUser(null);
-      onClose();
+      if (isFirstUserOrSelf) {
+        onClose();
+      }
     }
   };
 
@@ -111,6 +133,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               ? 'Créez un profil pour un collaborateur et envoyez-lui une invitation par e-mail'
               : selectedUser && selectedUser.password 
               ? 'Veuillez saisir votre mot de passe personnel pour accéder au CRM'
+              : selectedUser && !selectedUser.password
+              ? 'Bienvenue ! Veuillez définir et enregistrer votre mot de passe pour cette 1ère connexion'
               : 'Sélectionnez votre profil pour vous connecter et synchroniser votre boîte mail'}
           </p>
         </div>
@@ -165,6 +189,73 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               >
                 <LogIn size={16} />
                 Me connecter
+              </button>
+            </div>
+          </form>
+        ) : selectedUser && (!selectedUser.password || selectedUser.password.trim() === '') && !isCreatingNew ? (
+          <form onSubmit={handleSaveFirstPassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ padding: '14px', backgroundColor: '#FEF3C7', borderRadius: 'var(--radius-md)', border: '1px solid #F59E0B', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <KeyRound size={22} style={{ color: '#D97706' }} />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '14px', color: '#92400E' }}>
+                  🌱 1ère connexion : {selectedUser.username}
+                </div>
+                <div style={{ fontSize: '12.5px', color: '#B45309', marginTop: '2px' }}>
+                  Veuillez choisir et enregistrer le mot de passe personnel qui protégera votre compte.
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
+                Choisissez votre mot de passe *
+              </label>
+              <input
+                type="password"
+                className="input-field"
+                placeholder="Ex: MonSecret2026..."
+                value={newFirstPassword}
+                onChange={(e) => setNewFirstPassword(e.target.value)}
+                autoFocus
+                required
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
+                Confirmez votre mot de passe *
+              </label>
+              <input
+                type="password"
+                className="input-field"
+                placeholder="Retapez votre mot de passe..."
+                value={confirmFirstPassword}
+                onChange={(e) => setConfirmFirstPassword(e.target.value)}
+                required
+              />
+              {firstPasswordError && (
+                <div style={{ fontSize: '13px', color: '#DC2626', marginTop: '6px', fontWeight: 500 }}>
+                  ⚠️ {firstPasswordError}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => setSelectedUser(null)}
+              >
+                Changer d'utilisateur
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+              >
+                <CheckCheck size={16} />
+                Enregistrer & Accéder
               </button>
             </div>
           </form>
@@ -300,19 +391,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Mot de passe (optionnel)
-                </label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="Ex: MotDePasse..."
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
               </div>
             </div>
 
