@@ -296,7 +296,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 >
                   {storageService.getRoles().map((r) => (
                     <option key={r} value={r}>
-                      {r === 'directrice' ? 'Directrice (Accès total)' : r === 'admin' ? 'Administrateur / Gérant' : r === 'user' ? 'Collaborateur / Commercial' : r}
+                      {r === 'directrice' ? 'Directrice' : r === 'admin' ? 'Administrateur' : r === 'user' ? 'Collaborateur' : r}
                     </option>
                   ))}
                 </select>

@@ -617,7 +617,7 @@ export const SettingsView: React.FC = () => {
                         <div style={{ fontWeight: 600, fontSize: '13.5px', color: isDir ? '#D97706' : 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           {isDir ? <Crown size={16} /> : <Shield size={16} style={{ color: 'var(--primary)' }} />}
                           <span>
-                            {role === 'directrice' ? 'Directrice (Accès total)' : role === 'admin' ? 'Administrateur / Gérant' : role === 'user' ? 'Collaborateur / Commercial' : role}
+                            {role === 'directrice' ? 'Directrice' : role === 'admin' ? 'Administrateur' : role === 'user' ? 'Collaborateur' : role}
                           </span>
                           {isDir && <span className="badge" style={{ backgroundColor: '#D97706', color: '#FFF', fontSize: '10px' }}>Système</span>}
                         </div>
@@ -699,7 +699,7 @@ export const SettingsView: React.FC = () => {
                 >
                   {storageService.getRoles().map((r) => (
                     <option key={r} value={r}>
-                      {r === 'directrice' ? 'Directrice (Accès total)' : r === 'admin' ? 'Administrateur / Gérant' : r === 'user' ? 'Collaborateur / Commercial' : r}
+                      {r === 'directrice' ? 'Directrice' : r === 'admin' ? 'Administrateur' : r === 'user' ? 'Collaborateur' : r}
                     </option>
                   ))}
                 </select>
