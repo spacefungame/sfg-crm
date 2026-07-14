@@ -164,6 +164,11 @@ export const DEFAULT_CRM_DATA: CRMData = {
     { id: 'tag-2', name: 'Gros budget', description: 'Événement > 2000 €', color: '#2E7D32' },
     { id: 'tag-3', name: 'Urgent', description: 'Événement à organiser dans moins de 7 jours', color: '#C62828' }
   ],
+  roles: [
+    'directrice',
+    'admin',
+    'user'
+  ],
   emailTemplates: [
     {
       id: 'tpl-1',

@@ -52,6 +52,7 @@ export class StorageService {
           contactTypes: parsed.contactTypes || DEFAULT_CRM_DATA.contactTypes,
           statuses: parsed.statuses || DEFAULT_CRM_DATA.statuses,
           tags: parsed.tags || DEFAULT_CRM_DATA.tags,
+          roles: parsed.roles || DEFAULT_CRM_DATA.roles,
           emailTemplates: parsed.emailTemplates || DEFAULT_CRM_DATA.emailTemplates,
           cloudConfig: parsed.cloudConfig || DEFAULT_CRM_DATA.cloudConfig
         };
@@ -186,6 +187,55 @@ export class StorageService {
     this.saveToLocalStorage();
   }
 
+  // --- Roles ---
+  public getRoles(): string[] {
+    if (!this.data.roles || this.data.roles.length === 0) {
+      this.data.roles = [...(DEFAULT_CRM_DATA.roles || ['directrice', 'admin', 'user'])];
+      this.saveToLocalStorage();
+    }
+    return this.data.roles;
+  }
+
+  public addRole(roleName: string): void {
+    const trimmed = roleName.trim();
+    if (trimmed && !this.getRoles().includes(trimmed)) {
+      this.data.roles!.push(trimmed);
+      this.saveToLocalStorage();
+    }
+  }
+
+  public updateRole(oldRole: string, newRole: string): void {
+    const trimmed = newRole.trim();
+    if (!trimmed || oldRole === trimmed) return;
+    const roles = this.getRoles();
+    const index = roles.indexOf(oldRole);
+    if (index >= 0) {
+      this.data.roles![index] = trimmed;
+    } else {
+      this.data.roles!.push(trimmed);
+    }
+    // Update users having this role
+    this.data.users.forEach(u => {
+      if (u.role === oldRole) {
+        u.role = trimmed;
+      }
+    });
+    this.saveToLocalStorage();
+  }
+
+  public deleteRole(roleName: string): void {
+    if (roleName === 'directrice') return; // protection du rôle principal
+    const roles = this.getRoles();
+    this.data.roles = roles.filter(r => r !== roleName);
+    // Switch users with deleted role to 'user'
+    this.data.users.forEach(u => {
+      if (u.role === roleName) {
+        u.role = 'user';
+      }
+    });
+    this.saveToLocalStorage();
+  }
+
   // --- Tags ---
   public getTags(): TagDefinition[] {
     return this.data.tags || [];
@@ -221,7 +271,7 @@ export class StorageService {
     return this.data.users || [];
   }
 
-  public addUser(username: string, role: 'directrice' | 'admin' | 'user' = 'user', email?: string, password?: string, isInvited?: boolean): User {
+  public addUser(username: string, role: string = 'user', email?: string, password?: string, isInvited?: boolean): User {
     const existing = this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase() || (email && u.email?.toLowerCase() === email.toLowerCase()));
     if (existing) {
       if (email && !existing.email) existing.email = email;

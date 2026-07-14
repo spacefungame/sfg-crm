@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import type { TagDefinition, User } from '../types/crm';
-import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown } from 'lucide-react';
+import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown, X } from 'lucide-react';
 import { TemplatesManager } from './TemplatesManager';
 
 export const SettingsView: React.FC = () => {
   const { users, currentUser, registerUser, refreshUsers } = useAuth();
-  const [activeSection, setActiveSection] = useState<'tags' | 'statuses' | 'types' | 'users' | 'templates'>('tags');
+  const [activeSection, setActiveSection] = useState<'tags' | 'statuses' | 'types' | 'roles' | 'users' | 'templates'>('tags');
 
   // --- Tags State ---
   const [tagsList, setTagsList] = useState<TagDefinition[]>(storageService.getTags());
@@ -24,11 +24,17 @@ export const SettingsView: React.FC = () => {
   const [typesList, setTypesList] = useState<string[]>(storageService.getContactTypes());
   const [newTypeName, setNewTypeName] = useState<string>('');
 
+  // --- Roles State ---
+  const [rolesList, setRolesList] = useState<string[]>(storageService.getRoles());
+  const [newRoleName, setNewRoleName] = useState<string>('');
+  const [editingRoleOldName, setEditingRoleOldName] = useState<string | null>(null);
+  const [newRoleEditName, setNewRoleEditName] = useState<string>('');
+
   // --- Users State ---
   const [newUsername, setNewUsername] = useState<string>('');
   const [newEmail, setNewEmail] = useState<string>('');
   const [newPassword, setNewPassword] = useState<string>('');
-  const [newRole, setNewRole] = useState<'directrice' | 'admin' | 'user'>('user');
+  const [newRole, setNewRole] = useState<string>('user');
 
   const colorPalette = [
     { name: 'Marron / Caramel', code: '#8B5A2B' },
@@ -114,6 +120,41 @@ export const SettingsView: React.FC = () => {
     }
   };
 
+  const handleAddRole = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoleName.trim()) return;
+    storageService.addRole(newRoleName.trim());
+    setNewRoleName('');
+    setRolesList(storageService.getRoles());
+  };
+
+  const handleDeleteRole = (role: string) => {
+    if (role === 'directrice') {
+      alert("Le rôle Directrice ne peut pas être supprimé car c'est le rôle principal du système.");
+      return;
+    }
+    if (window.confirm(`Supprimer le rôle "${role}" ? Les collaborateurs ayant ce rôle passeront en rôle "user".`)) {
+      storageService.deleteRole(role);
+      setRolesList(storageService.getRoles());
+      refreshUsers();
+    }
+  };
+
+  const handleStartEditRole = (role: string) => {
+    setEditingRoleOldName(role);
+    setNewRoleEditName(role);
+  };
+
+  const handleSaveEditRole = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRoleOldName || !newRoleEditName.trim()) return;
+    storageService.updateRole(editingRoleOldName, newRoleEditName.trim());
+    setEditingRoleOldName(null);
+    setNewRoleEditName('');
+    setRolesList(storageService.getRoles());
+    refreshUsers();
+  };
+
   const handleInviteUser = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUsername.trim()) return;
@@ -184,6 +225,14 @@ export const SettingsView: React.FC = () => {
           >
             <TagIcon size={14} />
             Types ({typesList.length})
+          </button>
+          <button
+            onClick={() => setActiveSection('roles')}
+            className={`btn btn-sm ${activeSection === 'roles' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ border: 'none' }}
+          >
+            <Crown size={14} />
+            Rôles ({rolesList.length})
           </button>
           <button
             onClick={() => setActiveSection('users')}
@@ -495,7 +544,115 @@ export const SettingsView: React.FC = () => {
         </div>
       )}
 
-      {/* Section 4: ÉQUIPE & UTILISATEURS */}
+      {/* Section 4: RÔLES DE COLLABORATEURS */}
+      {activeSection === 'roles' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', alignItems: 'start' }}>
+          <div className="card" style={{ padding: '20px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Plus size={18} style={{ color: 'var(--primary)' }} />
+              Ajouter un rôle
+            </h3>
+            <form onSubmit={handleAddRole} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                  Nom du rôle *
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Ex: Stagiaire, Responsable Événements, Animateur..."
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  required
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                + Ajouter le Rôle
+              </button>
+            </form>
+          </div>
+
+          <div className="card" style={{ padding: '20px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '14px' }}>
+              Rôles existants ({rolesList.length})
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {rolesList.map((role, idx) => {
+                const isDir = role === 'directrice';
+                const isEditing = editingRoleOldName === role;
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: '10px 14px',
+                      backgroundColor: isDir ? '#FEF3C7' : 'var(--surface-warm)',
+                      borderRadius: 'var(--radius-md)',
+                      border: isDir ? '1px solid #F59E0B' : '1px solid var(--border)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '12px'
+                    }}
+                  >
+                    {isEditing ? (
+                      <form onSubmit={handleSaveEditRole} style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                        <input
+                          type="text"
+                          className="input-field"
+                          value={newRoleEditName}
+                          onChange={(e) => setNewRoleEditName(e.target.value)}
+                          style={{ padding: '4px 8px', fontSize: '13px' }}
+                          required
+                          autoFocus
+                        />
+                        <button type="submit" className="btn btn-primary btn-sm" title="Enregistrer">
+                          <Check size={14} />
+                        </button>
+                        <button type="button" onClick={() => setEditingRoleOldName(null)} className="btn btn-secondary btn-sm" title="Annuler">
+                          <X size={14} />
+                        </button>
+                      </form>
+                    ) : (
+                      <>
+                        <div style={{ fontWeight: 600, fontSize: '13.5px', color: isDir ? '#D97706' : 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {isDir ? <Crown size={16} /> : <Shield size={16} style={{ color: 'var(--primary)' }} />}
+                          <span>
+                            {role === 'directrice' ? 'Directrice (Accès total)' : role === 'admin' ? 'Administrateur / Gérant' : role === 'user' ? 'Collaborateur / Commercial' : role}
+                          </span>
+                          {isDir && <span className="badge" style={{ backgroundColor: '#D97706', color: '#FFF', fontSize: '10px' }}>Système</span>}
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <button
+                            onClick={() => handleStartEditRole(role)}
+                            className="btn-icon"
+                            style={{ border: 'none', background: 'var(--surface)', cursor: 'pointer', color: 'var(--text-main)' }}
+                            title="Renommer ce rôle"
+                          >
+                            <Edit3 size={15} />
+                          </button>
+                          {!isDir && (
+                            <button
+                              onClick={() => handleDeleteRole(role)}
+                              className="btn-icon"
+                              style={{ border: 'none', background: '#FDE8E8', cursor: 'pointer', color: '#C81E1E' }}
+                              title="Supprimer ce rôle"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Section 5: ÉQUIPE & UTILISATEURS */}
       {activeSection === 'users' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', alignItems: 'start' }}>
           <div className="card" style={{ padding: '20px' }}>
@@ -538,11 +695,13 @@ export const SettingsView: React.FC = () => {
                 <select
                   className="input-field"
                   value={newRole}
-                  onChange={(e) => setNewRole(e.target.value as any)}
+                  onChange={(e) => setNewRole(e.target.value)}
                 >
-                  <option value="user">Collaborateur / Commercial</option>
-                  <option value="admin">Administrateur / Gérant</option>
-                  <option value="directrice">Directrice (Accès total)</option>
+                  {storageService.getRoles().map((r) => (
+                    <option key={r} value={r}>
+                      {r === 'directrice' ? 'Directrice (Accès total)' : r === 'admin' ? 'Administrateur / Gérant' : r === 'user' ? 'Collaborateur / Commercial' : r}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -610,7 +769,34 @@ export const SettingsView: React.FC = () => {
                           {u.role === 'admin' && <span title="Administrateur" style={{ display: 'inline-flex' }}><Shield size={14} style={{ color: 'var(--accent)' }} /></span>}
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span>Rôle : <strong style={{ color: isDir ? '#D97706' : 'inherit' }}>{isDir ? 'Directrice' : u.role === 'admin' ? 'Administrateur' : 'Collaborateur'}</strong></span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            Rôle :
+                            <select
+                              value={u.role}
+                              onChange={(e) => {
+                                u.role = e.target.value;
+                                storageService.saveUser(u);
+                                refreshUsers();
+                              }}
+                              disabled={!isDir && !isMe && currentUser?.role !== 'directrice' && currentUser?.role !== 'admin'}
+                              style={{
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                border: '1px solid var(--border)',
+                                fontWeight: 600,
+                                fontSize: '12px',
+                                backgroundColor: 'var(--surface)',
+                                color: isDir ? '#D97706' : 'inherit',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {storageService.getRoles().map((r) => (
+                                <option key={r} value={r}>
+                                  {r === 'directrice' ? 'Directrice' : r === 'admin' ? 'Administrateur' : r === 'user' ? 'Collaborateur' : r}
+                                </option>
+                              ))}
+                            </select>
+                          </span>
                           {u.email && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} /> {u.email}</span>}
                           {u.password && <span style={{ display: 'flex', alignItems: 'center', gap: '3px', opacity: 0.7 }}><Lock size={12} /> Sécurisé</span>}
                         </div>

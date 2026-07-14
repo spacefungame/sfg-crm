@@ -50,7 +50,7 @@ export interface User {
   username: string;
   email?: string;
   password?: string;
-  role: 'directrice' | 'admin' | 'user';
+  role: string; // 'directrice', 'admin', 'user' ou rôle personnalisé
   isInvited?: boolean;
 }
 
@@ -81,6 +81,7 @@ export interface CRMData {
   contactTypes: string[];
   statuses: string[];
   tags: TagDefinition[];
+  roles?: string[];
   emailTemplates: EmailTemplate[];
   cloudConfig: CloudConfig;
 }

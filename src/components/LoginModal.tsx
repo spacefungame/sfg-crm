@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { storageService } from '../services/storageService';
 import type { User } from '../types/crm';
 import { UserCheck, UserPlus, LogIn, Shield, Users, Lock, Mail, Crown, CheckCircle, X } from 'lucide-react';
 
@@ -9,7 +10,7 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-  const { users, login, registerUser, updateUser, currentUser } = useAuth();
+  const { users, currentUser, login, registerUser, updateUser } = useAuth();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
@@ -18,7 +19,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [newUsername, setNewUsername] = useState<string>('');
   const [newEmail, setNewEmail] = useState<string>('');
   const [newPassword, setNewPassword] = useState<string>('');
-  const [newRole, setNewRole] = useState<'directrice' | 'admin' | 'user'>('user');
+  const [newRole, setNewRole] = useState<string>('user');
 
   // Boîte mail d'envoi de l'utilisateur actif
   const [activeEmailConfig, setActiveEmailConfig] = useState<string>(currentUser?.email || '');
@@ -122,7 +123,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>{selectedUser.username}</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   Rôle : <span style={{ fontWeight: 600, color: selectedUser.role === 'directrice' ? '#D97706' : 'var(--primary)' }}>
-                    {selectedUser.role === 'directrice' ? 'Directrice' : selectedUser.role === 'admin' ? 'Administrateur' : 'Collaborateur'}
+                    {selectedUser.role === 'directrice' ? 'Directrice' : selectedUser.role === 'admin' ? 'Administrateur' : selectedUser.role === 'user' ? 'Collaborateur' : selectedUser.role}
                   </span>
                 </div>
               </div>
@@ -291,11 +292,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 <select
                   className="input-field"
                   value={newRole}
-                  onChange={(e) => setNewRole(e.target.value as 'directrice' | 'admin' | 'user')}
+                  onChange={(e) => setNewRole(e.target.value)}
                 >
-                  <option value="user">Collaborateur / Commercial</option>
-                  <option value="admin">Administrateur / Gérant</option>
-                  <option value="directrice">Directrice (Accès total)</option>
+                  {storageService.getRoles().map((r) => (
+                    <option key={r} value={r}>
+                      {r === 'directrice' ? 'Directrice (Accès total)' : r === 'admin' ? 'Administrateur / Gérant' : r === 'user' ? 'Collaborateur / Commercial' : r}
+                    </option>
+                  ))}
                 </select>
               </div>
 
