@@ -18,8 +18,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
 
   // Filter contacts according to report selection
   const filteredContacts = contacts.filter((c) => {
-    if (selectedEstablishment !== 'all' && c.establishment !== selectedEstablishment) return false;
-    if (selectedType !== 'all' && c.type !== selectedType) return false;
+    if (selectedEstablishment !== 'all' && c.establishment !== selectedEstablishment && c.establishment !== 'les_deux') return false;
+    if (selectedType !== 'all') {
+      const contactTypes = (c.type || '').split(',').map(t => t.trim());
+      if (!contactTypes.includes(selectedType) && c.type !== selectedType) return false;
+    }
     return true;
   });
 

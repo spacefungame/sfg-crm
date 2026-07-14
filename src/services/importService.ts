@@ -161,6 +161,9 @@ export class ImportService {
       if (item.isDuplicate && item.duplicateOf) {
         // Merge without duplicate
         const contact = item.duplicateOf;
+        const oldEst = contact.establishment;
+        const oldTagsCount = (contact.tags || []).length;
+
         if (!contact.phone && item.parsed.phone) {
           contact.phone = item.parsed.phone;
         }
@@ -171,9 +174,37 @@ export class ImportService {
           contact.company = item.parsed.company;
         }
 
+        // Tags merge : ajout des nouveaux tags sur le client existant
         if (tags && tags.length > 0) {
           contact.tags = Array.from(new Set([...(contact.tags || []), ...tags]));
         }
+
+        // Types merge : ajout du type s'il n'est pas déjà dans le contact
+        let typeAdded = false;
+        if (type && type.trim()) {
+          const existingTypes = (contact.type || '').split(',').map(t => t.trim()).filter(Boolean);
+          if (!existingTypes.includes(type.trim())) {
+            existingTypes.push(type.trim());
+            contact.type = existingTypes.join(', ');
+            typeAdded = true;
+          }
+        }
+
+        // Établissement merge : si le client est déjà dans un établissement mais que l'import en indique l'autre, passage à "les_deux"
+        let estChangedToBoth = false;
+        if (contact.establishment !== establishment) {
+          contact.establishment = 'les_deux';
+          estChangedToBoth = true;
+        } else if (establishment === 'les_deux' && contact.establishment !== 'les_deux') {
+          contact.establishment = 'les_deux';
+          estChangedToBoth = true;
+        }
+
+        const newTagsAdded = (contact.tags || []).length > oldTagsCount;
+        const updateSummaryParts = [];
+        if (typeAdded) updateSummaryParts.push(`Type ajouté : "${type.trim()}"`);
+        if (newTagsAdded) updateSummaryParts.push(`Tags ajoutés : ${tags.join(', ')}`);
+        if (estChangedToBoth) updateSummaryParts.push(`Établissement passé sur "Les deux" (ancien : ${oldEst === 'space_fun_games' ? 'Space Fun Games' : 'Share & Fun'})`);
 
         // Add log
         const log: ActivityLog = {
@@ -181,7 +212,7 @@ export class ImportService {
           contactId: contact.id,
           employeeName,
           actionType: 'import',
-          summary: `Ré-import de contact (${type} - ${establishment === 'space_fun_games' ? 'Space Fun Games' : establishment === 'share_and_fun' ? 'Share & Fun' : 'Les deux'}). Fiche mise à jour et doublon évité.${tags && tags.length > 0 ? ` Tags ajoutés : ${tags.join(', ')}` : ''}`,
+          summary: `Ré-import de contact (${type} - ${establishment === 'space_fun_games' ? 'Space Fun Games' : establishment === 'share_and_fun' ? 'Share & Fun' : 'Les deux'}). Fiche mise à jour et doublon évité.${updateSummaryParts.length > 0 ? ` ${updateSummaryParts.join(' | ')}.` : ''}`,
           timestamp: new Date().toISOString()
         };
         contact.logs.unshift(log);

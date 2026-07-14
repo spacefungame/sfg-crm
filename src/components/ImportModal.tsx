@@ -391,8 +391,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                         </td>
                         <td>
                           {row.isDuplicate ? (
-                            <span className="badge" style={{ backgroundColor: '#FFF3E6', color: '#B86200' }}>
-                              ⚡ Doublon détecté (Mise à jour)
+                            <span className="badge" style={{ backgroundColor: '#FFF3E6', color: '#B86200' }} title="Ce client existe déjà : les nouveaux tags/types lui seront ajoutés et l'établissement sera mis à jour en 'Les deux' si nécessaire.">
+                              ⚡ Doublon (Enrichissement auto : tags/type & étab.)
                             </span>
                           ) : (
                             <span className="badge" style={{ backgroundColor: '#E8F4F8', color: '#1E6B82' }}>

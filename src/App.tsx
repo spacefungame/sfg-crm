@@ -79,12 +79,13 @@ const AppContent: React.FC = () => {
 
     // Establishment
     if (filters.establishment !== 'all') {
-      if (c.establishment !== filters.establishment) return false;
+      if (c.establishment !== filters.establishment && c.establishment !== 'les_deux') return false;
     }
 
     // Type
     if (filters.type !== 'all') {
-      if (c.type !== filters.type) return false;
+      const contactTypes = (c.type || '').split(',').map(t => t.trim());
+      if (!contactTypes.includes(filters.type) && c.type !== filters.type) return false;
     }
 
     // Status
