@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import type { User } from '../types/crm';
-import { UserCheck, UserPlus, LogIn, Shield, Users, Lock, Mail, Crown, CheckCircle } from 'lucide-react';
+import { UserCheck, UserPlus, LogIn, Shield, Users, Lock, Mail, Crown, CheckCircle, X } from 'lucide-react';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -84,8 +84,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="overlay-backdrop animate-fade-in">
-      <div className="card animate-scale-up" style={{ width: '100%', maxWidth: '480px', padding: '28px', maxHeight: '90vh', overflowY: 'auto' }}>
+    <div className="overlay-backdrop animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="card animate-scale-up" style={{ position: 'relative', width: '100%', maxWidth: '480px', padding: '28px', maxHeight: '90vh', overflowY: 'auto' }}>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+          title="Fermer"
+        >
+          <X size={20} />
+        </button>
         <div style={{ textAlign: 'center', marginBottom: '22px' }}>
           <div style={{ 
             width: '56px', height: '56px', borderRadius: 'var(--radius-full)', 
@@ -326,14 +334,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           </form>
         )}
 
-        {currentUser && !selectedUser && !isCreatingNew && (
+        {!isCreatingNew && !selectedUser && (
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
             <button
               type="button"
               onClick={onClose}
               style={{ background: 'none', border: 'none', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}
             >
-              Fermer (Rester connecté en tant que {currentUser.username})
+              Fermer {currentUser ? `(Rester connecté en tant que ${currentUser.username})` : '(Fermer la fenêtre)'}
             </button>
           </div>
         )}

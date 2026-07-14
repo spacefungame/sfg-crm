@@ -36,10 +36,19 @@ export class StorageService {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as CRMData;
-        // Ensure all required fields exist
+        let loadedUsers = parsed.users && parsed.users.length > 0 ? parsed.users : DEFAULT_CRM_DATA.users;
+        
+        // S'assurer que le profil Directrice (Lauréline Henkens) est toujours présent dans les comptes existants
+        if (!loadedUsers.some(u => u.role === 'directrice' || u.username.toLowerCase().includes('laur'))) {
+          const dirUser = DEFAULT_CRM_DATA.users.find(u => u.role === 'directrice');
+          if (dirUser) {
+            loadedUsers = [dirUser, ...loadedUsers];
+          }
+        }
+
         return {
           contacts: parsed.contacts || DEFAULT_CRM_DATA.contacts,
-          users: parsed.users || DEFAULT_CRM_DATA.users,
+          users: loadedUsers,
           contactTypes: parsed.contactTypes || DEFAULT_CRM_DATA.contactTypes,
           statuses: parsed.statuses || DEFAULT_CRM_DATA.statuses,
           tags: parsed.tags || DEFAULT_CRM_DATA.tags,
@@ -199,6 +208,16 @@ export class StorageService {
 
   // --- Users ---
   public getUsers(): User[] {
+    if (!this.data.users || this.data.users.length === 0) {
+      this.data.users = [...DEFAULT_CRM_DATA.users];
+      this.saveToLocalStorage();
+    } else if (!this.data.users.some(u => u.role === 'directrice' || u.username.toLowerCase().includes('laur'))) {
+      const dirUser = DEFAULT_CRM_DATA.users.find(u => u.role === 'directrice');
+      if (dirUser) {
+        this.data.users = [dirUser, ...this.data.users];
+        this.saveToLocalStorage();
+      }
+    }
     return this.data.users || [];
   }
 
