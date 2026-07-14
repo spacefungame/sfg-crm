@@ -35,8 +35,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
   const [previews, setPreviews] = useState<ImportPreviewRow[]>([]);
   const [importResult, setImportResult] = useState<{ addedCount: number; updatedCount: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const contactTypes = storageService.getContactTypes();
+  const allTags = storageService.getTags();
 
   if (!isOpen) return null;
 
@@ -88,7 +90,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
       previews,
       finalType,
       selectedEstablishment,
-      currentUser?.username || 'Utilisateur anonyme'
+      currentUser?.username || 'Utilisateur anonyme',
+      selectedTags
     );
     setImportResult(result);
     setStep('done');
@@ -212,6 +215,49 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                           X
                         </button>
                       </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tags assignation */}
+                <div style={{ marginTop: '16px', borderTop: '1px dashed var(--border)', paddingTop: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    🏷️ Assignation automatique de Tags à tous les contacts importés (facultatif) :
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {allTags.map(tag => {
+                      const isSelected = selectedTags.includes(tag.name);
+                      return (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTags(isSelected ? selectedTags.filter(t => t !== tag.name) : [...selectedTags, tag.name]);
+                          }}
+                          style={{
+                            padding: '5px 12px',
+                            borderRadius: 'var(--radius-full)',
+                            border: isSelected ? '2px solid #2A211D' : '1px dashed var(--border)',
+                            backgroundColor: isSelected ? tag.color : 'var(--surface)',
+                            color: isSelected ? '#FFFFFF' : 'var(--text-main)',
+                            fontWeight: isSelected ? 600 : 500,
+                            fontSize: '12.5px',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <span>{isSelected ? '✓' : '+'}</span>
+                          <span>{tag.name}</span>
+                        </button>
+                      );
+                    })}
+                    {allTags.length === 0 && (
+                      <span style={{ fontSize: '12px', color: 'var(--text-light)', fontStyle: 'italic' }}>
+                        Aucun tag disponible. Vous pouvez en créer dans Paramètres &gt; Tags & Catégories.
+                      </span>
                     )}
                   </div>
                 </div>

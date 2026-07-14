@@ -5,9 +5,10 @@ import { storageService } from '../services/storageService';
 interface AuthContextType {
   currentUser: User | null;
   users: User[];
-  login: (username: string) => void;
+  login: (username: string, password?: string) => boolean;
   logout: () => void;
-  registerUser: (username: string, role?: 'admin' | 'user') => User;
+  registerUser: (username: string, role?: 'directrice' | 'admin' | 'user', email?: string, password?: string) => User;
+  updateUser: (user: User) => void;
   refreshUsers: () => void;
 }
 
@@ -20,7 +21,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [users, setUsers] = useState<User[]>(storageService.getUsers());
 
   useEffect(() => {
-    // Check if user was already logged in during session
     const savedUserId = sessionStorage.getItem(SESSION_USER_KEY) || localStorage.getItem(SESSION_USER_KEY);
     const allUsers = storageService.getUsers();
     setUsers(allUsers);
@@ -30,10 +30,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (found) {
         setCurrentUser(found);
       }
-    } else if (allUsers.length > 0) {
-      // Auto login first user (Jean) for smooth zero-friction initial experience if no session yet
-      setCurrentUser(allUsers[0]);
-      sessionStorage.setItem(SESSION_USER_KEY, allUsers[0].id);
     }
 
     const handleStorageUpdate = () => {
@@ -45,10 +41,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => window.removeEventListener('crm_data_updated', handleStorageUpdate);
   }, []);
 
-  const login = (username: string) => {
+  const login = (username: string, password?: string): boolean => {
     const allUsers = storageService.getUsers();
     let found = allUsers.find(u => u.username.toLowerCase() === username.trim().toLowerCase() || u.id === username);
     
+    if (found && found.password && found.password.trim() !== '') {
+      if (password !== found.password) {
+        return false;
+      }
+    }
+
     if (!found) {
       found = storageService.addUser(username);
       setUsers(storageService.getUsers());
@@ -57,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentUser(found);
     sessionStorage.setItem(SESSION_USER_KEY, found.id);
     localStorage.setItem(SESSION_USER_KEY, found.id);
+    return true;
   };
 
   const logout = () => {
@@ -65,11 +68,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem(SESSION_USER_KEY);
   };
 
-  const registerUser = (username: string, role: 'admin' | 'user' = 'user'): User => {
-    const newUser = storageService.addUser(username, role);
+  const registerUser = (username: string, role: 'directrice' | 'admin' | 'user' = 'user', email?: string, password?: string): User => {
+    const newUser = storageService.addUser(username, role, email, password);
     setUsers(storageService.getUsers());
-    login(newUser.username);
+    login(newUser.username, password);
     return newUser;
+  };
+
+  const updateUser = (user: User) => {
+    storageService.saveUser(user);
+    setUsers(storageService.getUsers());
+    if (currentUser?.id === user.id) {
+      setCurrentUser(user);
+    }
   };
 
   const refreshUsers = () => {
@@ -77,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, users, login, logout, registerUser, refreshUsers }}>
+    <AuthContext.Provider value={{ currentUser, users, login, logout, registerUser, updateUser, refreshUsers }}>
       {children}
     </AuthContext.Provider>
   );
@@ -85,6 +96,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 };

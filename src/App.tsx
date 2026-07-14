@@ -15,12 +15,14 @@ import { LoginModal } from './components/LoginModal';
 import { NewContactModal } from './components/NewContactModal';
 import { TemplatesManager } from './components/TemplatesManager';
 import { ReportsView } from './components/ReportsView';
+import { SettingsView } from './components/SettingsView';
+import { EmailTemplatePickerModal } from './components/EmailTemplatePickerModal';
 
 const AppContent: React.FC = () => {
   const { currentUser } = useAuth();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [currentTab, setCurrentTab] = useState<'contacts' | 'reports' | 'templates'>('contacts');
+  const [currentTab, setCurrentTab] = useState<'contacts' | 'reports' | 'templates' | 'settings'>('contacts');
   
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
@@ -28,6 +30,7 @@ const AppContent: React.FC = () => {
     establishment: 'all',
     type: 'all',
     status: 'all',
+    tag: 'all',
     urgency: 'all'
   });
 
@@ -36,6 +39,7 @@ const AppContent: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [isNewContactOpen, setIsNewContactOpen] = useState<boolean>(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [emailPickerContact, setEmailPickerContact] = useState<Contact | null>(null);
 
   // Load and refresh contacts from storage
   const loadContacts = () => {
@@ -88,6 +92,11 @@ const AppContent: React.FC = () => {
       if (c.status !== filters.status) return false;
     }
 
+    // Tag
+    if (filters.tag && filters.tag !== 'all') {
+      if (!c.tags || !c.tags.includes(filters.tag)) return false;
+    }
+
     // Urgency deadline
     if (filters.urgency !== 'all') {
       if (filters.urgency === 'none') {
@@ -126,53 +135,22 @@ const AppContent: React.FC = () => {
     });
     loadContacts();
 
-    // Launch tel link
-    window.location.href = `tel:${contact.phone.replace(/\s+/g, '')}`;
+    // Launch tel link in new window per user instruction
+    window.open(`tel:${contact.phone.replace(/\s+/g, '')}`, '_blank');
   };
 
-  const handleInitiateMail = (contact: Contact, eOrTemplate?: React.MouseEvent | EmailTemplate, maybeTemplate?: EmailTemplate) => {
+  const handleInitiateMail = (contact: Contact, eOrTemplate?: React.MouseEvent | EmailTemplate, _maybeTemplate?: EmailTemplate) => {
     if (eOrTemplate && 'stopPropagation' in eOrTemplate) {
       eOrTemplate.stopPropagation();
     }
     
-    let template: EmailTemplate | undefined = maybeTemplate;
-    if (eOrTemplate && !('stopPropagation' in eOrTemplate)) {
-      template = eOrTemplate;
-    }
-
     if (!contact.email) {
       alert(`Aucune adresse e-mail enregistrée pour ${contact.firstName} ${contact.lastName}.`);
       return;
     }
 
-    // Prepare dynamic tag replacement
-    let subject = template?.subject || `Message de Space Fun Games & Share & Fun`;
-    let body = template?.body || `Bonjour ${contact.firstName},\n\n\nCordialement,\nL'équipe`;
-
-    const replaceTags = (text: string) => {
-      return text
-        .replace(/\{Prénom\}/gi, contact.firstName || '')
-        .replace(/\{Nom\}/gi, contact.lastName || '')
-        .replace(/\{Société\}/gi, contact.company || contact.type || '');
-    };
-
-    subject = replaceTags(subject);
-    body = replaceTags(body);
-
-    // Record pending communication
-    storageService.setPendingCommunication(contact.id, 'mail', template?.title || 'E-mail libre');
-
-    // Log immediate action
-    storageService.addActivityLog(contact.id, {
-      employeeName: currentUser ? currentUser.username : 'Collaborateur',
-      actionType: 'mail',
-      summary: `E-mail lancé (${template ? `modèle : ${template.title}` : 'libre'}) vers ${contact.email}`
-    });
-    loadContacts();
-
-    // Launch mailto link
-    const mailtoUrl = `mailto:${contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoUrl;
+    // Open email template picker modal before launching email
+    setEmailPickerContact(contact);
   };
 
   return (
@@ -224,6 +202,13 @@ const AppContent: React.FC = () => {
           </div>
         )}
 
+        {/* Tab 4: Paramètres & Personnalisation */}
+        {currentTab === 'settings' && (
+          <div className="animate-fade-in">
+            <SettingsView />
+          </div>
+        )}
+
       </main>
 
       {/* Footer */}
@@ -259,6 +244,13 @@ const AppContent: React.FC = () => {
         onUpdate={loadContacts}
         onInitiateCall={(c) => handleInitiateCall(c)}
         onInitiateMail={(c, template) => handleInitiateMail(c, template)}
+      />
+
+      <EmailTemplatePickerModal
+        contact={emailPickerContact}
+        isOpen={emailPickerContact !== null}
+        onClose={() => setEmailPickerContact(null)}
+        onMailSent={loadContacts}
       />
 
       <ReturnPromptModal

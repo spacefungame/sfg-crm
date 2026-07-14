@@ -21,6 +21,17 @@ export const ContactList: React.FC<ContactListProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const allTags = storageService.getTags();
+
+  const getTagBadge = (tagName: string) => {
+    const found = allTags.find(t => t.name.toLowerCase() === tagName.toLowerCase());
+    const bg = found?.color || '#8B5A2B';
+    return (
+      <span key={tagName} style={{ backgroundColor: bg, color: '#FFF', fontSize: '11px', fontWeight: 600, padding: '2px 7px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+        🏷️ {tagName}
+      </span>
+    );
+  };
 
   const statuses: ContactStatus[] = [
     'Nouveau : à contacter',
@@ -218,14 +229,17 @@ export const ContactList: React.FC<ContactListProps> = ({
                     )}
                   </td>
 
-                  {/* Établissement & Type */}
+                  {/* Établissement & Type + Tags */}
                   <td>
                     <div style={{ marginBottom: '6px' }}>
                       {getEstablishmentBadge(c.establishment)}
                     </div>
-                    <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '3px 8px', borderRadius: '4px' }}>
-                      {c.type}
-                    </span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '3px 8px', borderRadius: '4px' }}>
+                        {c.type}
+                      </span>
+                      {c.tags && c.tags.map(t => getTagBadge(t))}
+                    </div>
                   </td>
 
                   {/* Coordonnées + boutons action rapide */}
@@ -346,12 +360,13 @@ export const ContactList: React.FC<ContactListProps> = ({
                 <ChevronRight size={20} style={{ color: 'var(--text-light)' }} />
               </div>
 
-              {/* Établissement & Type */}
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {/* Établissement & Type + Tags */}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {getEstablishmentBadge(c.establishment)}
                 <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '3px 8px', borderRadius: '4px' }}>
                   {c.type}
                 </span>
+                {c.tags && c.tags.map(t => getTagBadge(t))}
               </div>
 
               {/* Statut & Deadline (Selects en 1 clic) */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { UserCheck, UserPlus, LogIn, Shield, Users } from 'lucide-react';
+import type { User } from '../types/crm';
+import { UserCheck, UserPlus, LogIn, Shield, Users, Lock, Mail, Crown, CheckCircle } from 'lucide-react';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -8,36 +9,84 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-  const { users, login, registerUser, currentUser } = useAuth();
-  const [selectedUsername, setSelectedUsername] = useState<string>('');
+  const { users, login, registerUser, updateUser, currentUser } = useAuth();
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
+  
   const [isCreatingNew, setIsCreatingNew] = useState<boolean>(false);
   const [newUsername, setNewUsername] = useState<string>('');
-  const [newRole, setNewRole] = useState<'admin' | 'user'>('user');
+  const [newEmail, setNewEmail] = useState<string>('');
+  const [newPassword, setNewPassword] = useState<string>('');
+  const [newRole, setNewRole] = useState<'directrice' | 'admin' | 'user'>('user');
+
+  // Boîte mail d'envoi de l'utilisateur actif
+  const [activeEmailConfig, setActiveEmailConfig] = useState<string>(currentUser?.email || '');
+  const [emailSavedMessage, setEmailSavedMessage] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedUsername) {
-      login(selectedUsername);
+  const handleSelectUserButton = (user: User) => {
+    setSelectedUser(user);
+    setPasswordInput('');
+    setPasswordError('');
+    if (!user.password || user.password.trim() === '') {
+      // Pas de mot de passe requis -> connexion immédiate
+      login(user.username);
+      setActiveEmailConfig(user.email || '');
       onClose();
+    }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+    const success = login(selectedUser.username, passwordInput);
+    if (success) {
+      setPasswordError('');
+      setActiveEmailConfig(selectedUser.email || '');
+      onClose();
+    } else {
+      setPasswordError('Mot de passe incorrect. Veuillez réessayer.');
     }
   };
 
   const handleCreateNew = (e: React.FormEvent) => {
     e.preventDefault();
     if (newUsername.trim()) {
-      registerUser(newUsername.trim(), newRole);
+      registerUser(newUsername.trim(), newRole, newEmail.trim() || undefined, newPassword.trim() || undefined);
+      
+      // Si un mail est renseigné et que ce n'est pas le compte actuel, on peut préparer un mail d'invitation
+      if (newEmail.trim()) {
+        const inviteSubject = encodeURIComponent(`Invitation au CRM Space Fun Games & Share & Fun`);
+        const inviteBody = encodeURIComponent(
+          `Bonjour ${newUsername.trim()},\n\nVous avez été invité(e) à rejoindre le CRM de l'établissement Space Fun Games & Share & Fun en tant que ${newRole === 'directrice' ? 'Directrice' : newRole === 'admin' ? 'Administrateur' : 'Collaborateur'}.\n\nAccédez au CRM en ligne ici : https://spacefungame.github.io/sfg-crm/\n\nIdentifiant : ${newUsername.trim()}\n${newPassword ? `Mot de passe provisoire : ${newPassword}\n` : ''}\nÀ très bientôt,\nL'équipe`
+        );
+        window.open(`mailto:${newEmail.trim()}?subject=${inviteSubject}&body=${inviteBody}`, '_blank');
+      }
+
       setNewUsername('');
+      setNewEmail('');
+      setNewPassword('');
       setIsCreatingNew(false);
+      setSelectedUser(null);
       onClose();
+    }
+  };
+
+  const handleSaveActiveEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (currentUser) {
+      updateUser({ ...currentUser, email: activeEmailConfig.trim() });
+      setEmailSavedMessage(true);
+      setTimeout(() => setEmailSavedMessage(false), 2500);
     }
   };
 
   return (
     <div className="overlay-backdrop animate-fade-in">
-      <div className="card animate-scale-up" style={{ width: '100%', maxWidth: '440px', padding: '28px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+      <div className="card animate-scale-up" style={{ width: '100%', maxWidth: '480px', padding: '28px', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '22px' }}>
           <div style={{ 
             width: '56px', height: '56px', borderRadius: 'var(--radius-full)', 
             backgroundColor: 'var(--primary-light)', color: 'var(--primary)',
@@ -46,99 +95,163 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <Users size={28} />
           </div>
           <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-            {isCreatingNew ? 'Nouveau collaborateur' : 'Espace Collaborateur'}
+            {isCreatingNew ? 'Créer / Inviter un collaborateur' : selectedUser && selectedUser.password ? `Connexion sécurisée : ${selectedUser.username}` : 'Espace Collaborateur'}
           </h2>
-          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
             {isCreatingNew 
-              ? 'Créez votre profil en 10 secondes pour suivre votre activité'
-              : 'Sélectionnez votre identifiant pour tracer vos appels, mails et relances'}
+              ? 'Créez un profil pour un collaborateur et envoyez-lui une invitation par e-mail'
+              : selectedUser && selectedUser.password 
+              ? 'Veuillez saisir votre mot de passe personnel pour accéder au CRM'
+              : 'Sélectionnez votre profil pour vous connecter et synchroniser votre boîte mail'}
           </p>
         </div>
 
-        {!isCreatingNew ? (
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        {selectedUser && selectedUser.password && !isCreatingNew ? (
+          <form onSubmit={handlePasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ padding: '14px', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Lock size={20} style={{ color: 'var(--primary)' }} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>{selectedUser.username}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  Rôle : <span style={{ fontWeight: 600, color: selectedUser.role === 'directrice' ? '#D97706' : 'var(--primary)' }}>
+                    {selectedUser.role === 'directrice' ? 'Directrice' : selectedUser.role === 'admin' ? 'Administrateur' : 'Collaborateur'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                Choisir votre compte
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
+                Mot de passe *
+              </label>
+              <input
+                type="password"
+                className="input-field"
+                placeholder="Saisissez votre mot de passe (ex: Jerome22...)"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                autoFocus
+                required
+              />
+              {passwordError && (
+                <div style={{ fontSize: '13px', color: '#DC2626', marginTop: '6px', fontWeight: 500 }}>
+                  ⚠️ {passwordError}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => setSelectedUser(null)}
+              >
+                Changer d'utilisateur
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+              >
+                <LogIn size={16} />
+                Me connecter
+              </button>
+            </div>
+          </form>
+        ) : !isCreatingNew ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '10px' }}>
+                Sélectionnez votre compte :
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 {users.map((u) => {
                   const isCurrent = currentUser?.id === u.id;
+                  const isDir = u.role === 'directrice';
                   return (
                     <button
                       key={u.id}
                       type="button"
-                      onClick={() => {
-                        setSelectedUsername(u.username);
-                        login(u.username);
-                        onClose();
-                      }}
+                      onClick={() => handleSelectUserButton(u)}
                       style={{
-                        padding: '12px',
+                        padding: '12px 10px',
                         borderRadius: 'var(--radius-md)',
-                        border: isCurrent ? '2px solid var(--primary)' : '1px solid var(--border)',
-                        backgroundColor: isCurrent ? 'var(--primary-light)' : 'var(--surface)',
-                        color: isCurrent ? 'var(--primary)' : 'var(--text-main)',
+                        border: isCurrent ? '2px solid var(--primary)' : isDir ? '1px solid #D97706' : '1px solid var(--border)',
+                        backgroundColor: isCurrent ? 'var(--primary-light)' : isDir ? '#FEF3C7' : 'var(--surface)',
+                        color: isCurrent ? 'var(--primary)' : isDir ? '#92400E' : 'var(--text-main)',
                         fontWeight: 600,
-                        fontSize: '14px',
+                        fontSize: '13px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '8px',
+                        gap: '6px',
                         cursor: 'pointer',
-                        transition: 'all 0.15s ease'
+                        transition: 'all 0.15s ease',
+                        boxShadow: isDir ? '0 2px 4px rgba(217, 119, 6, 0.1)' : 'none'
                       }}
                     >
-                      <UserCheck size={16} />
-                      {u.username}
+                      {isDir ? <Crown size={16} style={{ color: '#D97706' }} /> : <UserCheck size={15} />}
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.username}</span>
                       {u.role === 'admin' && <Shield size={13} style={{ color: 'var(--accent)' }} />}
+                      {u.password && <Lock size={12} style={{ opacity: 0.6 }} />}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                  Ou saisir un autre identifiant
+            {/* Config Boîte Mail du collaborateur actif */}
+            {currentUser && (
+              <form onSubmit={handleSaveActiveEmail} style={{ padding: '14px', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>
+                  <Mail size={16} style={{ color: 'var(--primary)' }} />
+                  Configuration de votre boîte mail d'envoi ({currentUser.username}) :
                 </label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
-                    type="text"
+                    type="email"
                     className="input-field"
-                    placeholder="Ex: Antoine, Céline..."
-                    value={selectedUsername}
-                    onChange={(e) => setSelectedUsername(e.target.value)}
+                    placeholder="Ex: laureline@spacefungames.fr"
+                    value={activeEmailConfig}
+                    onChange={(e) => setActiveEmailConfig(e.target.value)}
+                    style={{ fontSize: '13px' }}
                   />
-                  <button type="submit" className="btn btn-primary" disabled={!selectedUsername.trim()}>
-                    <LogIn size={16} />
-                    Entrer
+                  <button type="submit" className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '13px' }}>
+                    Enregistrer
                   </button>
                 </div>
-              </div>
+                {emailSavedMessage && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#16A34A', marginTop: '6px', fontWeight: 500 }}>
+                    <CheckCircle size={14} />
+                    Boîte mail enregistrée pour l'envoi de vos e-mails clients !
+                  </div>
+                )}
+              </form>
+            )}
 
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button
                 type="button"
                 className="btn btn-outline-primary"
                 onClick={() => setIsCreatingNew(true)}
-                style={{ width: '100%', marginTop: '4px' }}
+                style={{ width: '100%' }}
               >
                 <UserPlus size={16} />
-                + Ajouter un nouveau collaborateur
+                + Créer ou inviter un nouveau collaborateur
               </button>
             </div>
-          </form>
+          </div>
         ) : (
-          <form onSubmit={handleCreateNew} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleCreateNew} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                Prénom ou Nom du collaborateur *
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                Prénom / Nom du collaborateur *
               </label>
               <input
                 type="text"
                 className="input-field"
-                placeholder="Ex: Sophie"
+                placeholder="Ex: Jérôme, Julie..."
                 required
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
@@ -147,20 +260,52 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                Rôle au sein de l'équipe
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                Adresse e-mail du collaborateur (pour l'invitation & les envois)
               </label>
-              <select
+              <input
+                type="email"
                 className="input-field"
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value as 'admin' | 'user')}
-              >
-                <option value="user">Collaborateur / Commercial</option>
-                <option value="admin">Administrateur / Gérant</option>
-              </select>
+                placeholder="Ex: jerome@spacefungames.fr"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+              />
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                Si renseigné, un e-mail d'invitation sera préparé automatiquement pour l'inviter.
+              </span>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                  Rôle au sein du CRM
+                </label>
+                <select
+                  className="input-field"
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as 'directrice' | 'admin' | 'user')}
+                >
+                  <option value="user">Collaborateur / Commercial</option>
+                  <option value="admin">Administrateur / Gérant</option>
+                  <option value="directrice">Directrice (Accès total)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                  Mot de passe (optionnel)
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Ex: MotDePasse..."
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -175,13 +320,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 style={{ flex: 1 }}
                 disabled={!newUsername.trim()}
               >
-                Créer et me connecter
+                Créer & Inviter
               </button>
             </div>
           </form>
         )}
 
-        {currentUser && (
+        {currentUser && !selectedUser && !isCreatingNew && (
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
             <button
               type="button"

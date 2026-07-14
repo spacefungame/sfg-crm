@@ -1,4 +1,4 @@
-import type { CRMData, Contact, ActivityLog, User, EmailTemplate, CloudConfig } from '../types/crm';
+import type { CRMData, Contact, ActivityLog, User, EmailTemplate, CloudConfig, TagDefinition } from '../types/crm';
 import { DEFAULT_CRM_DATA } from './defaultData';
 
 const STORAGE_KEY = 'space_fun_crm_data_v1';
@@ -41,6 +41,8 @@ export class StorageService {
           contacts: parsed.contacts || DEFAULT_CRM_DATA.contacts,
           users: parsed.users || DEFAULT_CRM_DATA.users,
           contactTypes: parsed.contactTypes || DEFAULT_CRM_DATA.contactTypes,
+          statuses: parsed.statuses || DEFAULT_CRM_DATA.statuses,
+          tags: parsed.tags || DEFAULT_CRM_DATA.tags,
           emailTemplates: parsed.emailTemplates || DEFAULT_CRM_DATA.emailTemplates,
           cloudConfig: parsed.cloudConfig || DEFAULT_CRM_DATA.cloudConfig
         };
@@ -141,7 +143,7 @@ export class StorageService {
 
   // --- Contact Types ---
   public getContactTypes(): string[] {
-    return this.data.contactTypes;
+    return this.data.contactTypes || [];
   }
 
   public addContactType(type: string): void {
@@ -152,23 +154,90 @@ export class StorageService {
     }
   }
 
-  // --- Users ---
-  public getUsers(): User[] {
-    return this.data.users;
+  public deleteContactType(type: string): void {
+    this.data.contactTypes = this.data.contactTypes.filter(t => t !== type);
+    this.saveToLocalStorage();
   }
 
-  public addUser(username: string, role: 'admin' | 'user' = 'user'): User {
-    const existing = this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase());
-    if (existing) return existing;
+  // --- Statuses ---
+  public getStatuses(): string[] {
+    return this.data.statuses || [];
+  }
+
+  public addStatus(status: string): void {
+    const trimmed = status.trim();
+    if (trimmed && !this.data.statuses.includes(trimmed)) {
+      this.data.statuses.push(trimmed);
+      this.saveToLocalStorage();
+    }
+  }
+
+  public deleteStatus(status: string): void {
+    this.data.statuses = this.data.statuses.filter(s => s !== status);
+    this.saveToLocalStorage();
+  }
+
+  // --- Tags ---
+  public getTags(): TagDefinition[] {
+    return this.data.tags || [];
+  }
+
+  public saveTag(tag: TagDefinition): void {
+    const index = this.data.tags.findIndex(t => t.id === tag.id);
+    if (index >= 0) {
+      this.data.tags[index] = tag;
+    } else {
+      this.data.tags.push(tag);
+    }
+    this.saveToLocalStorage();
+  }
+
+  public deleteTag(id: string): void {
+    this.data.tags = this.data.tags.filter(t => t.id !== id);
+    this.saveToLocalStorage();
+  }
+
+  // --- Users ---
+  public getUsers(): User[] {
+    return this.data.users || [];
+  }
+
+  public addUser(username: string, role: 'directrice' | 'admin' | 'user' = 'user', email?: string, password?: string, isInvited?: boolean): User {
+    const existing = this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase() || (email && u.email?.toLowerCase() === email.toLowerCase()));
+    if (existing) {
+      if (email && !existing.email) existing.email = email;
+      if (password && !existing.password) existing.password = password;
+      if (role) existing.role = role;
+      this.saveToLocalStorage();
+      return existing;
+    }
 
     const newUser: User = {
-      id: 'u-' + Date.now(),
+      id: 'u-' + Date.now() + Math.floor(Math.random()*100),
       username: username.trim(),
-      role
+      email: email?.trim(),
+      password,
+      role,
+      isInvited
     };
     this.data.users.push(newUser);
     this.saveToLocalStorage();
     return newUser;
+  }
+
+  public saveUser(user: User): void {
+    const index = this.data.users.findIndex(u => u.id === user.id);
+    if (index >= 0) {
+      this.data.users[index] = user;
+    } else {
+      this.data.users.push(user);
+    }
+    this.saveToLocalStorage();
+  }
+
+  public deleteUser(id: string): void {
+    this.data.users = this.data.users.filter(u => u.id !== id);
+    this.saveToLocalStorage();
   }
 
   // --- Email Templates ---

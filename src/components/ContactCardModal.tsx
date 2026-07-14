@@ -29,6 +29,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
 
   const contactTypes = storageService.getContactTypes();
   const emailTemplates = storageService.getEmailTemplates();
+  const allTags = storageService.getTags();
 
   const statuses: ContactStatus[] = [
     'Nouveau : à contacter',
@@ -38,6 +39,23 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
     'Client converti',
     'Pas intéressé'
   ];
+
+  const handleToggleTag = (tagName: string) => {
+    if (!formData) return;
+    const currentTags = formData.tags || [];
+    const newTags = currentTags.includes(tagName)
+      ? currentTags.filter(t => t !== tagName)
+      : [...currentTags, tagName];
+    const updated = { ...formData, tags: newTags };
+    setFormData(updated);
+    storageService.saveContact(updated);
+    storageService.addActivityLog(formData.id, {
+      employeeName: currentUser ? currentUser.username : 'Collaborateur',
+      actionType: 'status_change',
+      summary: `${currentTags.includes(tagName) ? 'Tag retiré' : 'Tag ajouté'} : ${tagName}`
+    });
+    onUpdate();
+  };
 
   useEffect(() => {
     if (contact) {
@@ -73,19 +91,19 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
     
     // Refresh local contact state from DB
     const refreshed = storageService.getContactById(formData.id);
-    if (refreshed) setFormData(refreshed);
+    if (refreshed) setFormData(JSON.parse(JSON.stringify(refreshed)));
     setNewNoteInput('');
     onUpdate();
   };
 
-  const handleStatusOrDeadlineChange = (newStatus: string, newDeadline?: string) => {
-    const updated = { ...formData, status: newStatus, deadline: newDeadline };
+  const handleStatusOrDeadlineChange = (newStatus: ContactStatus | string, newDeadline?: string) => {
+    const updated = { ...formData, status: newStatus as ContactStatus, deadline: newDeadline || undefined };
     setFormData(updated);
     storageService.saveContact(updated);
-    storageService.addActivityLog(updated.id, {
+    storageService.addActivityLog(formData.id, {
       employeeName: currentUser ? currentUser.username : 'Collaborateur',
       actionType: 'status_change',
-      summary: `Mise à jour rapide du statut : ${newStatus}${newDeadline ? ` (Dead line : ${newDeadline})` : ''}`,
+      summary: `Statut/Dead line mis à jour : ${newStatus} ${newDeadline ? `(Dead line : ${newDeadline})` : ''}`,
       newStatus,
       deadline: newDeadline
     });
@@ -110,16 +128,26 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
     }
   };
 
+  const getTagBadge = (tagName: string) => {
+    const found = allTags.find(t => t.name.toLowerCase() === tagName.toLowerCase());
+    const bg = found?.color || '#8B5A2B';
+    return (
+      <span key={tagName} style={{ backgroundColor: bg, color: '#FFF', fontSize: '11px', fontWeight: 600, padding: '3px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+        🏷️ {tagName}
+      </span>
+    );
+  };
+
   return (
-    <div className="slide-panel-backdrop animate-fade-in" onClick={onClose}>
+    <div className="overlay-backdrop animate-fade-in" onClick={onClose}>
       <div
-        className="card animate-slide-right"
+        className="card animate-scale-up"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',
-          maxWidth: '680px',
-          height: '100vh',
-          borderRadius: 'var(--radius-lg) 0 0 var(--radius-lg)',
+          maxWidth: '820px',
+          maxHeight: '90vh',
+          borderRadius: 'var(--radius-lg)',
           display: 'flex',
           flexDirection: 'column',
           boxShadow: 'var(--shadow-modal)',
@@ -130,11 +158,12 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
         {/* Top Header Bar */}
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--surface-warm)' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
               {getEstablishmentBadge(formData.establishment)}
               <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: 'var(--surface)', padding: '3px 10px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border)' }}>
                 {formData.type}
               </span>
+              {formData.tags && formData.tags.map(t => getTagBadge(t))}
             </div>
             <h3 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-main)' }}>
               {formData.lastName} {formData.firstName}
@@ -163,7 +192,6 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
         {/* Action Button Bar (Call & Email with Templates) */}
         <div style={{ padding: '16px 24px', backgroundColor: '#F9F7F2', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {/* Call button */}
             <button
               type="button"
               onClick={() => onInitiateCall(formData)}
@@ -175,7 +203,6 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
               Appeler le {formData.phone || '(sans numéro)'}
             </button>
 
-            {/* Email toggle button */}
             <button
               type="button"
               onClick={() => setShowTemplateSelector(!showTemplateSelector)}
@@ -184,42 +211,34 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
               disabled={!formData.email}
             >
               <Mail size={18} />
-              Envoyer un E-mail au contact
+              Envoyer un E-mail
             </button>
           </div>
 
-          {/* Template Selector Drawer */}
           {showTemplateSelector && (
             <div className="animate-fade-in" style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid #D8CEEA', boxShadow: 'var(--shadow-sm)' }}>
               <h5 style={{ fontSize: '14px', fontWeight: 600, color: '#4A306D', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Send size={16} />
-                Choisissez un template pour personnaliser et ouvrir votre client mail :
+                Choisissez un template :
               </h5>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowTemplateSelector(false);
-                    onInitiateMail(formData);
-                  }}
+                  onClick={() => { setShowTemplateSelector(false); onInitiateMail(formData); }}
                   style={{ padding: '10px 14px', textAlign: 'left', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border)', backgroundColor: 'var(--surface)', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500 }}
                 >
-                  ✉️ E-mail vierge / Nouveau message libre
+                  ✉️ E-mail vierge
                 </button>
-
                 {emailTemplates.map((tpl) => (
                   <button
                     key={tpl.id}
                     type="button"
-                    onClick={() => {
-                      setShowTemplateSelector(false);
-                      onInitiateMail(formData, tpl);
-                    }}
-                    style={{ padding: '10px 14px', textAlign: 'left', borderRadius: 'var(--radius-sm)', border: '1px solid #E3D9F2', backgroundColor: '#FAF7FF', color: '#3B235E', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                    onClick={() => { setShowTemplateSelector(false); onInitiateMail(formData, tpl); }}
+                    style={{ padding: '10px 14px', textAlign: 'left', borderRadius: 'var(--radius-sm)', border: '1px solid #E3D9F2', backgroundColor: '#FAF7FF', color: '#3B235E', cursor: 'pointer' }}
                   >
                     <div style={{ fontWeight: 600, fontSize: '14px' }}>{tpl.title}</div>
-                    <div style={{ fontSize: '12px', color: '#7E699B', marginTop: '2px' }}>Sujet : {tpl.subject}</div>
+                    <div style={{ fontSize: '12px', color: '#7E699B' }}>Sujet : {tpl.subject}</div>
                   </button>
                 ))}
               </div>
@@ -230,41 +249,55 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
         {/* Scrollable Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          {/* Quick Status & Deadline Bar */}
-          <div style={{ backgroundColor: 'var(--surface-warm)', padding: '16px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ backgroundColor: 'var(--surface-warm)', padding: '16px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <div style={{ flex: '1 1 220px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px' }}>
-                Statut actuel du client
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) => handleStatusOrDeadlineChange(e.target.value, formData.deadline)}
-                className="input-field"
-                style={{ fontWeight: 600 }}
-              >
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px' }}>Statut actuel</label>
+              <select value={formData.status} onChange={(e) => handleStatusOrDeadlineChange(e.target.value, formData.deadline)} className="input-field">
                 {statuses.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-
             <div style={{ flex: '1 1 180px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px' }}>
-                Dead line (Prochaine action)
-              </label>
-              <input
-                type="date"
-                className="input-field"
-                value={formData.deadline || ''}
-                onChange={(e) => handleStatusOrDeadlineChange(formData.status, e.target.value)}
-              />
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px' }}>Dead line</label>
+              <input type="date" className="input-field" value={formData.deadline || ''} onChange={(e) => handleStatusOrDeadlineChange(formData.status, e.target.value)} />
             </div>
           </div>
 
-          {/* Edit Form OR View mode info */}
+          <div style={{ backgroundColor: 'var(--surface)', padding: '14px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
+              <span>🏷️ Tags attribués au contact (cliquez pour ajouter / retirer) :</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {allTags.map(tag => {
+                const isSelected = (formData.tags || []).includes(tag.name);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => handleToggleTag(tag.name)}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: 'var(--radius-full)',
+                      border: isSelected ? '2px solid #2A211D' : '1px dashed var(--border)',
+                      backgroundColor: isSelected ? tag.color : 'transparent',
+                      color: isSelected ? '#FFFFFF' : 'var(--text-main)',
+                      fontWeight: isSelected ? 600 : 500,
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <span>{isSelected ? '✓' : '+'}</span>
+                    <span>{tag.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {isEditing ? (
             <form onSubmit={handleSaveContact} style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#FFFDF9', padding: '18px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-              <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-                Modifier les coordonnées du client
-              </h4>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div>

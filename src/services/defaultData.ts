@@ -138,6 +138,7 @@ export const DEFAULT_CRM_DATA: CRMData = {
     }
   ],
   users: [
+    { id: 'u-dir', username: 'Lauréline Henkens', password: 'Jerome221087', role: 'directrice', email: 'laureline@spacefungames.fr' },
     { id: 'u-1', username: 'Jean', password: '', role: 'admin' },
     { id: 'u-2', username: 'Marie', password: '', role: 'admin' },
     { id: 'u-3', username: 'Marc', password: '', role: 'user' },
@@ -149,6 +150,19 @@ export const DEFAULT_CRM_DATA: CRMData = {
     'CE / CSE',
     'Scolaire & Mairie',
     'Particulier'
+  ],
+  statuses: [
+    'Nouveau : à contacter',
+    'À relancer',
+    'Rendez-vous fixé',
+    'Devis envoyé',
+    'Client converti',
+    'Pas intéressé'
+  ],
+  tags: [
+    { id: 'tag-1', name: 'VIP', description: 'Client prioritaire à fidéliser', color: '#8D5B4C' },
+    { id: 'tag-2', name: 'Gros budget', description: 'Événement > 2000 €', color: '#2E7D32' },
+    { id: 'tag-3', name: 'Urgent', description: 'Événement à organiser dans moins de 7 jours', color: '#C62828' }
   ],
   emailTemplates: [
     {

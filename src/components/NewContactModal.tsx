@@ -17,6 +17,7 @@ export const NewContactModal: React.FC<NewContactModalProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const contactTypes = storageService.getContactTypes();
+  const allTags = storageService.getTags();
 
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -26,6 +27,7 @@ export const NewContactModal: React.FC<NewContactModalProps> = ({
   const [type, setType] = useState(contactTypes[0] || 'Entreprise');
   const [establishment, setEstablishment] = useState<Establishment>('space_fun_games');
   const [notes, setNotes] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   if (!isOpen) return null;
 
@@ -43,6 +45,7 @@ export const NewContactModal: React.FC<NewContactModalProps> = ({
       type: type,
       establishment: establishment,
       status: 'Nouveau : à contacter', // All new prospects automatically start as "Nouveau : à contacter" according to user requirement
+      tags: [...selectedTags],
       notes: notes.trim() || undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -57,7 +60,7 @@ export const NewContactModal: React.FC<NewContactModalProps> = ({
         timestamp: new Date().toISOString(),
         employeeName: currentUser ? currentUser.username : 'Collaborateur',
         actionType: 'note',
-        summary: 'Création manuelle du prospect dans le CRM.'
+        summary: `Création manuelle du prospect dans le CRM.${selectedTags.length > 0 ? ` Tags : ${selectedTags.join(', ')}` : ''}`
       }
     ];
 
@@ -72,6 +75,7 @@ export const NewContactModal: React.FC<NewContactModalProps> = ({
     setEmail('');
     setCompany('');
     setNotes('');
+    setSelectedTags([]);
   };
 
   return (
@@ -200,6 +204,42 @@ export const NewContactModal: React.FC<NewContactModalProps> = ({
               <option value="share_and_fun">🎲 Share & Fun</option>
               <option value="les_deux">🌟 Les deux établissements</option>
             </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
+              🏷️ Tags initiaux :
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {allTags.map(tag => {
+                const isSelected = selectedTags.includes(tag.name);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTags(isSelected ? selectedTags.filter(t => t !== tag.name) : [...selectedTags, tag.name]);
+                    }}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: 'var(--radius-full)',
+                      border: isSelected ? '2px solid #2A211D' : '1px dashed var(--border)',
+                      backgroundColor: isSelected ? tag.color : 'var(--surface-warm)',
+                      color: isSelected ? '#FFFFFF' : 'var(--text-main)',
+                      fontWeight: isSelected ? 600 : 500,
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <span>{isSelected ? '✓' : '+'}</span>
+                    <span>{tag.name}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div>

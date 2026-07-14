@@ -1,13 +1,14 @@
 import React from 'react';
 import type { Establishment } from '../types/crm';
 import { storageService } from '../services/storageService';
-import { Search, Calendar, Building2, Tag, CheckCircle2, RotateCcw } from 'lucide-react';
+import { Search, Calendar, Building2, Tag as TagIcon, CheckCircle2, RotateCcw, Filter, Bookmark } from 'lucide-react';
 
 export interface FilterState {
   search: string;
   establishment: Establishment | 'all';
   type: string;
   status: string;
+  tag: string;
   urgency: 'all' | 'late' | 'today' | 'future' | 'none';
 }
 
@@ -25,15 +26,8 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
   filteredCount
 }) => {
   const contactTypes = storageService.getContactTypes();
-
-  const statuses = [
-    'Nouveau : à contacter',
-    'À relancer',
-    'Rendez-vous fixé',
-    'Devis envoyé',
-    'Client converti',
-    'Pas intéressé'
-  ];
+  const statuses = storageService.getStatuses();
+  const tags = storageService.getTags();
 
   const resetFilters = () => {
     onFilterChange({
@@ -41,6 +35,7 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
       establishment: 'all',
       type: 'all',
       status: 'all',
+      tag: 'all',
       urgency: 'all'
     });
   };
@@ -50,29 +45,30 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
     filters.establishment !== 'all' ||
     filters.type !== 'all' ||
     filters.status !== 'all' ||
+    (filters.tag && filters.tag !== 'all') ||
     filters.urgency !== 'all';
 
   return (
-    <div className="card" style={{ padding: '18px 20px', marginBottom: '20px' }}>
+    <div className="card" style={{ padding: '12px 16px', marginBottom: '16px' }}>
       
       {/* Top row: Search Bar & Count */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         
         {/* Search */}
-        <div style={{ position: 'relative', flex: '1 1 320px', maxWidth: '480px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+        <div style={{ position: 'relative', flex: '1 1 280px', maxWidth: '420px' }}>
+          <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
           <input
             type="text"
             className="input-field"
             placeholder="Rechercher par nom, téléphone, e-mail ou société..."
             value={filters.search}
             onChange={(e) => onFilterChange({ ...filters, search: e.target.value })}
-            style={{ paddingLeft: '40px' }}
+            style={{ paddingLeft: '36px', paddingRight: filters.search ? '60px' : '12px', paddingTop: '6px', paddingBottom: '6px', fontSize: '13px' }}
           />
           {filters.search && (
             <button
               onClick={() => onFilterChange({ ...filters, search: '' })}
-              style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-light)', cursor: 'pointer', fontSize: '12px' }}
+              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-light)', cursor: 'pointer', fontSize: '11.5px', fontWeight: 600 }}
             >
               Effacer
             </button>
@@ -80,206 +76,111 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
         </div>
 
         {/* Count & Reset */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', backgroundColor: 'var(--surface-warm)', padding: '6px 12px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border)' }}>
-            <strong>{filteredCount}</strong> contact{filteredCount !== 1 ? 's' : ''} affiché{filteredCount !== 1 ? 's' : ''} sur {totalCount}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted)', backgroundColor: 'var(--surface-warm)', padding: '5px 10px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border)' }}>
+            <strong>{filteredCount}</strong> affiché{filteredCount !== 1 ? 's' : ''} / {totalCount}
           </span>
 
           {hasActiveFilters && (
             <button
               onClick={resetFilters}
               className="btn btn-secondary btn-sm"
-              style={{ color: '#C81E1E', borderColor: '#FBD5D5', backgroundColor: '#FDE8E8' }}
+              style={{ color: '#C81E1E', borderColor: '#FBD5D5', backgroundColor: '#FDE8E8', padding: '5px 10px' }}
               title="Réinitialiser tous les filtres"
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={13} />
               Réinitialiser
             </button>
           )}
         </div>
       </div>
 
-      {/* Filter rows */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid #F0ECE4', paddingTop: '14px' }}>
-        
-        {/* Row 1: Établissement & Type */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
-          
-          {/* Établissement */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Building2 size={15} />
-              Établissement :
-            </span>
-            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-              {[
-                { id: 'all', label: 'Tous' },
-                { id: 'space_fun_games', label: '🚀 Space Fun Games' },
-                { id: 'share_and_fun', label: '🎲 Share & Fun' },
-                { id: 'les_deux', label: '🌟 Les deux' }
-              ].map((item) => {
-                const active = filters.establishment === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => onFilterChange({ ...filters, establishment: item.id as any })}
-                    style={{
-                      padding: '5px 11px',
-                      borderRadius: 'var(--radius-full)',
-                      border: active ? '1px solid var(--primary)' : '1px solid var(--border)',
-                      backgroundColor: active ? 'var(--primary)' : 'var(--surface)',
-                      color: active ? '#FFFFFF' : 'var(--text-main)',
-                      fontSize: '12px',
-                      fontWeight: active ? 600 : 500,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border)' }} />
-
-          {/* Type */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Tag size={15} />
-              Type :
-            </span>
-            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => onFilterChange({ ...filters, type: 'all' })}
-                style={{
-                  padding: '5px 11px',
-                  borderRadius: 'var(--radius-full)',
-                  border: filters.type === 'all' ? '1px solid var(--primary)' : '1px solid var(--border)',
-                  backgroundColor: filters.type === 'all' ? 'var(--primary)' : 'var(--surface)',
-                  color: filters.type === 'all' ? '#FFFFFF' : 'var(--text-main)',
-                  fontSize: '12px',
-                  fontWeight: filters.type === 'all' ? 600 : 500,
-                  cursor: 'pointer'
-                }}
-              >
-                Tous
-              </button>
-              {contactTypes.map((t) => {
-                const active = filters.type === t;
-                return (
-                  <button
-                    key={t}
-                    onClick={() => onFilterChange({ ...filters, type: active ? 'all' : t })}
-                    style={{
-                      padding: '5px 11px',
-                      borderRadius: 'var(--radius-full)',
-                      border: active ? '1px solid var(--secondary)' : '1px solid var(--border)',
-                      backgroundColor: active ? 'var(--secondary)' : 'var(--surface)',
-                      color: active ? '#FFFFFF' : 'var(--text-main)',
-                      fontSize: '12px',
-                      fontWeight: active ? 600 : 500,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {t}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
+      {/* Filter dropdowns (Compact line) */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', borderTop: '1px solid #F0ECE4', paddingTop: '10px', marginTop: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted)', marginRight: '2px' }}>
+          <Filter size={14} style={{ color: 'var(--primary)' }} />
+          Filtres :
         </div>
 
-        {/* Row 2: Statut & Urgence Dead line */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
-          
-          {/* Statut */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle2 size={15} />
-              Statut :
-            </span>
-            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => onFilterChange({ ...filters, status: 'all' })}
-                style={{
-                  padding: '5px 11px',
-                  borderRadius: 'var(--radius-full)',
-                  border: filters.status === 'all' ? '1px solid var(--primary)' : '1px solid var(--border)',
-                  backgroundColor: filters.status === 'all' ? 'var(--primary)' : 'var(--surface)',
-                  color: filters.status === 'all' ? '#FFFFFF' : 'var(--text-main)',
-                  fontSize: '12px',
-                  fontWeight: filters.status === 'all' ? 600 : 500,
-                  cursor: 'pointer'
-                }}
-              >
-                Tous
-              </button>
-              {statuses.map((s) => {
-                const active = filters.status === s;
-                return (
-                  <button
-                    key={s}
-                    onClick={() => onFilterChange({ ...filters, status: active ? 'all' : s })}
-                    style={{
-                      padding: '5px 11px',
-                      borderRadius: 'var(--radius-full)',
-                      border: active ? '1px solid var(--primary)' : '1px solid var(--border)',
-                      backgroundColor: active ? 'var(--primary-light)' : 'var(--surface)',
-                      color: active ? 'var(--primary)' : 'var(--text-main)',
-                      fontSize: '12px',
-                      fontWeight: active ? 600 : 500,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {s}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        {/* Menu déroulant Établissement */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Building2 size={13} style={{ color: 'var(--text-light)' }} />
+          <select
+            className="input-field"
+            value={filters.establishment}
+            onChange={(e) => onFilterChange({ ...filters, establishment: e.target.value as any })}
+            style={{ width: 'auto', minWidth: '150px', padding: '5px 8px', fontSize: '12.5px', fontWeight: filters.establishment !== 'all' ? 600 : 400, borderColor: filters.establishment !== 'all' ? 'var(--primary)' : 'var(--border)' }}
+          >
+            <option value="all">Établissement : Tous</option>
+            <option value="space_fun_games">🚀 Space Fun Games</option>
+            <option value="share_and_fun">🎲 Share & Fun</option>
+            <option value="les_deux">🌟 Les deux</option>
+          </select>
+        </div>
 
-          <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border)' }} />
+        {/* Menu déroulant Type */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <TagIcon size={13} style={{ color: 'var(--text-light)' }} />
+          <select
+            className="input-field"
+            value={filters.type}
+            onChange={(e) => onFilterChange({ ...filters, type: e.target.value })}
+            style={{ width: 'auto', minWidth: '130px', padding: '5px 8px', fontSize: '12.5px', fontWeight: filters.type !== 'all' ? 600 : 400, borderColor: filters.type !== 'all' ? 'var(--secondary)' : 'var(--border)' }}
+          >
+            <option value="all">Type : Tous</option>
+            {contactTypes.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
 
-          {/* Dead lines urgence */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Calendar size={15} />
-              Dead line :
-            </span>
-            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-              {[
-                { id: 'all', label: 'Toutes' },
-                { id: 'late', label: '⚠️ En retard', bg: '#FDE8E8', color: '#C81E1E' },
-                { id: 'today', label: '🔥 Aujourd\'hui', bg: '#FEF08A', color: '#854D0E' },
-                { id: 'future', label: '⏳ À venir' },
-                { id: 'none', label: 'Sans dead line' }
-              ].map((item) => {
-                const active = filters.urgency === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => onFilterChange({ ...filters, urgency: item.id as any })}
-                    style={{
-                      padding: '5px 11px',
-                      borderRadius: 'var(--radius-full)',
-                      border: active ? '1px solid #B89778' : '1px solid var(--border)',
-                      backgroundColor: active ? (item.bg || 'var(--primary)') : 'var(--surface)',
-                      color: active ? (item.color || '#FFFFFF') : 'var(--text-main)',
-                      fontSize: '12px',
-                      fontWeight: active ? 600 : 500,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        {/* Menu déroulant Statut */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <CheckCircle2 size={13} style={{ color: 'var(--text-light)' }} />
+          <select
+            className="input-field"
+            value={filters.status}
+            onChange={(e) => onFilterChange({ ...filters, status: e.target.value })}
+            style={{ width: 'auto', minWidth: '150px', padding: '5px 8px', fontSize: '12.5px', fontWeight: filters.status !== 'all' ? 600 : 400, borderColor: filters.status !== 'all' ? 'var(--primary)' : 'var(--border)' }}
+          >
+            <option value="all">Statut : Tous</option>
+            {statuses.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
 
+        {/* Menu déroulant Tag */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Bookmark size={13} style={{ color: 'var(--text-light)' }} />
+          <select
+            className="input-field"
+            value={filters.tag || 'all'}
+            onChange={(e) => onFilterChange({ ...filters, tag: e.target.value })}
+            style={{ width: 'auto', minWidth: '130px', padding: '5px 8px', fontSize: '12.5px', fontWeight: filters.tag && filters.tag !== 'all' ? 600 : 400, borderColor: filters.tag && filters.tag !== 'all' ? '#D97706' : 'var(--border)' }}
+          >
+            <option value="all">Tag : Tous</option>
+            {tags.map((tg) => (
+              <option key={tg.name} value={tg.name}>🏷️ {tg.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Menu déroulant Dead line urgence */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Calendar size={13} style={{ color: 'var(--text-light)' }} />
+          <select
+            className="input-field"
+            value={filters.urgency}
+            onChange={(e) => onFilterChange({ ...filters, urgency: e.target.value as any })}
+            style={{ width: 'auto', minWidth: '140px', padding: '5px 8px', fontSize: '12.5px', fontWeight: filters.urgency !== 'all' ? 600 : 400, borderColor: filters.urgency !== 'all' ? '#C81E1E' : 'var(--border)' }}
+          >
+            <option value="all">Dead line : Toutes</option>
+            <option value="late">⚠️ En retard</option>
+            <option value="today">🔥 Aujourd'hui</option>
+            <option value="future">⏳ À venir</option>
+            <option value="none">Sans dead line</option>
+          </select>
         </div>
 
       </div>

@@ -9,6 +9,13 @@ export type ContactStatus =
   | 'Pas intéressé'
   | string;
 
+export interface TagDefinition {
+  id: string;
+  name: string;
+  description?: string;
+  color: string; // CSS hex color ex: '#8D5B4C' or '#2E7D32'
+}
+
 export interface ActivityLog {
   id: string;
   contactId: string;
@@ -30,6 +37,7 @@ export interface Contact {
   type: string; // ex: 'Entreprise', 'Association', etc. (personnalisable)
   establishment: Establishment;
   status: string;
+  tags?: string[]; // array of TagDefinition ids
   deadline?: string; // au format YYYY-MM-DD
   notes?: string;
   createdAt: string;
@@ -40,8 +48,10 @@ export interface Contact {
 export interface User {
   id: string;
   username: string;
+  email?: string;
   password?: string;
-  role: 'admin' | 'user';
+  role: 'directrice' | 'admin' | 'user';
+  isInvited?: boolean;
 }
 
 export interface EmailTemplate {
@@ -69,6 +79,8 @@ export interface CRMData {
   contacts: Contact[];
   users: User[];
   contactTypes: string[];
+  statuses: string[];
+  tags: TagDefinition[];
   emailTemplates: EmailTemplate[];
   cloudConfig: CloudConfig;
 }

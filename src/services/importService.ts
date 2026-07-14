@@ -151,7 +151,8 @@ export class ImportService {
     previews: ImportPreviewRow[],
     type: string,
     establishment: Establishment,
-    employeeName: string
+    employeeName: string,
+    tags: string[] = []
   ): { addedCount: number; updatedCount: number } {
     let addedCount = 0;
     let updatedCount = 0;
@@ -170,13 +171,17 @@ export class ImportService {
           contact.company = item.parsed.company;
         }
 
+        if (tags && tags.length > 0) {
+          contact.tags = Array.from(new Set([...(contact.tags || []), ...tags]));
+        }
+
         // Add log
         const log: ActivityLog = {
           id: 'log-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
           contactId: contact.id,
           employeeName,
           actionType: 'import',
-          summary: `Ré-import de contact (${type} - ${establishment === 'space_fun_games' ? 'Space Fun Games' : establishment === 'share_and_fun' ? 'Share & Fun' : 'Les deux'}). Fiche mise à jour et doublon évité.`,
+          summary: `Ré-import de contact (${type} - ${establishment === 'space_fun_games' ? 'Space Fun Games' : establishment === 'share_and_fun' ? 'Share & Fun' : 'Les deux'}). Fiche mise à jour et doublon évité.${tags && tags.length > 0 ? ` Tags ajoutés : ${tags.join(', ')}` : ''}`,
           timestamp: new Date().toISOString()
         };
         contact.logs.unshift(log);
@@ -195,6 +200,7 @@ export class ImportService {
           type: type.trim() || 'Entreprise',
           establishment,
           status: 'Nouveau : à contacter',
+          tags: tags ? [...tags] : [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           logs: []
