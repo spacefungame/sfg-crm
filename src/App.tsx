@@ -214,7 +214,7 @@ const AppContent: React.FC = () => {
 
       {/* Footer */}
       <footer className="no-print" style={{ backgroundColor: 'var(--surface)', borderTop: '1px solid var(--border)', padding: '16px 20px', textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)' }}>
-        <strong>CRM Space Fun Games & Share & Fun</strong> • Système 100% en ligne, collaboratif & gratuit • Vos données sont sécurisées sur votre espace
+        <strong>CRM Space Fun Games & Share & Fun</strong>
       </footer>
 
       {/* Modals & Overlays */}
