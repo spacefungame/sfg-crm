@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import type { TagDefinition, User } from '../types/crm';
 import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown, X, KeyRound } from 'lucide-react';
 import { TemplatesManager } from './TemplatesManager';
+import { EmailProviderSelector } from './EmailProviderSelector';
 
 export const SettingsView: React.FC = () => {
   const { users, currentUser, registerUser, refreshUsers } = useAuth();
@@ -34,6 +35,7 @@ export const SettingsView: React.FC = () => {
   const [newUsername, setNewUsername] = useState<string>('');
   const [newEmail, setNewEmail] = useState<string>('');
   const [newRole, setNewRole] = useState<string>('user');
+  const [inviteProvider, setInviteProvider] = useState<string>(storageService.getPreferredEmailProvider());
 
   const colorPalette = [
     { name: 'Marron / Caramel', code: '#8B5A2B' },
@@ -160,11 +162,9 @@ export const SettingsView: React.FC = () => {
     registerUser(newUsername.trim(), newRole, newEmail.trim() || undefined, undefined, false);
 
     if (newEmail.trim()) {
-      const inviteSubject = encodeURIComponent(`Invitation au CRM Space Fun Games & Share & Fun`);
-      const inviteBody = encodeURIComponent(
-        `Bonjour ${newUsername.trim()},\n\nVous avez été invité(e) à rejoindre le CRM de l'établissement Space Fun Games & Share & Fun en tant que ${newRole === 'directrice' ? 'Directrice' : newRole === 'admin' ? 'Administrateur' : newRole === 'user' ? 'Collaborateur' : newRole}.\n\nAccédez au CRM en ligne ici : https://spacefungame.github.io/sfg-crm/\n\nIdentifiant : ${newUsername.trim()}\n\nLors de votre première connexion sur le site, cliquez sur votre profil et vous pourrez définir et enregistrer vous-même votre mot de passe personnel.\n\nÀ très bientôt,\nL'équipe`
-      );
-      window.open(`mailto:${newEmail.trim()}?subject=${inviteSubject}&body=${inviteBody}`, '_blank');
+      const inviteSubject = `Invitation au CRM Space Fun Games & Share & Fun`;
+      const inviteBody = `Bonjour ${newUsername.trim()},\n\nVous avez été invité(e) à rejoindre le CRM de l'établissement Space Fun Games & Share & Fun en tant que ${newRole === 'directrice' ? 'Directrice' : newRole === 'admin' ? 'Administrateur' : newRole === 'user' ? 'Collaborateur' : newRole}.\n\nAccédez au CRM en ligne ici : https://spacefungame.github.io/sfg-crm/\n\nIdentifiant : ${newUsername.trim()}\n\nLors de votre première connexion sur le site, cliquez sur votre profil et vous pourrez définir et enregistrer vous-même votre mot de passe personnel.\n\nÀ très bientôt,\nL'équipe`;
+      storageService.dispatchEmail(newEmail.trim(), inviteSubject, inviteBody, inviteProvider);
     }
 
     setNewUsername('');
@@ -702,6 +702,8 @@ export const SettingsView: React.FC = () => {
                   ))}
                 </select>
               </div>
+
+              <EmailProviderSelector value={inviteProvider} onChange={setInviteProvider} compact />
 
               <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
                 Créer profil & Inviter

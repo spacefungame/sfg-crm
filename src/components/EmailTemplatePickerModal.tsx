@@ -3,6 +3,7 @@ import type { Contact } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Send, FileText, X, ExternalLink } from 'lucide-react';
+import { EmailProviderSelector } from './EmailProviderSelector';
 
 interface EmailTemplatePickerModalProps {
   contact: Contact | null;
@@ -22,6 +23,7 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('free'); // 'free' = E-mail libre
   const [customSubject, setCustomSubject] = useState<string>('');
   const [customBody, setCustomBody] = useState<string>('');
+  const [provider, setProvider] = useState<string>(storageService.getPreferredEmailProvider());
 
   if (!isOpen || !contact) return null;
 
@@ -56,12 +58,11 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
     storageService.addActivityLog(contact.id, {
       employeeName: currentUser ? currentUser.username : 'Collaborateur',
       actionType: 'mail',
-      summary: `E-mail lancé (${selectedTemplate ? `Modèle : ${selectedTemplate.title}` : 'E-mail libre'}) vers ${contact.email}`
+      summary: `E-mail lancé (${selectedTemplate ? `Modèle : ${selectedTemplate.title}` : 'E-mail libre'}) via ${provider} vers ${contact.email}`
     });
 
-    // Launch mailto in new window (_blank) per user request
-    const mailtoUrl = `mailto:${contact.email}?subject=${encodeURIComponent(subjectToSend)}&body=${encodeURIComponent(bodyToSend)}`;
-    window.open(mailtoUrl, '_blank');
+    // Launch via selected email provider (Gmail, Outlook Web, Yahoo, Mailto, or Copy)
+    storageService.dispatchEmail(contact.email, subjectToSend, bodyToSend, provider);
 
     onMailSent();
     onClose();
@@ -168,11 +169,14 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
             </div>
           )}
 
+          {/* Sélecteur de boîte mail / Webmail */}
+          <EmailProviderSelector value={provider} onChange={setProvider} />
+
           {/* Note sur la nouvelle fenêtre */}
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', backgroundColor: '#F8F6F0', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <ExternalLink size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
             <span>
-              Au clic, votre application de messagerie (ou Webmail) s'ouvrira <strong>dans une nouvelle fenêtre</strong> avec le message prêt à être envoyé par <em>{currentUser?.email || currentUser?.username || 'vous'}</em>.
+              Au clic, la boîte sélectionnée s'ouvrira <strong>dans un nouvel onglet/fenêtre</strong> prête à être envoyée par <em>{currentUser?.email || currentUser?.username || 'vous'}</em>.
             </span>
           </div>
 

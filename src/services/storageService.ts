@@ -361,6 +361,38 @@ export class StorageService {
     localStorage.removeItem('pending_comm');
     return null;
   }
+
+  public getPreferredEmailProvider(): string {
+    return localStorage.getItem('sfg_preferred_email_provider') || 'gmail';
+  }
+
+  public setPreferredEmailProvider(provider: string): void {
+    localStorage.setItem('sfg_preferred_email_provider', provider);
+  }
+
+  public dispatchEmail(to: string, subject: string, body: string, provider?: string): void {
+    const chosenProvider = provider || this.getPreferredEmailProvider();
+    const encodedTo = encodeURIComponent(to);
+    const encodedSubject = encodeURIComponent(subject);
+    const encodedBody = encodeURIComponent(body);
+
+    if (chosenProvider === 'gmail') {
+      window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodedTo}&su=${encodedSubject}&body=${encodedBody}`, '_blank');
+    } else if (chosenProvider === 'outlook-pro') {
+      window.open(`https://outlook.office.com/mail/deeplink/compose?to=${encodedTo}&subject=${encodedSubject}&body=${encodedBody}`, '_blank');
+    } else if (chosenProvider === 'outlook-live') {
+      window.open(`https://outlook.live.com/mail/0/deeplink/compose?to=${encodedTo}&subject=${encodedSubject}&body=${encodedBody}`, '_blank');
+    } else if (chosenProvider === 'yahoo') {
+      window.open(`https://compose.mail.yahoo.com/?to=${encodedTo}&subject=${encodedSubject}&body=${encodedBody}`, '_blank');
+    } else if (chosenProvider === 'copy') {
+      const fullText = `Destinataire : ${to}\nObjet : ${subject}\n\n${body}`;
+      navigator.clipboard.writeText(fullText);
+      alert(`✅ Message et adresse copiés dans votre presse-papiers !\n\nDestinataire : ${to}\n\nVous pouvez maintenant coller le tout dans la boîte e-mail ou le compte de votre choix.`);
+    } else {
+      // 'mailto' - App par défaut de l'ordinateur
+      window.open(`mailto:${to}?subject=${encodedSubject}&body=${encodedBody}`, '_blank');
+    }
+  }
 }
 
 export const storageService = StorageService.getInstance();

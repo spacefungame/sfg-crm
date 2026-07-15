@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { storageService } from '../services/storageService';
 import type { User } from '../types/crm';
 import { UserCheck, UserPlus, LogIn, Shield, Users, Lock, Mail, Crown, CheckCircle, X, KeyRound, CheckCheck } from 'lucide-react';
+import { EmailProviderSelector } from './EmailProviderSelector';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [newUsername, setNewUsername] = useState<string>('');
   const [newEmail, setNewEmail] = useState<string>('');
   const [newRole, setNewRole] = useState<string>('user');
+  const [inviteProvider, setInviteProvider] = useState<string>(storageService.getPreferredEmailProvider());
 
   // Boîte mail d'envoi de l'utilisateur actif
   const [activeEmailConfig, setActiveEmailConfig] = useState<string>(currentUser?.email || '');
@@ -80,11 +82,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       registerUser(newUsername.trim(), newRole, newEmail.trim() || undefined, undefined, isFirstUserOrSelf);
       
       if (newEmail.trim()) {
-        const inviteSubject = encodeURIComponent(`Invitation au CRM Space Fun Games & Share & Fun`);
-        const inviteBody = encodeURIComponent(
-          `Bonjour ${newUsername.trim()},\n\nVous avez été invité(e) à rejoindre le CRM de l'établissement Space Fun Games & Share & Fun en tant que ${newRole === 'directrice' ? 'Directrice' : newRole === 'admin' ? 'Administrateur' : newRole === 'user' ? 'Collaborateur' : newRole}.\n\nAccédez au CRM en ligne ici : https://spacefungame.github.io/sfg-crm/\n\nIdentifiant : ${newUsername.trim()}\n\nLors de votre première connexion sur le site, sélectionnez votre profil et vous pourrez définir vous-même votre mot de passe personnel.\n\nÀ très bientôt,\nL'équipe`
-        );
-        window.open(`mailto:${newEmail.trim()}?subject=${inviteSubject}&body=${inviteBody}`, '_blank');
+        const inviteSubject = `Invitation au CRM Space Fun Games & Share & Fun`;
+        const inviteBody = `Bonjour ${newUsername.trim()},\n\nVous avez été invité(e) à rejoindre le CRM de l'établissement Space Fun Games & Share & Fun en tant que ${newRole === 'directrice' ? 'Directrice' : newRole === 'admin' ? 'Administrateur' : newRole === 'user' ? 'Collaborateur' : newRole}.\n\nAccédez au CRM en ligne ici : https://spacefungame.github.io/sfg-crm/\n\nIdentifiant : ${newUsername.trim()}\n\nLors de votre première connexion sur le site, sélectionnez votre profil et vous pourrez définir vous-même votre mot de passe personnel.\n\nÀ très bientôt,\nL'équipe`;
+        storageService.dispatchEmail(newEmail.trim(), inviteSubject, inviteBody, inviteProvider);
       }
 
       setNewUsername('');
@@ -393,6 +393,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 </select>
               </div>
             </div>
+
+            <EmailProviderSelector value={inviteProvider} onChange={setInviteProvider} compact />
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button
