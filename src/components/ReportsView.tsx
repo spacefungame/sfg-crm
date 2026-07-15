@@ -94,31 +94,31 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       
       {/* Top Filter & Export Bar (Hidden on print) */}
-      <div className="card no-print" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>👤 Employé :</span>
+      <div className="card no-print" style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>👤 Employé :</span>
             <select
               className="input-field"
               value={selectedEmployee}
               onChange={(e) => setSelectedEmployee(e.target.value)}
-              style={{ width: 'auto', padding: '6px 12px' }}
+              style={{ width: 'auto', padding: '3px 8px', fontSize: '11px' }}
             >
               <option value="all">Tous les collaborateurs</option>
               {users.map((u) => <option key={u.id} value={u.username}>{u.username}</option>)}
             </select>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>🏢 Établissement :</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>🏢 Établissement :</span>
             <select
               className="input-field"
               value={selectedEstablishment}
               onChange={(e) => setSelectedEstablishment(e.target.value as any)}
-              style={{ width: 'auto', padding: '6px 12px' }}
+              style={{ width: 'auto', padding: '3px 8px', fontSize: '11px' }}
             >
               <option value="all">Tous</option>
               <option value="space_fun_games">🚀 Space Fun Games</option>
@@ -127,13 +127,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
             </select>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>🏷️ Type client :</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>🏷️ Type client :</span>
             <select
               className="input-field"
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              style={{ width: 'auto', padding: '6px 12px' }}
+              style={{ width: 'auto', padding: '3px 8px', fontSize: '11px' }}
             >
               <option value="all">Tous les types</option>
               {contactTypes.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -141,61 +141,61 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handleExportExcel} className="btn btn-secondary btn-sm" title="Exporter le rapport en tableau Excel .xlsx">
-            <Download size={16} />
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button onClick={handleExportExcel} className="btn btn-secondary btn-sm" style={{ padding: '3px 8px', fontSize: '11px' }} title="Exporter le rapport en tableau Excel .xlsx">
+            <Download size={13} />
             Exporter Excel (.xlsx)
           </button>
-          <button onClick={handlePrint} className="btn btn-primary btn-sm" title="Imprimer ou enregistrer en PDF">
-            <Printer size={16} />
+          <button onClick={handlePrint} className="btn btn-primary btn-sm" style={{ padding: '3px 8px', fontSize: '11px' }} title="Imprimer ou enregistrer en PDF">
+            <Printer size={13} />
             Imprimer le rapport
           </button>
         </div>
       </div>
 
       {/* Printable Report Header */}
-      <div className="card" style={{ padding: '28px' }}>
-        <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '16px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="card" style={{ padding: '14px' }}>
+        <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)' }}>
               Rapport d'Activité CRM — Space Fun Games & Share & Fun
             </h2>
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginTop: '4px' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
               Filtres actifs : Employé ({selectedEmployee === 'all' ? 'Tous' : selectedEmployee}) • Établissement ({selectedEstablishment === 'all' ? 'Tous' : selectedEstablishment === 'space_fun_games' ? 'Space Fun Games' : selectedEstablishment === 'share_and_fun' ? 'Share & Fun' : 'Les deux'}) • Généré le {new Date().toLocaleDateString('fr-FR')} à {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
         </div>
 
         {/* Top 4 KPI Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '18px', marginBottom: '28px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '14px' }}>
           
-          <div style={{ backgroundColor: 'var(--surface-warm)', padding: '18px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', backgroundColor: '#EDE8F5', color: '#4A306D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Users size={24} />
+          <div style={{ backgroundColor: 'var(--surface-warm)', padding: '10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '34px', height: '34px', borderRadius: 'var(--radius-sm)', backgroundColor: '#EDE8F5', color: '#4A306D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Users size={18} />
             </div>
             <div>
-              <div style={{ fontSize: '26px', fontWeight: 700, color: 'var(--text-main)' }}>{filteredContacts.length}</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Contacts suivis</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-main)' }}>{filteredContacts.length}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Contacts suivis</div>
             </div>
           </div>
 
-          <div style={{ backgroundColor: 'var(--surface-warm)', padding: '18px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', backgroundColor: '#E8F8F0', color: '#1C7D4A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Phone size={24} />
+          <div style={{ backgroundColor: 'var(--surface-warm)', padding: '10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '34px', height: '34px', borderRadius: 'var(--radius-sm)', backgroundColor: '#E8F8F0', color: '#1C7D4A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Phone size={18} />
             </div>
             <div>
-              <div style={{ fontSize: '26px', fontWeight: 700, color: '#1C7D4A' }}>{totalCalls}</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Appels effectués</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#1C7D4A' }}>{totalCalls}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Appels effectués</div>
             </div>
           </div>
 
-          <div style={{ backgroundColor: 'var(--surface-warm)', padding: '18px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', backgroundColor: '#E8F4F8', color: '#1E6B82', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Mail size={24} />
+          <div style={{ backgroundColor: 'var(--surface-warm)', padding: '10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '34px', height: '34px', borderRadius: 'var(--radius-sm)', backgroundColor: '#E8F4F8', color: '#1E6B82', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Mail size={18} />
             </div>
             <div>
-              <div style={{ fontSize: '26px', fontWeight: 700, color: '#1E6B82' }}>{totalMails}</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>E-mails envoyés</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#1E6B82' }}>{totalMails}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>E-mails envoyés</div>
             </div>
           </div>
 
@@ -212,18 +212,18 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
         </div>
 
         {/* 2 Grids: Activité par Collaborateur & Répartition par Établissement/Statut */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginBottom: '28px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '14px', marginBottom: '18px' }}>
           
           {/* Tableau Collaborateurs */}
-          <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '18px' }}>
-            <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '14px' }}>
+          <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '12px' }}>
+            <h4 style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '10px' }}>
               📈 Bilan d'activité par collaborateur
             </h4>
             
             {Object.keys(employeeActivityMap).length === 0 ? (
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Aucune activité enregistrée sur cette sélection.</p>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Aucune activité enregistrée sur cette sélection.</p>
             ) : (
-              <table style={{ width: '100%', fontSize: '14px' }}>
+              <table style={{ width: '100%', fontSize: '11.5px' }}>
                 <thead>
                   <tr>
                     <th>Employé</th>
@@ -247,29 +247,29 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
           </div>
 
           {/* Tableau Répartitions */}
-          <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '18px' }}>
-            <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '14px' }}>
+          <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '12px' }}>
+            <h4 style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '10px' }}>
               🏢 Répartition par Établissement & Statuts
             </h4>
 
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-              <div style={{ flex: 1, backgroundColor: '#EDE8F5', padding: '10px', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: '#4A306D' }}>{spaceCount}</div>
-                <div style={{ fontSize: '12px', color: '#4A306D' }}>🚀 Space Fun</div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <div style={{ flex: 1, backgroundColor: '#EDE8F5', padding: '6px', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#4A306D' }}>{spaceCount}</div>
+                <div style={{ fontSize: '10.5px', color: '#4A306D' }}>🚀 Space Fun</div>
               </div>
-              <div style={{ flex: 1, backgroundColor: '#FFF2E5', padding: '10px', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: '#9C5414' }}>{shareCount}</div>
-                <div style={{ fontSize: '12px', color: '#9C5414' }}>🎲 Share & Fun</div>
+              <div style={{ flex: 1, backgroundColor: '#FFF2E5', padding: '6px', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#9C5414' }}>{shareCount}</div>
+                <div style={{ fontSize: '10.5px', color: '#9C5414' }}>🎲 Share & Fun</div>
               </div>
-              <div style={{ flex: 1, backgroundColor: '#E8F5E9', padding: '10px', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: '#2E6B34' }}>{bothCount}</div>
-                <div style={{ fontSize: '12px', color: '#2E6B34' }}>🌟 Les deux</div>
+              <div style={{ flex: 1, backgroundColor: '#E8F5E9', padding: '6px', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#2E6B34' }}>{bothCount}</div>
+                <div style={{ fontSize: '10.5px', color: '#2E6B34' }}>🌟 Les deux</div>
               </div>
             </div>
 
-            <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ fontSize: '11.5px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {Object.entries(statusCounts).map(([status, count]) => (
-                <div key={status} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F0ECE4', paddingBottom: '4px' }}>
+                <div key={status} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F0ECE4', paddingBottom: '3px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>{status}</span>
                   <span style={{ fontWeight: 600 }}>{count} client{count > 1 ? 's' : ''}</span>
                 </div>
@@ -281,12 +281,12 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
 
         {/* Journal d'activité récent (Tableau détaillé pour impression) */}
         <div>
-          <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '14px' }}>
+          <h4 style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '10px' }}>
             📋 Journal détaillé des communications récentes (Appels, Mails & Notes)
           </h4>
 
           {allLogs.length === 0 ? (
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Aucune action récente dans cette sélection.</p>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Aucune action récente dans cette sélection.</p>
           ) : (
             <div className="responsive-table-container">
               <table>
@@ -302,28 +302,29 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
                 <tbody>
                   {allLogs.slice(0, 40).map(({ log, contact }) => (
                     <tr key={log.id}>
-                      <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>
+                      <td style={{ whiteSpace: 'nowrap', fontSize: '11px' }}>
                         {new Date(log.timestamp).toLocaleDateString('fr-FR')} {new Date(log.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                       </td>
-                      <td style={{ fontWeight: 600, color: 'var(--primary)' }}>
+                      <td style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '11px' }}>
                         {log.employeeName}
                       </td>
-                      <td>
+                      <td style={{ fontSize: '11px' }}>
                         <strong>{contact.lastName} {contact.firstName}</strong>
-                        {contact.company && <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '12px' }}>{contact.company}</span>}
+                        {contact.company && <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>{contact.company}</span>}
                       </td>
                       <td>
                         <span className="badge" style={{ 
                           backgroundColor: log.actionType === 'call' ? '#E8F8F0' : log.actionType === 'mail' ? '#EDE8F5' : '#F0ECE4',
-                          color: log.actionType === 'call' ? '#1C7D4A' : log.actionType === 'mail' ? '#4A306D' : 'var(--text-main)'
+                          color: log.actionType === 'call' ? '#1C7D4A' : log.actionType === 'mail' ? '#4A306D' : 'var(--text-main)',
+                          fontSize: '10px'
                         }}>
                           {log.actionType === 'call' ? '📞 Appel' : log.actionType === 'mail' ? '✉️ E-mail' : log.actionType === 'status_change' ? '🔄 Statut' : '📝 Note'}
                         </span>
                       </td>
-                      <td>
+                      <td style={{ fontSize: '11px' }}>
                         <div>{log.summary}</div>
                         {log.newStatus && (
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '1px' }}>
                             ➔ Statut : <strong>{log.newStatus}</strong>
                           </div>
                         )}

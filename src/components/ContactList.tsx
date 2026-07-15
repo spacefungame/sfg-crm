@@ -27,7 +27,7 @@ export const ContactList: React.FC<ContactListProps> = ({
     const found = allTags.find(t => t.name.toLowerCase() === tagName.toLowerCase());
     const bg = found?.color || '#8B5A2B';
     return (
-      <span key={tagName} style={{ backgroundColor: bg, color: '#FFF', fontSize: '11px', fontWeight: 600, padding: '2px 7px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+      <span key={tagName} style={{ backgroundColor: bg, color: '#FFF', fontSize: '10px', fontWeight: 600, padding: '1px 5px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '2px', whiteSpace: 'nowrap' }}>
         🏷️ {tagName}
       </span>
     );
@@ -88,21 +88,21 @@ export const ContactList: React.FC<ContactListProps> = ({
     const today = new Date().toISOString().split('T')[0];
     if (deadline < today) {
       return (
-        <span className="badge" style={{ backgroundColor: '#FDE8E8', color: '#C81E1E', fontSize: '11px' }} title="Dead line dépassée !">
-          <AlertTriangle size={12} />
+        <span className="badge" style={{ backgroundColor: '#FDE8E8', color: '#C81E1E', fontSize: '10px', padding: '1px 5px' }} title="Dead line dépassée !">
+          <AlertTriangle size={11} />
           En retard ({deadline.split('-').reverse().join('/')})
         </span>
       );
     } else if (deadline === today) {
       return (
-        <span className="badge" style={{ backgroundColor: '#FEF08A', color: '#854D0E', fontSize: '11px' }} title="Dead line pour aujourd'hui">
+        <span className="badge" style={{ backgroundColor: '#FEF08A', color: '#854D0E', fontSize: '10px', padding: '1px 5px' }} title="Dead line pour aujourd'hui">
           🔥 Aujourd'hui
         </span>
       );
     } else {
       return (
-        <span className="badge" style={{ backgroundColor: '#E2E8F0', color: '#475569', fontSize: '11px' }}>
-          <Clock size={12} />
+        <span className="badge" style={{ backgroundColor: '#E2E8F0', color: '#475569', fontSize: '10px', padding: '1px 5px' }}>
+          <Clock size={11} />
           {deadline.split('-').reverse().join('/')}
         </span>
       );
@@ -147,48 +147,48 @@ export const ContactList: React.FC<ContactListProps> = ({
   return (
     <div>
       {/* View Toggle Bar */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--surface-warm)', padding: '4px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '6px' }}>
+        <div style={{ display: 'flex', gap: '2px', backgroundColor: 'var(--surface-warm)', padding: '2px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
           <button
             onClick={() => setViewMode('table')}
             style={{
-              padding: '6px 12px',
+              padding: '3px 8px',
               borderRadius: 'var(--radius-sm)',
               border: 'none',
               backgroundColor: viewMode === 'table' ? 'var(--surface)' : 'transparent',
               color: viewMode === 'table' ? 'var(--primary)' : 'var(--text-muted)',
               fontWeight: viewMode === 'table' ? 600 : 500,
-              fontSize: '13px',
+              fontSize: '11px',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '4px',
               cursor: 'pointer',
               boxShadow: viewMode === 'table' ? 'var(--shadow-sm)' : 'none'
             }}
             title="Vue Tableau (optimal sur PC)"
           >
-            <List size={15} />
+            <List size={13} />
             Tableau rapide
           </button>
           <button
             onClick={() => setViewMode('cards')}
             style={{
-              padding: '6px 12px',
+              padding: '3px 8px',
               borderRadius: 'var(--radius-sm)',
               border: 'none',
               backgroundColor: viewMode === 'cards' ? 'var(--surface)' : 'transparent',
               color: viewMode === 'cards' ? 'var(--primary)' : 'var(--text-muted)',
               fontWeight: viewMode === 'cards' ? 600 : 500,
-              fontSize: '13px',
+              fontSize: '11px',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '4px',
               cursor: 'pointer',
               boxShadow: viewMode === 'cards' ? 'var(--shadow-sm)' : 'none'
             }}
             title="Vue Cartes (tactile et smartphone)"
           >
-            <LayoutGrid size={15} />
+            <LayoutGrid size={13} />
             Cartes tactiles
           </button>
         </div>
@@ -218,12 +218,12 @@ export const ContactList: React.FC<ContactListProps> = ({
                 >
                   {/* Nom + Société */}
                   <td>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '15px' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '12.5px' }}>
                       {c.lastName} {c.firstName}
                     </div>
                     {c.company && (
-                      <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                        <Building2 size={13} />
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '1px' }}>
+                        <Building2 size={11} />
                         {c.company}
                       </div>
                     )}
@@ -231,11 +231,11 @@ export const ContactList: React.FC<ContactListProps> = ({
 
                   {/* Établissement & Type + Tags */}
                   <td>
-                    <div style={{ marginBottom: '6px' }}>
+                    <div style={{ marginBottom: '4px' }}>
                       {getEstablishmentBadge(c.establishment)}
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '3px 8px', borderRadius: '4px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10.5px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '1px 5px', borderRadius: '3px' }}>
                         {c.type}
                       </span>
                       {c.tags && c.tags.map(t => getTagBadge(t))}
@@ -244,29 +244,29 @@ export const ContactList: React.FC<ContactListProps> = ({
 
                   {/* Coordonnées + boutons action rapide */}
                   <td onClick={(e) => e.stopPropagation()}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                       {c.phone && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <button
                             onClick={(e) => onQuickCall(c, e)}
                             className="btn btn-sm"
-                            style={{ padding: '3px 8px', fontSize: '12px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', border: 'none' }}
+                            style={{ padding: '2px 5px', fontSize: '11px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', border: 'none' }}
                             title="Appeler sur téléphone ou mobile"
                           >
-                            <Phone size={13} />
+                            <Phone size={11} />
                             {c.phone}
                           </button>
                         </div>
                       )}
                       {c.email && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <button
                             onClick={(e) => onQuickMail(c, e)}
                             className="btn btn-sm"
-                            style={{ padding: '3px 8px', fontSize: '12px', backgroundColor: '#EDE8F5', color: '#4A306D', border: 'none' }}
+                            style={{ padding: '2px 5px', fontSize: '11px', backgroundColor: '#EDE8F5', color: '#4A306D', border: 'none' }}
                             title="Envoyer un mail (avec templates)"
                           >
-                            <Mail size={13} />
+                            <Mail size={11} />
                             {c.email}
                           </button>
                         </div>
@@ -281,11 +281,11 @@ export const ContactList: React.FC<ContactListProps> = ({
                       onChange={(e) => handleQuickStatusChange(c, e.target.value, e)}
                       className="input-field"
                       style={{
-                        padding: '6px 10px',
-                        fontSize: '13px',
+                        padding: '2px 5px',
+                        fontSize: '11px',
                         fontWeight: 600,
                         width: 'auto',
-                        minWidth: '170px',
+                        minWidth: '135px',
                         ...getStatusBadgeStyle(c.status)
                       }}
                     >
@@ -295,14 +295,14 @@ export const ContactList: React.FC<ContactListProps> = ({
 
                   {/* Dead line d'action */}
                   <td onClick={(e) => e.stopPropagation()}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                       {getUrgencyBadge(c.deadline)}
                       <input
                         type="date"
                         className="input-field"
                         value={c.deadline || ''}
                         onChange={(e) => handleQuickDeadlineChange(c, e.target.value, e)}
-                        style={{ padding: '4px 8px', fontSize: '12px', width: '130px' }}
+                        style={{ padding: '2px 4px', fontSize: '11px', width: '110px' }}
                       />
                     </div>
                   </td>
@@ -311,22 +311,22 @@ export const ContactList: React.FC<ContactListProps> = ({
                   <td>
                     {c.logs && c.logs.length > 0 ? (
                       <div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-main)', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-main)', maxWidth: '170px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           <strong>{c.logs[0].employeeName}</strong> : {c.logs[0].summary}
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>
+                        <div style={{ fontSize: '9.5px', color: 'var(--text-light)' }}>
                           {new Date(c.logs[0].timestamp).toLocaleDateString('fr-FR')} {new Date(c.logs[0].timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
                     ) : (
-                      <span style={{ fontSize: '12px', color: 'var(--text-light)' }}>Aucune action</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-light)' }}>Aucune action</span>
                     )}
                   </td>
 
                   {/* Bouton flèche */}
                   <td>
-                    <button className="btn btn-secondary btn-icon" style={{ padding: '6px', border: 'none' }}>
-                      <ChevronRight size={18} />
+                    <button className="btn btn-secondary btn-icon" style={{ padding: '3px', border: 'none' }}>
+                      <ChevronRight size={14} />
                     </button>
                   </td>
                 </tr>
@@ -336,50 +336,50 @@ export const ContactList: React.FC<ContactListProps> = ({
         </div>
       ) : (
         /* Vue Cartes Tactiles pour Smartphone & Mobile */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px' }}>
           {contacts.map((c) => (
             <div
               key={c.id}
               onClick={() => onSelectContact(c)}
               className="card card-hover"
-              style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer' }}
+              style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px', cursor: 'pointer' }}
             >
               {/* Top Header */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '6px' }}>
                 <div>
-                  <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)' }}>
+                  <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
                     {c.lastName} {c.firstName}
                   </h4>
                   {c.company && (
-                    <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                      <Building2 size={13} />
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '1px' }}>
+                      <Building2 size={11} />
                       {c.company}
                     </div>
                   )}
                 </div>
-                <ChevronRight size={20} style={{ color: 'var(--text-light)' }} />
+                <ChevronRight size={16} style={{ color: 'var(--text-light)' }} />
               </div>
 
               {/* Établissement & Type + Tags */}
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {getEstablishmentBadge(c.establishment)}
-                <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '3px 8px', borderRadius: '4px' }}>
+                <span style={{ fontSize: '10.5px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '1px 5px', borderRadius: '3px' }}>
                   {c.type}
                 </span>
                 {c.tags && c.tags.map(t => getTagBadge(t))}
               </div>
 
               {/* Statut & Deadline (Selects en 1 clic) */}
-              <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'var(--surface-warm)', padding: '10px', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Statut :</span>
+              <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: '4px', backgroundColor: 'var(--surface-warm)', padding: '6px', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Statut :</span>
                   <select
                     value={c.status}
                     onChange={(e) => handleQuickStatusChange(c, e.target.value, e)}
                     className="input-field"
                     style={{
-                      padding: '5px 8px',
-                      fontSize: '12px',
+                      padding: '2px 5px',
+                      fontSize: '11px',
                       fontWeight: 600,
                       width: 'auto',
                       flex: 1,
@@ -390,34 +390,34 @@ export const ContactList: React.FC<ContactListProps> = ({
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Dead line :</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Dead line :</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
                     {getUrgencyBadge(c.deadline)}
                     <input
                       type="date"
                       className="input-field"
                       value={c.deadline || ''}
                       onChange={(e) => handleQuickDeadlineChange(c, e.target.value, e)}
-                      style={{ padding: '3px 6px', fontSize: '12px' }}
+                      style={{ padding: '2px 4px', fontSize: '11px' }}
                     />
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons (Appeler & Envoyer Mail) */}
-              <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+              <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
                 {c.phone ? (
                   <button
                     onClick={(e) => onQuickCall(c, e)}
                     className="btn btn-primary btn-sm"
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '3px 6px', fontSize: '11px' }}
                   >
-                    <Phone size={14} />
+                    <Phone size={12} />
                     Appeler
                   </button>
                 ) : (
-                  <button disabled className="btn btn-secondary btn-sm" style={{ flex: 1, opacity: 0.5 }}>
+                  <button disabled className="btn btn-secondary btn-sm" style={{ flex: 1, opacity: 0.5, padding: '3px 6px', fontSize: '11px' }}>
                     Sans n° tel
                   </button>
                 )}
@@ -426,13 +426,13 @@ export const ContactList: React.FC<ContactListProps> = ({
                   <button
                     onClick={(e) => onQuickMail(c, e)}
                     className="btn btn-secondary btn-sm"
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#EDE8F5', color: '#4A306D', border: 'none' }}
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', backgroundColor: '#EDE8F5', color: '#4A306D', border: 'none', padding: '3px 6px', fontSize: '11px' }}
                   >
-                    <Mail size={14} />
+                    <Mail size={12} />
                     E-mail
                   </button>
                 ) : (
-                  <button disabled className="btn btn-secondary btn-sm" style={{ flex: 1, opacity: 0.5 }}>
+                  <button disabled className="btn btn-secondary btn-sm" style={{ flex: 1, opacity: 0.5, padding: '3px 6px', fontSize: '11px' }}>
                     Sans mail
                   </button>
                 )}
@@ -440,7 +440,7 @@ export const ContactList: React.FC<ContactListProps> = ({
 
               {/* Log preview */}
               {c.logs && c.logs.length > 0 && (
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid #F0ECE4', paddingTop: '8px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid #F0ECE4', paddingTop: '4px' }}>
                   <strong>{c.logs[0].employeeName}</strong> : {c.logs[0].summary}
                 </div>
               )}

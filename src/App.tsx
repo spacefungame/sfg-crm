@@ -175,7 +175,7 @@ const AppContent: React.FC = () => {
       />
 
       {/* Main Container */}
-      <main style={{ flex: 1, maxWidth: '1440px', width: '100%', margin: '0 auto', padding: '24px 20px' }}>
+      <main style={{ flex: 1, maxWidth: '1680px', width: '100%', margin: '0 auto', padding: '10px 14px' }}>
         
         {/* Tab 1: Contacts & Prospects */}
         {currentTab === 'contacts' && (
@@ -221,7 +221,7 @@ const AppContent: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="no-print" style={{ backgroundColor: 'var(--surface)', borderTop: '1px solid var(--border)', padding: '16px 20px', textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)' }}>
+      <footer className="no-print" style={{ backgroundColor: 'var(--surface)', borderTop: '1px solid var(--border)', padding: '6px 14px', textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
         <strong>CRM Space Fun Games & Share & Fun</strong>
       </footer>
 

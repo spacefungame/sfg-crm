@@ -168,7 +168,7 @@ export class StorageService {
 
   // --- Contact Types ---
   public getContactTypes(): string[] {
-    return this.data.contactTypes || [];
+    return [...(this.data.contactTypes || [])];
   }
 
   public addContactType(type: string): void {
@@ -186,7 +186,7 @@ export class StorageService {
 
   // --- Statuses ---
   public getStatuses(): string[] {
-    return this.data.statuses || [];
+    return [...(this.data.statuses || [])];
   }
 
   public addStatus(status: string): void {
@@ -208,12 +208,12 @@ export class StorageService {
       this.data.roles = [...(DEFAULT_CRM_DATA.roles || ['directrice', 'admin', 'user'])];
       this.saveToLocalStorage();
     }
-    return this.data.roles;
+    return [...this.data.roles];
   }
 
   public addRole(roleName: string): void {
     const trimmed = roleName.trim();
-    if (trimmed && !this.getRoles().includes(trimmed)) {
+    if (trimmed && !this.data.roles?.includes(trimmed)) {
       this.data.roles!.push(trimmed);
       this.saveToLocalStorage();
     }
@@ -222,8 +222,7 @@ export class StorageService {
   public updateRole(oldRole: string, newRole: string): void {
     const trimmed = newRole.trim();
     if (!trimmed || oldRole === trimmed) return;
-    const roles = this.getRoles();
-    const index = roles.indexOf(oldRole);
+    const index = this.data.roles!.indexOf(oldRole);
     if (index >= 0) {
       this.data.roles![index] = trimmed;
     } else {
@@ -240,8 +239,7 @@ export class StorageService {
 
   public deleteRole(roleName: string): void {
     if (roleName === 'directrice') return; // protection du rôle principal
-    const roles = this.getRoles();
-    this.data.roles = roles.filter(r => r !== roleName);
+    this.data.roles = (this.data.roles || []).filter(r => r !== roleName);
     // Switch users with deleted role to 'user'
     this.data.users.forEach(u => {
       if (u.role === roleName) {
@@ -253,7 +251,7 @@ export class StorageService {
 
   // --- Tags ---
   public getTags(): TagDefinition[] {
-    return this.data.tags || [];
+    return [...(this.data.tags || [])];
   }
 
   public saveTag(tag: TagDefinition): void {
@@ -283,7 +281,7 @@ export class StorageService {
         this.saveToLocalStorage();
       }
     }
-    return this.data.users || [];
+    return [...(this.data.users || [])];
   }
 
   public addUser(username: string, role: string = 'user', email?: string, password?: string, isInvited?: boolean): User {

@@ -108,34 +108,35 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
   });
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: editingTemplate ? '1fr 1fr' : '1fr', gap: '24px', alignItems: 'start' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: editingTemplate ? '1fr 1fr' : '1fr', gap: '14px', alignItems: 'start' }}>
       
       {/* Liste des templates et gestionnaire */}
-      <div className="card" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="card" style={{ padding: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Mail size={20} style={{ color: 'var(--primary)' }} />
+            <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Mail size={16} style={{ color: 'var(--primary)' }} />
               Modèles d'e-mails & Raccourcis
             </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
               Cliquez sur un titre pour dérouler le contenu. Organisez vos messages types par catégorie et raccourci rapide.
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
             <button
               onClick={() => setShowCategoryManager(!showCategoryManager)}
               className="btn btn-secondary btn-sm"
+              style={{ padding: '3px 8px', fontSize: '11px' }}
               title="Gérer les catégories"
             >
-              <Settings size={15} />
+              <Settings size={13} />
               {showCategoryManager ? 'Fermer catégories' : 'Gérer catégories'}
             </button>
 
             {!editingTemplate && (
-              <button onClick={handleCreateNew} className="btn btn-primary btn-sm">
-                <Plus size={16} />
+              <button onClick={handleCreateNew} className="btn btn-primary btn-sm" style={{ padding: '3px 8px', fontSize: '11px' }}>
+                <Plus size={13} />
                 + Nouveau modèle
               </button>
             )}
@@ -216,13 +217,13 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
         )}
 
         {/* Filtres par catégorie */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '18px', borderBottom: '1px solid var(--border)', paddingBottom: '14px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
           <button
             onClick={() => setSelectedCategory('all')}
             style={{
-              padding: '6px 14px',
+              padding: '3px 10px',
               borderRadius: '20px',
-              fontSize: '13px',
+              fontSize: '11px',
               fontWeight: 600,
               cursor: 'pointer',
               border: selectedCategory === 'all' ? '2px solid var(--primary)' : '1px solid var(--border)',
@@ -242,9 +243,9 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 style={{
-                  padding: '6px 14px',
+                  padding: '3px 10px',
                   borderRadius: '20px',
-                  fontSize: '13px',
+                  fontSize: '11px',
                   fontWeight: 600,
                   cursor: 'pointer',
                   border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
@@ -253,11 +254,11 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
                   transition: 'all 0.15s ease',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px'
+                  gap: '4px'
                 }}
               >
                 <span>{cat}</span>
-                <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '10px', backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : '#EAE4D8' }}>
+                <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '10px', backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : '#EAE4D8' }}>
                   {count}
                 </span>
               </button>
@@ -267,16 +268,16 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
 
         {/* Accordéon de la liste des templates */}
         {filteredTemplates.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '36px 20px', color: 'var(--text-muted)', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)' }}>
+          <div style={{ textAlign: 'center', padding: '24px 14px', color: 'var(--text-muted)', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)', fontSize: '12px' }}>
             Aucun modèle d'e-mail dans cette catégorie.
-            <div style={{ marginTop: '10px' }}>
-              <button onClick={handleCreateNew} className="btn btn-secondary btn-sm">
+            <div style={{ marginTop: '8px' }}>
+              <button onClick={handleCreateNew} className="btn btn-secondary btn-sm" style={{ padding: '3px 8px', fontSize: '11px' }}>
                 + Créer un modèle ici
               </button>
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {filteredTemplates.map((tpl) => {
               const isExpanded = expandedTemplateId === tpl.id;
               const isSelectedEditing = editingTemplate?.id === tpl.id;
@@ -300,58 +301,58 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '14px 16px',
+                      padding: '8px 12px',
                       cursor: 'pointer',
                       backgroundColor: isExpanded ? 'var(--primary-light)' : '#FFFFFF',
                       userSelect: 'none'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 700, padding: '3px 9px', borderRadius: '12px', backgroundColor: '#EFEBF6', color: '#533B82' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 7px', borderRadius: '10px', backgroundColor: '#EFEBF6', color: '#533B82' }}>
                         {tpl.category || 'Général'}
                       </span>
 
-                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
+                      <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
                         {tpl.title}
                       </h4>
 
                       {tpl.shortcut && (
-                        <span style={{ fontSize: '12px', fontWeight: 600, padding: '2px 8px', borderRadius: '6px', backgroundColor: '#FFF4E5', color: '#B76E00', border: '1px solid #FFE2B7', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Zap size={12} /> {tpl.shortcut}
+                        <span style={{ fontSize: '10.5px', fontWeight: 600, padding: '1px 6px', borderRadius: '4px', backgroundColor: '#FFF4E5', color: '#B76E00', border: '1px solid #FFE2B7', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          <Zap size={11} /> {tpl.shortcut}
                         </span>
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         {isExpanded ? 'Réduire' : 'Dérouler'}
                       </span>
-                      <ChevronDown size={18} style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease', color: 'var(--text-muted)' }} />
+                      <ChevronDown size={15} style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease', color: 'var(--text-muted)' }} />
                     </div>
                   </div>
 
                   {/* Contenu déroulé (Sujet, Corps, Actions) */}
                   {isExpanded && (
-                    <div className="animate-fade-in" style={{ padding: '16px', borderTop: '1px solid var(--border)', backgroundColor: '#FAF8F5' }}>
-                      <div style={{ marginBottom: '12px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>
+                    <div className="animate-fade-in" style={{ padding: '10px 12px', borderTop: '1px solid var(--border)', backgroundColor: '#FAF8F5' }}>
+                      <div style={{ marginBottom: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
                           SUJET DE L'E-MAIL :
                         </span>
-                        <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', backgroundColor: '#FFFFFF', padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid #ECE7DE' }}>
+                        <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', backgroundColor: '#FFFFFF', padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid #ECE7DE' }}>
                           {tpl.subject}
                         </div>
                       </div>
 
-                      <div style={{ marginBottom: '16px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>
+                      <div style={{ marginBottom: '10px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
                           CORPS DE DU MESSAGE :
                         </span>
-                        <div style={{ padding: '12px', backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid #ECE7DE', fontSize: '13px', color: 'var(--text-main)', whiteSpace: 'pre-wrap', maxHeight: '220px', overflowY: 'auto', lineHeight: 1.5 }}>
+                        <div style={{ padding: '8px 10px', backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid #ECE7DE', fontSize: '12px', color: 'var(--text-main)', whiteSpace: 'pre-wrap', maxHeight: '160px', overflowY: 'auto', lineHeight: 1.4 }}>
                           {tpl.body}
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -359,8 +360,9 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
                             setIsCreating(false);
                           }}
                           className="btn btn-secondary btn-sm"
+                          style={{ padding: '3px 8px', fontSize: '11px' }}
                         >
-                          <Edit size={14} />
+                          <Edit size={13} />
                           Modifier ce modèle
                         </button>
                         <button
@@ -369,9 +371,9 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
                             handleDelete(tpl.id, tpl.title);
                           }}
                           className="btn btn-secondary btn-sm"
-                          style={{ color: '#C81E1E' }}
+                          style={{ color: '#C81E1E', padding: '3px 8px', fontSize: '11px' }}
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={13} />
                           Supprimer
                         </button>
                       </div>
