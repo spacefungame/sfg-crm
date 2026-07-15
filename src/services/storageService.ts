@@ -291,7 +291,15 @@ export class StorageService {
   public saveTag(tag: TagDefinition): void {
     const index = this.data.tags.findIndex(t => t.id === tag.id);
     if (index >= 0) {
+      const oldName = this.data.tags[index].name;
       this.data.tags[index] = tag;
+      if (oldName && oldName !== tag.name) {
+        this.data.contacts.forEach(c => {
+          if (c.tags && c.tags.includes(oldName)) {
+            c.tags = c.tags.map(name => name === oldName ? tag.name : name);
+          }
+        });
+      }
     } else {
       this.data.tags.push(tag);
     }
@@ -299,8 +307,16 @@ export class StorageService {
   }
 
   public deleteTag(id: string): void {
-    this.data.tags = this.data.tags.filter(t => t.id !== id);
-    this.saveToLocalStorage();
+    const tagToDelete = this.data.tags.find(t => t.id === id);
+    if (tagToDelete) {
+      this.data.tags = this.data.tags.filter(t => t.id !== id);
+      this.data.contacts.forEach(c => {
+        if (c.tags && c.tags.includes(tagToDelete.name)) {
+          c.tags = c.tags.filter(name => name !== tagToDelete.name);
+        }
+      });
+      this.saveToLocalStorage();
+    }
   }
 
   // --- Users ---

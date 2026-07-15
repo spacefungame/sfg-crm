@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Contact, ContactStatus, Establishment, EmailTemplate } from '../types/crm';
+import type { Contact, ContactStatus, Establishment, EmailTemplate, TagDefinition } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { Phone, Mail, Building2, Clock, X, Save, Plus, Trash2, Rocket, Dices, Sparkles, Send, MessageSquare, Maximize2, Minimize2 } from 'lucide-react';
@@ -27,10 +27,16 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
   const [showTemplateSelector, setShowTemplateSelector] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [tagsList, setTagsList] = useState<TagDefinition[]>(storageService.getTags());
+  const [showTagManager, setShowTagManager] = useState<boolean>(false);
+  const [newTagName, setNewTagName] = useState<string>('');
+  const [newTagColor, setNewTagColor] = useState<string>('#8D5B4C');
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [editingTagName, setEditingTagName] = useState<string>('');
+  const [editingTagColor, setEditingTagColor] = useState<string>('#8D5B4C');
 
   const contactTypes = storageService.getContactTypes();
   const emailTemplates = storageService.getEmailTemplates();
-  const allTags = storageService.getTags();
 
   const statuses: ContactStatus[] = [
     'Nouveau : à contacter',
@@ -58,11 +64,83 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
     onUpdate();
   };
 
+  const handleCreateAndAssignTag = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTagName.trim() || !formData) return;
+    
+    const tagName = newTagName.trim();
+    let tagObj = tagsList.find(t => t.name.toLowerCase() === tagName.toLowerCase());
+    if (!tagObj) {
+      tagObj = {
+        id: 'tag-' + Date.now(),
+        name: tagName,
+        color: newTagColor
+      };
+      storageService.saveTag(tagObj);
+    }
+
+    const currentTags = formData.tags || [];
+    if (!currentTags.includes(tagObj.name)) {
+      const updated = { ...formData, tags: [...currentTags, tagObj.name] };
+      setFormData(updated);
+      storageService.saveContact(updated);
+      storageService.addActivityLog(formData.id, {
+        employeeName: currentUser ? currentUser.username : 'Collaborateur',
+        actionType: 'status_change',
+        summary: `Tag créé et attribué : ${tagObj.name}`
+      });
+    }
+
+    setTagsList(storageService.getTags());
+    setNewTagName('');
+    onUpdate();
+  };
+
+  const handleUpdateTag = (tagId: string, oldName: string, e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTagName.trim() || !formData) return;
+
+    const newName = editingTagName.trim();
+    storageService.saveTag({
+      id: tagId,
+      name: newName,
+      color: editingTagColor
+    });
+
+    if (formData.tags && formData.tags.includes(oldName)) {
+      setFormData({
+        ...formData,
+        tags: formData.tags.map(t => t === oldName ? newName : t)
+      });
+    }
+
+    setTagsList(storageService.getTags());
+    setEditingTagId(null);
+    onUpdate();
+  };
+
+  const handleDeleteTagModal = (tagId: string, tagName: string, e?: React.MouseEvent) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (window.confirm(`Confirmez-vous la suppression du tag "${tagName}" ? Il sera retiré de tous les contacts.`)) {
+      storageService.deleteTag(tagId);
+      if (formData && formData.tags && formData.tags.includes(tagName)) {
+        const updated = { ...formData, tags: formData.tags.filter(t => t !== tagName) };
+        setFormData(updated);
+        storageService.saveContact(updated);
+      }
+      setTagsList(storageService.getTags());
+      onUpdate();
+    }
+  };
+
   useEffect(() => {
     if (contact) {
       setFormData(JSON.parse(JSON.stringify(contact)));
       setIsEditing(false);
       setShowTemplateSelector(false);
+      setTagsList(storageService.getTags());
+      setShowTagManager(false);
+      setEditingTagId(null);
     }
   }, [contact]);
 
@@ -130,7 +208,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
   };
 
   const getTagBadge = (tagName: string) => {
-    const found = allTags.find(t => t.name.toLowerCase() === tagName.toLowerCase());
+    const found = tagsList.find(t => t.name.toLowerCase() === tagName.toLowerCase());
     const bg = found?.color || '#8B5A2B';
     return (
       <span key={tagName} style={{ backgroundColor: bg, color: '#FFF', fontSize: '10.5px', fontWeight: 600, padding: '2px 7px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
@@ -288,12 +366,24 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
             </div>
           </div>
 
-          <div style={{ backgroundColor: 'var(--surface)', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-            <div style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-              <span>🏷️ Tags attribués au contact (cliquez pour ajouter / retirer) :</span>
+          <div style={{ backgroundColor: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                <span>🏷️ Tags attribués au contact (cliquez pour ajouter / retirer) :</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTagManager(!showTagManager)}
+                className="btn btn-secondary btn-sm"
+                style={{ padding: '3px 8px', fontSize: '11px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-focus)', color: 'var(--primary)', fontWeight: 600 }}
+                title="Créer un nouveau tag ou modifier/supprimer des tags existants directement depuis la fiche"
+              >
+                <span>{showTagManager ? '✕ Fermer gestion' : '⚙️ Modifier / Créer des tags'}</span>
+              </button>
             </div>
+
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {allTags.map(tag => {
+              {tagsList.map(tag => {
                 const isSelected = (formData.tags || []).includes(tag.name);
                 return (
                   <button
@@ -320,6 +410,97 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
                 );
               })}
             </div>
+
+            {showTagManager && (
+              <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--surface-warm)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                {/* Formulaire de création rapide */}
+                <form onSubmit={handleCreateAndAssignTag} style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px dashed var(--border)' }}>
+                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Plus size={14} style={{ color: 'var(--primary)' }} /> Nouveau tag :
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Nom du tag (ex: VIP)..."
+                    className="input-field"
+                    value={newTagName}
+                    onChange={(e) => setNewTagName(e.target.value)}
+                    style={{ padding: '4px 8px', fontSize: '11.5px', height: 'auto', width: '150px' }}
+                  />
+                  <input
+                    type="color"
+                    value={newTagColor}
+                    onChange={(e) => setNewTagColor(e.target.value)}
+                    style={{ width: '30px', height: '26px', padding: '0', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                    title="Choisir la couleur"
+                  />
+                  <button type="submit" className="btn btn-primary btn-sm" style={{ padding: '4px 10px', fontSize: '11px' }}>
+                    Créer & Attribuer
+                  </button>
+                </form>
+
+                {/* Liste des tags existants pour modification / suppression */}
+                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  ⚙️ Modifier le nom, la couleur ou supprimer un tag :
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
+                  {tagsList.map(t => (
+                    <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', backgroundColor: 'var(--surface)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                      {editingTagId === t.id ? (
+                        <form onSubmit={(e) => handleUpdateTag(t.id, t.name, e)} style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+                          <input
+                            type="text"
+                            required
+                            className="input-field"
+                            value={editingTagName}
+                            onChange={(e) => setEditingTagName(e.target.value)}
+                            style={{ padding: '3px 6px', fontSize: '11px', height: 'auto', flex: 1 }}
+                          />
+                          <input
+                            type="color"
+                            value={editingTagColor}
+                            onChange={(e) => setEditingTagColor(e.target.value)}
+                            style={{ width: '26px', height: '22px', padding: '0', border: 'none', cursor: 'pointer', borderRadius: '3px' }}
+                          />
+                          <button type="submit" className="btn btn-primary btn-sm" style={{ padding: '3px 8px', fontSize: '11px' }} title="Enregistrer les modifications">
+                            <Save size={12} />
+                          </button>
+                          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditingTagId(null)} style={{ padding: '3px 8px', fontSize: '11px' }} title="Annuler">
+                            ✕
+                          </button>
+                        </form>
+                      ) : (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: t.color, display: 'inline-block' }} />
+                            <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{t.name}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button
+                              type="button"
+                              onClick={() => { setEditingTagId(t.id); setEditingTagName(t.name); setEditingTagColor(t.color || '#8D5B4C'); }}
+                              className="btn btn-secondary btn-sm"
+                              style={{ padding: '2px 8px', fontSize: '10.5px' }}
+                              title="Renommer / Changer couleur"
+                            >
+                              ✏️ Modifier
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteTagModal(t.id, t.name, e)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ padding: '2px 8px', fontSize: '10.5px', color: '#C81E1E', borderColor: '#F8B4B4', backgroundColor: '#FDE8E8' }}
+                              title="Supprimer ce tag du CRM"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {isEditing ? (
