@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import type { TagDefinition, User } from '../types/crm';
-import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown, X, KeyRound } from 'lucide-react';
+import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown, X, KeyRound, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 import { TemplatesManager } from './TemplatesManager';
 import { EmailProviderSelector } from './EmailProviderSelector';
 
@@ -20,6 +20,7 @@ export const SettingsView: React.FC = () => {
   // --- Statuses State ---
   const [statusesList, setStatusesList] = useState<string[]>(storageService.getStatuses());
   const [newStatusName, setNewStatusName] = useState<string>('');
+  const [draggedStatusIdx, setDraggedStatusIdx] = useState<number | null>(null);
 
   // --- Types State ---
   const [typesList, setTypesList] = useState<string[]>(storageService.getContactTypes());
@@ -118,6 +119,28 @@ export const SettingsView: React.FC = () => {
       storageService.deleteStatus(status);
       setStatusesList(storageService.getStatuses());
     }
+  };
+
+  const handleMoveStatusUp = (index: number, e?: React.MouseEvent) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (index <= 0) return;
+    const newList = [...statusesList];
+    const temp = newList[index - 1];
+    newList[index - 1] = newList[index];
+    newList[index] = temp;
+    storageService.reorderStatuses(newList);
+    setStatusesList(storageService.getStatuses());
+  };
+
+  const handleMoveStatusDown = (index: number, e?: React.MouseEvent) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (index >= statusesList.length - 1) return;
+    const newList = [...statusesList];
+    const temp = newList[index + 1];
+    newList[index + 1] = newList[index];
+    newList[index] = temp;
+    storageService.reorderStatuses(newList);
+    setStatusesList(storageService.getStatuses());
   };
 
   const handleAddType = (e: React.FormEvent) => {
@@ -476,29 +499,70 @@ export const SettingsView: React.FC = () => {
               {statusesList.map((st, idx) => (
                 <div
                   key={idx}
+                  draggable
+                  onDragStart={() => setDraggedStatusIdx(idx)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (draggedStatusIdx !== null && draggedStatusIdx !== idx) {
+                      const newList = [...statusesList];
+                      const [removed] = newList.splice(draggedStatusIdx, 1);
+                      newList.splice(idx, 0, removed);
+                      storageService.reorderStatuses(newList);
+                      setStatusesList(storageService.getStatuses());
+                    }
+                    setDraggedStatusIdx(null);
+                  }}
                   style={{
-                    padding: '8px 12px',
-                    backgroundColor: 'var(--surface-warm)',
+                    padding: '6px 10px',
+                    backgroundColor: draggedStatusIdx === idx ? 'var(--primary-light)' : 'var(--surface-warm)',
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--border)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    cursor: 'grab',
+                    transition: 'background-color 0.15s ease'
                   }}
                 >
                   <div style={{ fontWeight: 600, fontSize: '12px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span title="Glisser-déposer pour déplacer" style={{ display: 'flex', alignItems: 'center' }}>
+                      <GripVertical size={14} style={{ color: 'var(--text-muted)', cursor: 'grab' }} />
+                    </span>
                     <CheckCircle2 size={14} style={{ color: 'var(--primary)' }} />
                     {st}
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => handleDeleteStatus(st, e)}
-                    className="btn-icon"
-                    style={{ border: 'none', background: '#FDE8E8', cursor: 'pointer', color: '#C81E1E', padding: '4px' }}
-                    title="Supprimer"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <button
+                      type="button"
+                      onClick={(e) => handleMoveStatusUp(idx, e)}
+                      disabled={idx === 0}
+                      className="btn-icon"
+                      style={{ border: 'none', background: idx === 0 ? 'var(--surface-warm)' : 'var(--surface)', cursor: idx === 0 ? 'not-allowed' : 'pointer', color: idx === 0 ? 'var(--border)' : 'var(--primary)', padding: '4px' }}
+                      title="Monter ce statut vers le début"
+                    >
+                      <ArrowUp size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleMoveStatusDown(idx, e)}
+                      disabled={idx === statusesList.length - 1}
+                      className="btn-icon"
+                      style={{ border: 'none', background: idx === statusesList.length - 1 ? 'var(--surface-warm)' : 'var(--surface)', cursor: idx === statusesList.length - 1 ? 'not-allowed' : 'pointer', color: idx === statusesList.length - 1 ? 'var(--border)' : 'var(--primary)', padding: '4px' }}
+                      title="Descendre ce statut vers la fin"
+                    >
+                      <ArrowDown size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteStatus(st, e)}
+                      className="btn-icon"
+                      style={{ border: 'none', background: '#FDE8E8', cursor: 'pointer', color: '#C81E1E', padding: '4px' }}
+                      title="Supprimer"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

@@ -202,6 +202,12 @@ export class StorageService {
     this.saveToLocalStorage();
   }
 
+  public reorderStatuses(newOrder: string[]): void {
+    if (!newOrder || !Array.isArray(newOrder) || newOrder.length === 0) return;
+    this.data.statuses = [...newOrder];
+    this.saveToLocalStorage();
+  }
+
   // --- Roles ---
   public getRoles(): string[] {
     if (!this.data.roles || this.data.roles.length === 0) {
