@@ -363,7 +363,7 @@ export class StorageService {
   }
 
   public getPreferredEmailProvider(): string {
-    return localStorage.getItem('sfg_preferred_email_provider') || 'gmail';
+    return localStorage.getItem('sfg_preferred_email_provider') || 'gmail-0';
   }
 
   public setPreferredEmailProvider(provider: string): void {
@@ -376,8 +376,10 @@ export class StorageService {
     const encodedSubject = encodeURIComponent(subject);
     const encodedBody = encodeURIComponent(body);
 
-    if (chosenProvider === 'gmail') {
-      window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodedTo}&su=${encodedSubject}&body=${encodedBody}`, '_blank');
+    if (chosenProvider.startsWith('gmail')) {
+      const parts = chosenProvider.split('-');
+      const accountIndex = parts.length > 1 ? parts[1] : '0';
+      window.open(`https://mail.google.com/mail/u/${accountIndex}/?view=cm&fs=1&to=${encodedTo}&su=${encodedSubject}&body=${encodedBody}`, '_blank');
     } else if (chosenProvider === 'outlook-pro') {
       window.open(`https://outlook.office.com/mail/deeplink/compose?to=${encodedTo}&subject=${encodedSubject}&body=${encodedBody}`, '_blank');
     } else if (chosenProvider === 'outlook-live') {
