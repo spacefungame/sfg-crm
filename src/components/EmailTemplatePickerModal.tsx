@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Contact } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Send, FileText, X, ExternalLink, Zap, Search, Tag } from 'lucide-react';
+import { Mail, Send, FileText, X, Zap, Search, Tag } from 'lucide-react';
 import { EmailProviderSelector } from './EmailProviderSelector';
 
 interface EmailTemplatePickerModalProps {
@@ -381,16 +381,7 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
             </div>
           )}
 
-          {/* Sélecteur de boîte mail / Webmail */}
           <EmailProviderSelector value={provider} onChange={setProvider} />
-
-          {/* Note sur la nouvelle fenêtre */}
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', backgroundColor: '#F8F6F0', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ExternalLink size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-            <span>
-              Au clic, la boîte sélectionnée s'ouvrira <strong>dans un nouvel onglet/fenêtre</strong> prête à être envoyée par <em>{currentUser?.email || currentUser?.username || 'vous'}</em>.
-            </span>
-          </div>
 
           <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
             <button

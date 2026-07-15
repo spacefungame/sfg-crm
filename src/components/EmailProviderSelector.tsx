@@ -149,19 +149,6 @@ export const EmailProviderSelector: React.FC<EmailProviderSelectorProps> = ({ va
         </div>
       )}
 
-      <div style={{ fontSize: '11.5px', color: '#0284C7', marginTop: '6px', lineHeight: '1.4' }}>
-        {value.startsWith('gmail:') && (
-          <div>
-            👉 <strong>Ouverture directe et garantie :</strong> Le CRM demande à Google d'ouvrir l'onglet de rédaction précisément pour <strong>{value.substring(6)}</strong> via son identifiant officiel. Fini les numéros de comptes !
-          </div>
-        )}
-        {value === 'gmail' && "👉 Ouvre directement Gmail Web avec le compte Google actif par défaut."}
-        {value === 'outlook-pro' && "👉 Ouvre directement Outlook Office 365 en ligne pour les comptes professionnels."}
-        {value === 'outlook-live' && "👉 Ouvre directement Outlook.com / Hotmail en ligne."}
-        {value === 'yahoo' && "👉 Ouvre Yahoo Mail en ligne."}
-        {value === 'mailto' && "👉 Ouvre l'application ou le compte e-mail associé par défaut à votre session Windows/Mac."}
-        {value === 'copy' && "👉 Copie instantanément l'adresse e-mail, l'objet et le texte du message dans votre presse-papiers pour les coller où vous voulez."}
-      </div>
     </div>
   );
 };
