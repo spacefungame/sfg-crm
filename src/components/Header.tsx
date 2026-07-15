@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Users, BarChart3, Mail, Plus, Upload, UserCheck, Shield, Rocket, Dices, Settings, Crown, Trash2 } from 'lucide-react';
+import { Users, BarChart3, Mail, Plus, Upload, UserCheck, Shield, Rocket, Dices, Settings, Crown } from 'lucide-react';
 
 interface HeaderProps {
   currentTab: 'contacts' | 'reports' | 'templates' | 'settings';
@@ -8,8 +8,6 @@ interface HeaderProps {
   onOpenImport: () => void;
   onOpenNewContact: () => void;
   onOpenLogin: () => void;
-  contactsCount?: number;
-  onClearAllContacts?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,9 +15,7 @@ export const Header: React.FC<HeaderProps> = ({
   onTabChange,
   onOpenImport,
   onOpenNewContact,
-  onOpenLogin,
-  contactsCount = 0,
-  onClearAllContacts
+  onOpenLogin
 }) => {
   const { currentUser } = useAuth();
 
@@ -158,17 +154,6 @@ export const Header: React.FC<HeaderProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
           {currentTab === 'contacts' && (
             <>
-              {contactsCount > 0 && onClearAllContacts && (
-                <button 
-                  onClick={onClearAllContacts} 
-                  className="btn btn-secondary btn-sm" 
-                  style={{ backgroundColor: '#FDE8E8', borderColor: '#F8B4B4', color: '#C81E1E', fontWeight: 600 }}
-                  title="Supprimer tous les contacts du CRM pour recommencer à zéro"
-                >
-                  <Trash2 size={13} />
-                  Vider la liste ({contactsCount})
-                </button>
-              )}
               <button onClick={onOpenImport} className="btn btn-secondary btn-sm" title="Importer Excel / CSV">
                 <Upload size={13} />
                 Importer Excel

@@ -162,13 +162,6 @@ const AppContent: React.FC = () => {
     setEmailPickerContact(contact);
   };
 
-  const handleClearAllContacts = () => {
-    if (window.confirm("⚠️ Êtes-vous sûre de vouloir supprimer la TOTALITÉ des contacts de votre CRM et repartir de zéro ? Cette action est définitive et vous permettra de faire une nouvelle importation propre.")) {
-      storageService.clearAllContacts();
-      loadContacts();
-    }
-  };
-
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
       
@@ -179,8 +172,6 @@ const AppContent: React.FC = () => {
         onOpenImport={() => setIsImportOpen(true)}
         onOpenNewContact={() => setIsNewContactOpen(true)}
         onOpenLogin={() => setIsLoginOpen(true)}
-        contactsCount={contacts.length}
-        onClearAllContacts={handleClearAllContacts}
       />
 
       {/* Main Container */}
