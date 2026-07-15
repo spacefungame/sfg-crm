@@ -36,6 +36,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
   const [importResult, setImportResult] = useState<{ addedCount: number; updatedCount: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [extraColumnsToNote, setExtraColumnsToNote] = useState<string[]>([]);
 
   const contactTypes = storageService.getContactTypes();
   const allTags = storageService.getTags();
@@ -57,6 +58,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         setRawRows(r);
         const auto = ImportService.autoDetectColumns(h);
         setMapping(auto);
+        const mappedVals = Object.values(auto).filter(Boolean);
+        setExtraColumnsToNote(h.filter(col => !mappedVals.includes(col)));
         setStep('mapping');
       } catch (err: any) {
         setError('Erreur lors de la lecture du fichier : ' + (err.message || String(err)));
@@ -70,7 +73,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
       return;
     }
     setError(null);
-    const p = ImportService.analyzeRows(rawRows, mapping);
+    const p = ImportService.analyzeRows(rawRows, mapping, extraColumnsToNote);
     setPreviews(p);
     setStep('preview');
   };
@@ -344,6 +347,56 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                   </div>
                 </div>
               </div>
+
+              {/* Colonnes supplémentaires -> Notes */}
+              <div style={{ backgroundColor: '#FAF7FF', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid #E0D4F7' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '6px', color: '#4A306D' }}>
+                  3. Autres colonnes à importer dans les notes du client (ex: Adresse, Date de vente...)
+                </h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+                  Cochez ci-dessous les colonnes supplémentaires qui seront automatiquement enregistrées et structurées dans la section <strong>Notes</strong> de chaque fiche client :
+                </p>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {headers
+                    .filter(h => !Object.values(mapping).includes(h))
+                    .map(col => {
+                      const isChecked = extraColumnsToNote.includes(col);
+                      return (
+                        <button
+                          key={col}
+                          type="button"
+                          onClick={() => {
+                            setExtraColumnsToNote(isChecked ? extraColumnsToNote.filter(c => c !== col) : [...extraColumnsToNote, col]);
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: 'var(--radius-md)',
+                            border: isChecked ? '2px solid #6E44FF' : '1px dashed var(--border)',
+                            backgroundColor: isChecked ? '#F3EEFF' : 'var(--surface)',
+                            color: isChecked ? '#4A306D' : 'var(--text-main)',
+                            fontWeight: isChecked ? 600 : 500,
+                            fontSize: '12.5px',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <span>{isChecked ? '☑' : '☐'}</span>
+                          <span>{col}</span>
+                        </button>
+                      );
+                    })}
+                  {headers.filter(h => !Object.values(mapping).includes(h)).length === 0 && (
+                    <span style={{ fontSize: '13px', color: 'var(--text-light)', fontStyle: 'italic' }}>
+                      Toutes les colonnes de votre fichier sont déjà associées ci-dessus aux champs de base.
+                    </span>
+                  )}
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -352,7 +405,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                 <div>
                   <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)' }}>
-                    3. Aperçu et détection des doublons ({previews.length} contacts trouvés)
+                    4. Aperçu et détection des doublons ({previews.length} contacts trouvés)
                   </h4>
                   <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                     Les doublons existants dans votre base seront mis à jour/fusionnés sans créer de double fiche !
@@ -382,7 +435,12 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     {previews.slice(0, 50).map((row, i) => (
                       <tr key={i}>
                         <td style={{ fontWeight: 500 }}>
-                          {row.parsed.lastName} {row.parsed.firstName}
+                          <div>{row.parsed.lastName} {row.parsed.firstName}</div>
+                          {row.parsed.notes && (
+                            <div style={{ fontSize: '11px', color: '#6E44FF', marginTop: '3px', fontWeight: 600 }}>
+                              📝 + Notes importées ({row.parsed.notes.split('\n').length - 1} infos)
+                            </div>
+                          )}
                         </td>
                         <td>{row.parsed.company || '-'}</td>
                         <td>

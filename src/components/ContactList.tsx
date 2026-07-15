@@ -243,12 +243,12 @@ export const ContactList: React.FC<ContactListProps> = ({
                   </td>
 
                   {/* Coordonnées + boutons action rapide */}
-                  <td onClick={(e) => e.stopPropagation()}>
+                  <td>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                       {c.phone && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <button
-                            onClick={(e) => onQuickCall(c, e)}
+                            onClick={(e) => { e.stopPropagation(); onQuickCall(c, e); }}
                             className="btn btn-sm"
                             style={{ padding: '2px 5px', fontSize: '11px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', border: 'none' }}
                             title="Appeler sur téléphone ou mobile"
@@ -261,7 +261,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                       {c.email && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <button
-                            onClick={(e) => onQuickMail(c, e)}
+                            onClick={(e) => { e.stopPropagation(); onQuickMail(c, e); }}
                             className="btn btn-sm"
                             style={{ padding: '2px 5px', fontSize: '11px', backgroundColor: '#EDE8F5', color: '#4A306D', border: 'none' }}
                             title="Envoyer un mail (avec templates)"
@@ -275,9 +275,10 @@ export const ContactList: React.FC<ContactListProps> = ({
                   </td>
 
                   {/* Statut modifiable manuellement en 1 clic */}
-                  <td onClick={(e) => e.stopPropagation()}>
+                  <td>
                     <select
                       value={c.status}
+                      onClick={(e) => e.stopPropagation()}
                       onChange={(e) => handleQuickStatusChange(c, e.target.value, e)}
                       className="input-field"
                       style={{
@@ -294,12 +295,13 @@ export const ContactList: React.FC<ContactListProps> = ({
                   </td>
 
                   {/* Dead line d'action */}
-                  <td onClick={(e) => e.stopPropagation()}>
+                  <td>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                       {getUrgencyBadge(c.deadline)}
                       <input
                         type="date"
                         className="input-field"
+                        onClick={(e) => e.stopPropagation()}
                         value={c.deadline || ''}
                         onChange={(e) => handleQuickDeadlineChange(c, e.target.value, e)}
                         style={{ padding: '2px 4px', fontSize: '11px', width: '110px' }}

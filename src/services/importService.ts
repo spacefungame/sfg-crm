@@ -19,6 +19,7 @@ export interface ImportPreviewRow {
     email: string;
     phone: string;
     company?: string;
+    notes?: string;
   };
   isDuplicate: boolean;
   duplicateOf?: Contact;
@@ -86,7 +87,6 @@ export class ImportService {
       } else if (!mapping.company && (n.includes('socie') || n.includes('entrepr') || n.includes('comp') || n.includes('orga') || n.includes('etabli') || n.includes('structure') || n.includes('raison soc'))) {
         mapping.company = h;
       } else if (!mapping.lastName && (n.includes('nom') || n.includes('last') || n.includes('contact') || n === 'patronyme')) {
-        // If it says "nom" and we don't have lastName yet, assign it
         if (n !== 'prénom' && !n.includes('prenom') && !n.includes('nom de la société') && !n.includes('nom entreprise')) {
           mapping.lastName = h;
         }
@@ -96,7 +96,7 @@ export class ImportService {
     return mapping;
   }
 
-  public static analyzeRows(rows: Record<string, any>[], mapping: ColumnMapping): ImportPreviewRow[] {
+  public static analyzeRows(rows: Record<string, any>[], mapping: ColumnMapping, extraColumnsToNote: string[] = []): ImportPreviewRow[] {
     const existingContacts = storageService.getContacts();
 
     return rows.map(row => {
@@ -110,6 +110,18 @@ export class ImportService {
       if (!rawLastName && !rawFirstName && !rawEmail && !rawPhone && !rawCompany) {
         return null;
       }
+
+      // Collect extra columns into formatted note
+      const extraNotesLines: string[] = [];
+      for (const col of extraColumnsToNote) {
+        const val = row[col];
+        if (val !== undefined && val !== null && String(val).trim() !== '') {
+          extraNotesLines.push(`• ${col} : ${String(val).trim()}`);
+        }
+      }
+      const notesStr = extraNotesLines.length > 0
+        ? `📋 Informations complémentaires (Import Excel) :\n${extraNotesLines.join('\n')}`
+        : undefined;
 
       // Check duplicate against existing DB
       let duplicateOf: Contact | undefined;
@@ -139,7 +151,8 @@ export class ImportService {
           firstName: rawFirstName,
           email: rawEmail,
           phone: rawPhone,
-          company: rawCompany || undefined
+          company: rawCompany || undefined,
+          notes: notesStr
         },
         isDuplicate: !!duplicateOf,
         duplicateOf
@@ -172,6 +185,15 @@ export class ImportService {
         }
         if (!contact.company && item.parsed.company) {
           contact.company = item.parsed.company;
+        }
+
+        // Add extra notes if any
+        if (item.parsed.notes) {
+          if (!contact.notes) {
+            contact.notes = item.parsed.notes;
+          } else if (!contact.notes.includes(item.parsed.notes)) {
+            contact.notes = contact.notes + "\n\n" + item.parsed.notes;
+          }
         }
 
         // Tags merge : ajout des nouveaux tags sur le client existant
@@ -212,7 +234,7 @@ export class ImportService {
           contactId: contact.id,
           employeeName,
           actionType: 'import',
-          summary: `Ré-import de contact (${type} - ${establishment === 'space_fun_games' ? 'Space Fun Games' : establishment === 'share_and_fun' ? 'Share & Fun' : 'Les deux'}). Fiche mise à jour et doublon évité.${updateSummaryParts.length > 0 ? ` ${updateSummaryParts.join(' | ')}.` : ''}`,
+          summary: `Ré-import de contact (${type} - ${establishment === 'space_fun_games' ? 'Space Fun Games' : establishment === 'share_and_fun' ? 'Share & Fun' : 'Les deux'}). Fiche mise à jour et doublon évité.${item.parsed.notes ? ' Notes additionnelles importées.' : ''}${updateSummaryParts.length > 0 ? ` ${updateSummaryParts.join(' | ')}.` : ''}`,
           timestamp: new Date().toISOString()
         };
         contact.logs.unshift(log);
@@ -228,6 +250,7 @@ export class ImportService {
           email: item.parsed.email,
           phone: item.parsed.phone,
           company: item.parsed.company,
+          notes: item.parsed.notes || undefined,
           type: type.trim() || 'Entreprise',
           establishment,
           status: 'Nouveau : à contacter',
@@ -242,7 +265,7 @@ export class ImportService {
           contactId: newContact.id,
           employeeName,
           actionType: 'import',
-          summary: `Contact importé via fichier (${newContact.type}). Statut automatique : Nouveau : à contacter.`,
+          summary: `Contact importé via fichier (${newContact.type}).${item.parsed.notes ? ' Informations complémentaires (ex: Adresse, Date...) enregistrées dans les Notes.' : ''} Statut automatique : Nouveau : à contacter.`,
           newStatus: 'Nouveau : à contacter',
           timestamp: new Date().toISOString()
         };
