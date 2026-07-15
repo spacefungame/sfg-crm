@@ -36,7 +36,17 @@ export class StorageService {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as CRMData;
-        let loadedUsers = parsed.users && parsed.users.length > 0 ? parsed.users : DEFAULT_CRM_DATA.users;
+        
+        // Nettoyage automatique des 5 faux prospects de démo (`c-101` à `c-105`) lors du passage en réel
+        const demoContactIds = ['c-101', 'c-102', 'c-103', 'c-104', 'c-105'];
+        const cleanedContacts = (parsed.contacts || []).filter(c => !demoContactIds.includes(c.id));
+
+        // Nettoyage automatique des collaborateurs de démo (`Jean`, `Marie`, `Marc`, `Julie`)
+        const demoUsernames = ['Jean', 'Marie', 'Marc', 'Julie'];
+        const demoUserIds = ['u-1', 'u-2', 'u-3', 'u-4'];
+        let loadedUsers = (parsed.users || []).filter(
+          u => !demoUsernames.includes(u.username) && !demoUserIds.includes(u.id)
+        );
         
         // S'assurer que le profil Directrice (Lauréline Henkens) est toujours présent dans les comptes existants
         if (!loadedUsers.some(u => u.role === 'directrice' || u.username.toLowerCase().includes('laur'))) {
@@ -60,8 +70,8 @@ export class StorageService {
           ? parsed.templateCategories
           : [...(DEFAULT_CRM_DATA.templateCategories || ['Prospection', 'Relance', 'Suivi & Fidélisation', 'Evénements & Devis', 'Général'])];
 
-        return {
-          contacts: parsed.contacts || DEFAULT_CRM_DATA.contacts,
+        const finalData: CRMData = {
+          contacts: cleanedContacts,
           users: loadedUsers,
           contactTypes: parsed.contactTypes || DEFAULT_CRM_DATA.contactTypes,
           statuses: parsed.statuses || DEFAULT_CRM_DATA.statuses,
@@ -71,6 +81,19 @@ export class StorageService {
           emailTemplates: loadedTemplates,
           cloudConfig: parsed.cloudConfig || DEFAULT_CRM_DATA.cloudConfig
         };
+
+        // Si le nettoyage a supprimé des données de démo du cache, on ré-enregistre silencieusement
+        if (cleanedContacts.length !== (parsed.contacts || []).length || loadedUsers.length !== (parsed.users || []).length) {
+          setTimeout(() => {
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
+            } catch (e) {
+              console.error('Failed to auto-clean storage:', e);
+            }
+          }, 0);
+        }
+
+        return finalData;
       }
     } catch (err) {
       console.error('Failed to load CRM data from localStorage:', err);
