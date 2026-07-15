@@ -23,6 +23,12 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
       const contactTypes = (c.type || '').split(',').map(t => t.trim());
       if (!contactTypes.includes(selectedType) && c.type !== selectedType) return false;
     }
+    if (selectedEmployee !== 'all') {
+      const hasEmployeeActivity = c.logs?.some(
+        (l) => l.employeeName.toLowerCase() === selectedEmployee.toLowerCase()
+      );
+      if (!hasEmployeeActivity) return false;
+    }
     return true;
   });
 
@@ -72,25 +78,48 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
   };
 
   const handleExportExcel = () => {
-    const exportData = filteredContacts.map((c) => ({
-      'Nom': c.lastName,
-      'Prénom': c.firstName,
-      'Société': c.company || '',
-      'Type': c.type,
-      'Établissement': c.establishment === 'space_fun_games' ? 'Space Fun Games' : c.establishment === 'share_and_fun' ? 'Share & Fun' : 'Les deux',
-      'Téléphone': c.phone,
-      'E-mail': c.email,
-      'Statut actuel': c.status,
-      'Dead line': c.deadline || '',
-      'Dernière action': c.logs?.[0]?.summary || '',
-      'Employé': c.logs?.[0]?.employeeName || '',
-      'Date dernière action': c.logs?.[0]?.timestamp ? new Date(c.logs[0].timestamp).toLocaleDateString('fr-FR') : ''
+    const exportContactsData = filteredContacts.map((c) => {
+      const relevantLog = selectedEmployee !== 'all'
+        ? c.logs?.find((l) => l.employeeName.toLowerCase() === selectedEmployee.toLowerCase()) || c.logs?.[0]
+        : c.logs?.[0];
+
+      return {
+        'Nom': c.lastName,
+        'Prénom': c.firstName,
+        'Société': c.company || '',
+        'Type': c.type,
+        'Établissement': c.establishment === 'space_fun_games' ? 'Space Fun Games' : c.establishment === 'share_and_fun' ? 'Share & Fun' : 'Les deux',
+        'Téléphone': c.phone,
+        'E-mail': c.email,
+        'Statut actuel': c.status,
+        'Dead line': c.deadline || '',
+        'Action (Sélection)': relevantLog?.summary || '',
+        'Employé (Sélection)': relevantLog?.employeeName || '',
+        'Date action': relevantLog?.timestamp ? new Date(relevantLog.timestamp).toLocaleDateString('fr-FR') : ''
+      };
+    });
+
+    const exportLogsData = allLogs.map(({ log, contact }) => ({
+      'Date & Heure': new Date(log.timestamp).toLocaleDateString('fr-FR') + ' ' + new Date(log.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      'Collaborateur': log.employeeName,
+      'Client / Société': `${contact.lastName} ${contact.firstName}${contact.company ? ' (' + contact.company + ')' : ''}`,
+      'Établissement': contact.establishment === 'space_fun_games' ? 'Space Fun Games' : contact.establishment === 'share_and_fun' ? 'Share & Fun' : 'Les deux',
+      'Type action': log.actionType === 'call' ? 'Appel' : log.actionType === 'mail' ? 'E-mail' : log.actionType === 'status_change' ? 'Changement de statut' : 'Note',
+      'Résumé de l\'échange': log.summary,
+      'Statut résultant': log.newStatus || contact.status
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Rapport_CRM');
-    XLSX.writeFile(workbook, `Rapport_CRM_SpaceFun_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const worksheetContacts = XLSX.utils.json_to_sheet(exportContactsData);
+    XLSX.utils.book_append_sheet(workbook, worksheetContacts, 'Contacts_Sélectionnés');
+
+    if (exportLogsData.length > 0) {
+      const worksheetLogs = XLSX.utils.json_to_sheet(exportLogsData);
+      XLSX.utils.book_append_sheet(workbook, worksheetLogs, 'Journal_Activité_Détaillé');
+    }
+
+    const cleanEmployeeName = selectedEmployee !== 'all' ? selectedEmployee.replace(/[^a-zA-Z0-9_-]/g, '_') : 'Global';
+    XLSX.writeFile(workbook, `Rapport_CRM_${cleanEmployeeName}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   return (
