@@ -18,8 +18,11 @@ export const EmailProviderSelector: React.FC<EmailProviderSelectorProps> = ({ va
     onChange(newProvider);
   };
 
-  const handleAddAccount = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddAccount = (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     const trimmed = newAccountEmail.trim();
     if (!trimmed || !trimmed.includes('@')) {
       alert('Veuillez entrer une adresse e-mail valide.');
@@ -36,7 +39,11 @@ export const EmailProviderSelector: React.FC<EmailProviderSelectorProps> = ({ va
     handleChange(`gmail:${trimmed}`);
   };
 
-  const handleDeleteAccount = (accountToDelete: string) => {
+  const handleDeleteAccount = (accountToDelete: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     const updated = gmailAccounts.filter((a) => a !== accountToDelete);
     storageService.saveGmailAccounts(updated);
     setGmailAccounts(updated);
@@ -55,7 +62,7 @@ export const EmailProviderSelector: React.FC<EmailProviderSelectorProps> = ({ va
         </label>
         <button
           type="button"
-          onClick={() => setIsManaging(!isManaging)}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsManaging(!isManaging); }}
           style={{ background: 'none', border: 'none', color: '#0284C7', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'underline' }}
         >
           <Settings size={13} />
@@ -102,7 +109,7 @@ export const EmailProviderSelector: React.FC<EmailProviderSelectorProps> = ({ va
                 {acc}
                 <button
                   type="button"
-                  onClick={() => handleDeleteAccount(acc)}
+                  onClick={(e) => handleDeleteAccount(acc, e)}
                   style={{ border: 'none', background: 'none', color: '#EF4444', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center' }}
                   title="Supprimer cette adresse"
                 >
@@ -114,23 +121,31 @@ export const EmailProviderSelector: React.FC<EmailProviderSelectorProps> = ({ va
               <span style={{ fontSize: '11px', color: '#64748B', fontStyle: 'italic' }}>Aucune adresse Gmail enregistrée.</span>
             )}
           </div>
-          <form onSubmit={handleAddAccount} style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
             <input
               type="email"
               placeholder="Ajouter une adresse (ex: contact@...)"
               value={newAccountEmail}
               onChange={(e) => setNewAccountEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleAddAccount(e);
+                }
+              }}
               style={{ flex: 1, padding: '4px 8px', fontSize: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid #7DD3FC', outline: 'none' }}
             />
             <button
-              type="submit"
+              type="button"
+              onClick={(e) => handleAddAccount(e)}
               className="btn btn-sm btn-primary"
               style={{ padding: '4px 10px', fontSize: '12px' }}
             >
               <Plus size={14} />
               Ajouter
             </button>
-          </form>
+          </div>
         </div>
       )}
 
