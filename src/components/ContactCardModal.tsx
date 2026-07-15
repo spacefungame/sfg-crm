@@ -35,7 +35,12 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
   const [editingTagName, setEditingTagName] = useState<string>('');
   const [editingTagColor, setEditingTagColor] = useState<string>('#8D5B4C');
 
-  const contactTypes = storageService.getContactTypes();
+  const [contactTypesList, setContactTypesList] = useState<string[]>(storageService.getContactTypes());
+  const [showTypeManager, setShowTypeManager] = useState<boolean>(false);
+  const [newContactTypeName, setNewContactTypeName] = useState<string>('');
+  const [editingOldTypeName, setEditingOldTypeName] = useState<string | null>(null);
+  const [editingNewTypeName, setEditingNewTypeName] = useState<string>('');
+
   const emailTemplates = storageService.getEmailTemplates();
 
   const statuses: ContactStatus[] = [
@@ -133,6 +138,87 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
     }
   };
 
+  const handleToggleContactType = (typeName: string) => {
+    if (!formData) return;
+    const currentTypes = (formData.type || '').split(',').map(t => t.trim()).filter(Boolean);
+    const newTypes = currentTypes.includes(typeName)
+      ? currentTypes.filter(t => t !== typeName)
+      : [...currentTypes, typeName];
+    
+    const finalTypeString = newTypes.length > 0 ? newTypes.join(', ') : 'Autre';
+    const updated = { ...formData, type: finalTypeString };
+    setFormData(updated);
+    storageService.saveContact(updated);
+    storageService.addActivityLog(formData.id, {
+      employeeName: currentUser ? currentUser.username : 'Collaborateur',
+      actionType: 'status_change',
+      summary: `${currentTypes.includes(typeName) ? 'Type retiré' : 'Type ajouté'} : ${typeName}`
+    });
+    onUpdate();
+  };
+
+  const handleCreateAndAssignContactType = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newContactTypeName.trim() || !formData) return;
+    
+    const typeName = newContactTypeName.trim();
+    storageService.addContactType(typeName);
+
+    const currentTypes = (formData.type || '').split(',').map(t => t.trim()).filter(Boolean);
+    if (!currentTypes.includes(typeName)) {
+      const updatedTypes = [...currentTypes, typeName];
+      const updated = { ...formData, type: updatedTypes.join(', ') };
+      setFormData(updated);
+      storageService.saveContact(updated);
+      storageService.addActivityLog(formData.id, {
+        employeeName: currentUser ? currentUser.username : 'Collaborateur',
+        actionType: 'status_change',
+        summary: `Type créé et attribué : ${typeName}`
+      });
+    }
+
+    setContactTypesList(storageService.getContactTypes());
+    setNewContactTypeName('');
+    onUpdate();
+  };
+
+  const handleUpdateContactType = (oldType: string, e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingNewTypeName.trim() || !formData) return;
+
+    const newType = editingNewTypeName.trim();
+    storageService.updateContactType(oldType, newType);
+
+    const currentTypes = (formData.type || '').split(',').map(t => t.trim()).filter(Boolean);
+    if (currentTypes.includes(oldType)) {
+      const updatedTypes = currentTypes.map(t => t === oldType ? newType : t);
+      setFormData({
+        ...formData,
+        type: updatedTypes.join(', ')
+      });
+    }
+
+    setContactTypesList(storageService.getContactTypes());
+    setEditingOldTypeName(null);
+    onUpdate();
+  };
+
+  const handleDeleteContactTypeModal = (typeName: string, e?: React.MouseEvent) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (window.confirm(`Confirmez-vous la suppression du type "${typeName}" ? Il sera retiré de la liste du CRM.`)) {
+      storageService.deleteContactType(typeName);
+      const currentTypes = (formData?.type || '').split(',').map(t => t.trim()).filter(Boolean);
+      if (formData && currentTypes.includes(typeName)) {
+        const filtered = currentTypes.filter(t => t !== typeName);
+        const updated = { ...formData, type: filtered.length > 0 ? filtered.join(', ') : 'Autre' };
+        setFormData(updated);
+        storageService.saveContact(updated);
+      }
+      setContactTypesList(storageService.getContactTypes());
+      onUpdate();
+    }
+  };
+
   useEffect(() => {
     if (contact) {
       setFormData(JSON.parse(JSON.stringify(contact)));
@@ -141,6 +227,9 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
       setTagsList(storageService.getTags());
       setShowTagManager(false);
       setEditingTagId(null);
+      setContactTypesList(storageService.getContactTypes());
+      setShowTypeManager(false);
+      setEditingOldTypeName(null);
     }
   }, [contact]);
 
@@ -241,9 +330,11 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px', flexWrap: 'wrap' }}>
               {getEstablishmentBadge(formData.establishment)}
-              <span style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', backgroundColor: 'var(--surface)', padding: '2px 8px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border)' }}>
-                {formData.type}
-              </span>
+              {(formData.type || '').split(',').map(t => t.trim()).filter(Boolean).map(t => (
+                <span key={t} style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', backgroundColor: 'var(--surface)', padding: '2px 8px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                  📇 {t}
+                </span>
+              ))}
               {formData.tags && formData.tags.map(t => getTagBadge(t))}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
@@ -364,6 +455,128 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>Dead line</label>
               <input type="date" className="input-field" value={formData.deadline || ''} onChange={(e) => handleStatusOrDeadlineChange(formData.status, e.target.value)} style={{ padding: '5px 8px', fontSize: '12.5px', height: 'auto' }} />
             </div>
+          </div>
+
+          <div style={{ backgroundColor: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                <span>📇 Type(s) du contact (cliquez pour en attribuer un ou plusieurs) :</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTypeManager(!showTypeManager)}
+                className="btn btn-secondary btn-sm"
+                style={{ padding: '3px 8px', fontSize: '11px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-focus)', color: 'var(--primary)', fontWeight: 600 }}
+                title="Créer, modifier ou supprimer des types de client directement depuis la fiche"
+              >
+                <span>{showTypeManager ? '✕ Fermer gestion' : '⚙️ Modifier / Créer des types'}</span>
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {contactTypesList.map(type => {
+                const currentTypes = (formData.type || '').split(',').map(t => t.trim()).filter(Boolean);
+                const isSelected = currentTypes.includes(type);
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => handleToggleContactType(type)}
+                    style={{
+                      padding: '3px 8px',
+                      borderRadius: 'var(--radius-full)',
+                      border: isSelected ? '2px solid #2A211D' : '1px dashed var(--border)',
+                      backgroundColor: isSelected ? '#E6D7C3' : 'transparent',
+                      color: isSelected ? '#2A211D' : 'var(--text-main)',
+                      fontWeight: isSelected ? 700 : 500,
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <span>{isSelected ? '✓' : '+'}</span>
+                    <span>{type}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {showTypeManager && (
+              <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--surface-warm)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                {/* Formulaire de création rapide de type */}
+                <form onSubmit={handleCreateAndAssignContactType} style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px dashed var(--border)' }}>
+                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Plus size={14} style={{ color: 'var(--primary)' }} /> Nouveau type de client :
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Nom du type (ex: Mairie, Club)..."
+                    className="input-field"
+                    value={newContactTypeName}
+                    onChange={(e) => setNewContactTypeName(e.target.value)}
+                    style={{ padding: '4px 8px', fontSize: '11.5px', height: 'auto', width: '180px' }}
+                  />
+                  <button type="submit" className="btn btn-primary btn-sm" style={{ padding: '4px 10px', fontSize: '11px' }}>
+                    Créer & Attribuer
+                  </button>
+                </form>
+
+                {/* Liste des types existants pour modification / suppression */}
+                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  ⚙️ Modifier le nom ou supprimer un type de client :
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
+                  {contactTypesList.map(t => (
+                    <div key={t} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', backgroundColor: 'var(--surface)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                      {editingOldTypeName === t ? (
+                        <form onSubmit={(e) => handleUpdateContactType(t, e)} style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+                          <input
+                            type="text"
+                            required
+                            className="input-field"
+                            value={editingNewTypeName}
+                            onChange={(e) => setEditingNewTypeName(e.target.value)}
+                            style={{ padding: '3px 6px', fontSize: '11px', height: 'auto', flex: 1 }}
+                          />
+                          <button type="submit" className="btn btn-primary btn-sm" style={{ padding: '3px 8px', fontSize: '11px' }} title="Enregistrer le nom">
+                            <Save size={12} />
+                          </button>
+                          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditingOldTypeName(null)} style={{ padding: '3px 8px', fontSize: '11px' }} title="Annuler">
+                            ✕
+                          </button>
+                        </form>
+                      ) : (
+                        <>
+                          <span style={{ fontSize: '11.5px', fontWeight: 600 }}>📇 {t}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button
+                              type="button"
+                              onClick={() => { setEditingOldTypeName(t); setEditingNewTypeName(t); }}
+                              className="btn btn-secondary btn-sm"
+                              style={{ padding: '2px 8px', fontSize: '10.5px' }}
+                              title="Renommer ce type de client"
+                            >
+                              ✏️ Modifier
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteContactTypeModal(t, e)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ padding: '2px 8px', fontSize: '10.5px', color: '#C81E1E', borderColor: '#F8B4B4', backgroundColor: '#FDE8E8' }}
+                              title="Supprimer ce type"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ backgroundColor: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
@@ -534,10 +747,29 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
                   <input type="text" className="input-field" value={formData.company || ''} onChange={(e) => setFormData({ ...formData, company: e.target.value })} style={{ padding: '5px 8px', fontSize: '12px' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '3px' }}>Type de contact</label>
-                  <select className="input-field" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} style={{ padding: '5px 8px', fontSize: '12px' }}>
-                    {contactTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '4px' }}>Type(s) de contact (plusieurs possibles)</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '6px', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', maxHeight: '90px', overflowY: 'auto' }}>
+                    {contactTypesList.map(t => {
+                      const currentTypes = (formData.type || '').split(',').map(item => item.trim()).filter(Boolean);
+                      const isChecked = currentTypes.includes(t);
+                      return (
+                        <label key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: isChecked ? 600 : 400, cursor: 'pointer', backgroundColor: isChecked ? '#F3ECE4' : 'transparent', padding: '2px 6px', borderRadius: '4px' }}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {
+                              const newTypes = isChecked
+                                ? currentTypes.filter(item => item !== t)
+                                : [...currentTypes, t];
+                              setFormData({ ...formData, type: newTypes.length > 0 ? newTypes.join(', ') : 'Autre' });
+                            }}
+                            style={{ margin: 0 }}
+                          />
+                          {t}
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 

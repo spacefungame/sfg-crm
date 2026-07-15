@@ -209,6 +209,35 @@ export class StorageService {
 
   public deleteContactType(type: string): void {
     this.data.contactTypes = this.data.contactTypes.filter(t => t !== type);
+    this.data.contacts.forEach(c => {
+      if (c.type) {
+        const types = c.type.split(',').map(t => t.trim());
+        if (types.includes(type)) {
+          const filtered = types.filter(t => t !== type);
+          c.type = filtered.length > 0 ? filtered.join(', ') : 'Autre';
+        }
+      }
+    });
+    this.saveToLocalStorage();
+  }
+
+  public updateContactType(oldType: string, newType: string): void {
+    const trimmed = newType.trim();
+    if (!trimmed || oldType === trimmed) return;
+    const index = this.data.contactTypes.indexOf(oldType);
+    if (index >= 0) {
+      this.data.contactTypes[index] = trimmed;
+    } else if (!this.data.contactTypes.includes(trimmed)) {
+      this.data.contactTypes.push(trimmed);
+    }
+    this.data.contacts.forEach(c => {
+      if (c.type) {
+        const types = c.type.split(',').map(t => t.trim());
+        if (types.includes(oldType)) {
+          c.type = types.map(t => t === oldType ? trimmed : t).join(', ');
+        }
+      }
+    });
     this.saveToLocalStorage();
   }
 

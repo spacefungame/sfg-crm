@@ -235,9 +235,11 @@ export const ContactList: React.FC<ContactListProps> = ({
                       {getEstablishmentBadge(c.establishment)}
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '10.5px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '1px 5px', borderRadius: '3px' }}>
-                        {c.type}
-                      </span>
+                      {(c.type || '').split(',').map(t => t.trim()).filter(Boolean).map(t => (
+                        <span key={t} style={{ fontSize: '10.5px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '1px 5px', borderRadius: '3px', display: 'inline-block' }}>
+                          📇 {t}
+                        </span>
+                      ))}
                       {c.tags && c.tags.map(t => getTagBadge(t))}
                     </div>
                   </td>
@@ -367,9 +369,11 @@ export const ContactList: React.FC<ContactListProps> = ({
               {/* Établissement & Type + Tags */}
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {getEstablishmentBadge(c.establishment)}
-                <span style={{ fontSize: '10.5px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '1px 5px', borderRadius: '3px' }}>
-                  {c.type}
-                </span>
+                {(c.type || '').split(',').map(t => t.trim()).filter(Boolean).map(t => (
+                  <span key={t} style={{ fontSize: '10.5px', fontWeight: 500, color: 'var(--text-muted)', backgroundColor: '#F3ECE4', padding: '1px 5px', borderRadius: '3px', display: 'inline-block' }}>
+                    📇 {t}
+                  </span>
+                ))}
                 {c.tags && c.tags.map(t => getTagBadge(t))}
               </div>
 
