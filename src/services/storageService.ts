@@ -426,8 +426,31 @@ export class StorageService {
     return null;
   }
 
+  public getGmailAccounts(): string[] {
+    const saved = localStorage.getItem('sfg_gmail_accounts');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return ['laureline@spacefungames.fr', 'share&fun@spacefungames.fr', 'henkens.laureline@gmail.com'];
+  }
+
+  public saveGmailAccounts(accounts: string[]): void {
+    localStorage.setItem('sfg_gmail_accounts', JSON.stringify(accounts));
+  }
+
   public getPreferredEmailProvider(): string {
-    return localStorage.getItem('sfg_preferred_email_provider') || 'gmail-0';
+    const saved = localStorage.getItem('sfg_preferred_email_provider');
+    // Si l'utilisateur avait une ancienne configuration u/0, u/1 ou gmail pur, on bascule sur sa 1ère adresse en clair
+    if (!saved || saved.startsWith('gmail-') || saved === 'gmail') {
+      const accounts = this.getGmailAccounts();
+      return accounts.length > 0 ? `gmail:${accounts[0]}` : 'gmail';
+    }
+    return saved;
   }
 
   public setPreferredEmailProvider(provider: string): void {
@@ -440,10 +463,11 @@ export class StorageService {
     const encodedSubject = encodeURIComponent(subject);
     const encodedBody = encodeURIComponent(body);
 
-    if (chosenProvider.startsWith('gmail')) {
-      const parts = chosenProvider.split('-');
-      const accountIndex = parts.length > 1 ? parts[1] : '0';
-      window.open(`https://mail.google.com/mail/u/${accountIndex}/?view=cm&fs=1&to=${encodedTo}&su=${encodedSubject}&body=${encodedBody}`, '_blank');
+    if (chosenProvider.startsWith('gmail:')) {
+      const emailAccount = chosenProvider.substring(6).trim();
+      window.open(`https://mail.google.com/mail/?authuser=${encodeURIComponent(emailAccount)}&view=cm&fs=1&to=${encodedTo}&su=${encodedSubject}&body=${encodedBody}`, '_blank');
+    } else if (chosenProvider === 'gmail') {
+      window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodedTo}&su=${encodedSubject}&body=${encodedBody}`, '_blank');
     } else if (chosenProvider === 'outlook-pro') {
       window.open(`https://outlook.office.com/mail/deeplink/compose?to=${encodedTo}&subject=${encodedSubject}&body=${encodedBody}`, '_blank');
     } else if (chosenProvider === 'outlook-live') {
