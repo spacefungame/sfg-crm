@@ -67,13 +67,31 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
     }
   };
 
+  const handleMappingChange = (field: keyof ColumnMapping, value: string) => {
+    const oldVal = mapping[field];
+    const newMapping = { ...mapping, [field]: value };
+    setMapping(newMapping);
+
+    const mappedVals = Object.values(newMapping).filter(Boolean);
+    let updatedExtras = [...extraColumnsToNote];
+    if (value) {
+      updatedExtras = updatedExtras.filter(c => c !== value);
+    }
+    if (oldVal && !mappedVals.includes(oldVal) && !updatedExtras.includes(oldVal)) {
+      updatedExtras.push(oldVal);
+    }
+    setExtraColumnsToNote(updatedExtras);
+  };
+
   const handleProceedToPreview = () => {
     if (!mapping.lastName && !mapping.firstName && !mapping.email && !mapping.phone && !mapping.company) {
       setError('Veuillez associer au moins une colonne (ex: Nom, Téléphone ou E-mail).');
       return;
     }
     setError(null);
-    const p = ImportService.analyzeRows(rawRows, mapping, extraColumnsToNote);
+    const mappedVals = Object.values(mapping).filter(Boolean);
+    const validExtras = extraColumnsToNote.filter(c => !mappedVals.includes(c));
+    const p = ImportService.analyzeRows(rawRows, mapping, validExtras);
     setPreviews(p);
     setStep('preview');
   };
@@ -283,7 +301,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     <select
                       className="input-field"
                       value={mapping.lastName}
-                      onChange={(e) => setMapping({ ...mapping, lastName: e.target.value })}
+                      onChange={(e) => handleMappingChange('lastName', e.target.value)}
                     >
                       <option value="">-- Ignorer --</option>
                       {headers.map(h => <option key={h} value={h}>{h}</option>)}
@@ -297,7 +315,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     <select
                       className="input-field"
                       value={mapping.firstName}
-                      onChange={(e) => setMapping({ ...mapping, firstName: e.target.value })}
+                      onChange={(e) => handleMappingChange('firstName', e.target.value)}
                     >
                       <option value="">-- Ignorer --</option>
                       {headers.map(h => <option key={h} value={h}>{h}</option>)}
@@ -311,7 +329,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     <select
                       className="input-field"
                       value={mapping.email}
-                      onChange={(e) => setMapping({ ...mapping, email: e.target.value })}
+                      onChange={(e) => handleMappingChange('email', e.target.value)}
                     >
                       <option value="">-- Ignorer --</option>
                       {headers.map(h => <option key={h} value={h}>{h}</option>)}
@@ -325,7 +343,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     <select
                       className="input-field"
                       value={mapping.phone}
-                      onChange={(e) => setMapping({ ...mapping, phone: e.target.value })}
+                      onChange={(e) => handleMappingChange('phone', e.target.value)}
                     >
                       <option value="">-- Ignorer --</option>
                       {headers.map(h => <option key={h} value={h}>{h}</option>)}
@@ -339,7 +357,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     <select
                       className="input-field"
                       value={mapping.company}
-                      onChange={(e) => setMapping({ ...mapping, company: e.target.value })}
+                      onChange={(e) => handleMappingChange('company', e.target.value)}
                     >
                       <option value="">-- Ignorer --</option>
                       {headers.map(h => <option key={h} value={h}>{h}</option>)}

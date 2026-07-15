@@ -112,11 +112,16 @@ export class ImportService {
       }
 
       // Collect extra columns into formatted note
+      const mappedValues = Object.values(mapping).filter(Boolean);
       const extraNotesLines: string[] = [];
       for (const col of extraColumnsToNote) {
-        const val = row[col];
-        if (val !== undefined && val !== null && String(val).trim() !== '') {
-          extraNotesLines.push(`• ${col} : ${String(val).trim()}`);
+        if (mappedValues.includes(col)) continue;
+        const rowKey = Object.keys(row).find(k => k === col || k.trim() === col.trim());
+        if (rowKey) {
+          const val = row[rowKey];
+          if (val !== undefined && val !== null && String(val).trim() !== '') {
+            extraNotesLines.push(`• ${col.trim()} : ${String(val).trim()}`);
+          }
         }
       }
       const notesStr = extraNotesLines.length > 0
