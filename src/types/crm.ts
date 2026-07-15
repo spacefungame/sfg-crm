@@ -57,6 +57,8 @@ export interface User {
 export interface EmailTemplate {
   id: string;
   title: string;
+  category?: string; // ex: 'Prospection', 'Relance', 'Suivi & Fidélisation', 'Evénements & Devis', 'Général'
+  shortcut?: string; // ex: '/intro', '/relance1', '/visite'
   subject: string;
   body: string; // Supports {Nom}, {Prénom}, {Société}
 }
@@ -82,6 +84,7 @@ export interface CRMData {
   statuses: string[];
   tags: TagDefinition[];
   roles?: string[];
+  templateCategories?: string[];
   emailTemplates: EmailTemplate[];
   cloudConfig: CloudConfig;
 }

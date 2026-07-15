@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { EmailTemplate } from '../types/crm';
 import { storageService } from '../services/storageService';
-import { Mail, Plus, Edit, Trash2, Save, X, Sparkles } from 'lucide-react';
+import { Mail, Plus, Edit, Trash2, Save, X, Sparkles, ChevronDown, FolderPlus, Tag, Zap, Settings } from 'lucide-react';
 
 interface TemplatesManagerProps {
   onTemplatesChanged: () => void;
@@ -9,13 +9,31 @@ interface TemplatesManagerProps {
 
 export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesChanged }) => {
   const [templates, setTemplates] = useState<EmailTemplate[]>(storageService.getEmailTemplates());
+  const [categories, setCategories] = useState<string[]>(storageService.getTemplateCategories());
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [expandedTemplateId, setExpandedTemplateId] = useState<string | null>(null);
+  
+  // Create / Edit state
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [isCreating, setIsCreating] = useState<boolean>(false);
+
+  // Category Manager state
+  const [showCategoryManager, setShowCategoryManager] = useState<boolean>(false);
+  const [newCategoryInput, setNewCategoryInput] = useState<string>('');
+  const [editingCatName, setEditingCatName] = useState<{ oldName: string; newName: string } | null>(null);
+
+  const refreshState = () => {
+    setTemplates(storageService.getEmailTemplates());
+    setCategories(storageService.getTemplateCategories());
+    onTemplatesChanged();
+  };
 
   const handleCreateNew = () => {
     setEditingTemplate({
       id: 'tpl-' + Date.now(),
       title: 'Nouveau modèle d\'e-mail',
+      category: selectedCategory !== 'all' ? selectedCategory : (categories[0] || 'Général'),
+      shortcut: '/nouveau',
       subject: 'Sujet de votre message pour {Société}',
       body: 'Bonjour {Prénom},\n\n\n\nCordialement,\nL\'équipe Space Fun Games & Share & Fun'
     });
@@ -26,100 +44,344 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
     e.preventDefault();
     if (!editingTemplate || !editingTemplate.title.trim()) return;
 
-    storageService.saveEmailTemplate(editingTemplate);
-    setTemplates(storageService.getEmailTemplates());
+    let shortcut = editingTemplate.shortcut?.trim() || `/${editingTemplate.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)}`;
+    if (!shortcut.startsWith('/') && !shortcut.startsWith('#')) {
+      shortcut = '/' + shortcut;
+    }
+
+    const templateToSave: EmailTemplate = {
+      ...editingTemplate,
+      category: editingTemplate.category || 'Général',
+      shortcut
+    };
+
+    storageService.saveEmailTemplate(templateToSave);
     setEditingTemplate(null);
     setIsCreating(false);
-    onTemplatesChanged();
+    refreshState();
   };
 
   const handleDelete = (id: string, title: string) => {
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer le modèle "${title}" ?`)) {
       storageService.deleteEmailTemplate(id);
-      setTemplates(storageService.getEmailTemplates());
+      if (expandedTemplateId === id) setExpandedTemplateId(null);
       if (editingTemplate?.id === id) setEditingTemplate(null);
-      onTemplatesChanged();
+      refreshState();
     }
   };
+
+  // --- Category Actions ---
+  const handleAddCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryInput.trim()) return;
+    storageService.addTemplateCategory(newCategoryInput.trim());
+    setNewCategoryInput('');
+    refreshState();
+  };
+
+  const handleDeleteCategory = (cat: string) => {
+    if (categories.length <= 1) {
+      alert("Vous devez conserver au moins une catégorie.");
+      return;
+    }
+    if (window.confirm(`Supprimer la catégorie "${cat}" ? Les modèles associés seront déplacés.`)) {
+      storageService.deleteTemplateCategory(cat);
+      if (selectedCategory === cat) setSelectedCategory('all');
+      refreshState();
+    }
+  };
+
+  const handleRenameCategory = (oldName: string, newName: string) => {
+    if (!newName.trim() || oldName === newName.trim()) {
+      setEditingCatName(null);
+      return;
+    }
+    storageService.updateTemplateCategory(oldName, newName.trim());
+    setEditingCatName(null);
+    if (selectedCategory === oldName) setSelectedCategory(newName.trim());
+    refreshState();
+  };
+
+  const filteredTemplates = templates.filter(tpl => {
+    if (selectedCategory === 'all') return true;
+    return (tpl.category || 'Général') === selectedCategory;
+  });
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: editingTemplate ? '1fr 1fr' : '1fr', gap: '24px', alignItems: 'start' }}>
       
-      {/* Liste des templates */}
+      {/* Liste des templates et gestionnaire */}
       <div className="card" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Mail size={20} style={{ color: 'var(--primary)' }} />
-              Modèles d'e-mails pour l'équipe
+              Modèles d'e-mails & Raccourcis
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-              Préparez vos messages types pour envoyer des devis, présentations et relances en 1 clic
+              Cliquez sur un titre pour dérouler le contenu. Organisez vos messages types par catégorie et raccourci rapide.
             </p>
           </div>
 
-          {!editingTemplate && (
-            <button onClick={handleCreateNew} className="btn btn-primary btn-sm">
-              <Plus size={16} />
-              + Nouveau modèle
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setShowCategoryManager(!showCategoryManager)}
+              className="btn btn-secondary btn-sm"
+              title="Gérer les catégories"
+            >
+              <Settings size={15} />
+              {showCategoryManager ? 'Fermer catégories' : 'Gérer catégories'}
             </button>
-          )}
+
+            {!editingTemplate && (
+              <button onClick={handleCreateNew} className="btn btn-primary btn-sm">
+                <Plus size={16} />
+                + Nouveau modèle
+              </button>
+            )}
+          </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {templates.map((tpl) => {
-            const isSelected = editingTemplate?.id === tpl.id;
+        {/* Panneau Gestion des Catégories */}
+        {showCategoryManager && (
+          <div className="animate-fade-in" style={{ backgroundColor: 'var(--surface-warm)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', marginBottom: '20px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Tag size={16} style={{ color: 'var(--primary)' }} />
+              Catégories de modèles
+            </h4>
+
+            <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Nouvelle catégorie (ex: Partenariats, Relance VIP...)"
+                value={newCategoryInput}
+                onChange={(e) => setNewCategoryInput(e.target.value)}
+                style={{ flex: 1, padding: '8px 12px', fontSize: '13px' }}
+              />
+              <button type="submit" className="btn btn-primary btn-sm" style={{ padding: '8px 14px' }}>
+                <FolderPlus size={15} /> Ajouter
+              </button>
+            </form>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {categories.map((cat) => {
+                const isEditing = editingCatName?.oldName === cat;
+                return (
+                  <div
+                    key={cat}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: '13px' }}
+                  >
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        autoFocus
+                        value={editingCatName.newName}
+                        onChange={(e) => setEditingCatName({ ...editingCatName, newName: e.target.value })}
+                        onBlur={() => handleRenameCategory(cat, editingCatName.newName)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleRenameCategory(cat, editingCatName.newName);
+                          if (e.key === 'Escape') setEditingCatName(null);
+                        }}
+                        style={{ width: '120px', padding: '2px 6px', border: '1px solid var(--primary)', borderRadius: '4px' }}
+                      />
+                    ) : (
+                      <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{cat}</span>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setEditingCatName(isEditing ? null : { oldName: cat, newName: cat })}
+                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px' }}
+                      title="Renommer"
+                    >
+                      <Edit size={13} />
+                    </button>
+
+                    {categories.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(cat)}
+                        style={{ background: 'none', border: 'none', color: '#C81E1E', cursor: 'pointer', padding: '2px' }}
+                        title="Supprimer la catégorie"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Filtres par catégorie */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '18px', borderBottom: '1px solid var(--border)', paddingBottom: '14px' }}>
+          <button
+            onClick={() => setSelectedCategory('all')}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '20px',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              border: selectedCategory === 'all' ? '2px solid var(--primary)' : '1px solid var(--border)',
+              backgroundColor: selectedCategory === 'all' ? 'var(--primary)' : 'var(--surface)',
+              color: selectedCategory === 'all' ? '#FFFFFF' : 'var(--text-main)',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Toutes ({templates.length})
+          </button>
+
+          {categories.map((cat) => {
+            const count = templates.filter(t => (t.category || 'Général') === cat).length;
+            const isSelected = selectedCategory === cat;
             return (
-              <div
-                key={tpl.id}
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
                 style={{
-                  padding: '16px',
-                  borderRadius: 'var(--radius-md)',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
                   border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
-                  backgroundColor: isSelected ? 'var(--primary-light)' : 'var(--surface)',
-                  transition: 'all 0.15s ease'
+                  backgroundColor: isSelected ? 'var(--primary)' : 'var(--surface)',
+                  color: isSelected ? '#FFFFFF' : 'var(--text-main)',
+                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
-                  <div>
-                    <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                      {tpl.title}
-                    </h4>
-                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                      <strong>Sujet :</strong> {tpl.subject}
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button
-                      onClick={() => {
-                        setEditingTemplate(tpl);
-                        setIsCreating(false);
-                      }}
-                      className="btn btn-secondary btn-icon"
-                      title="Modifier ce modèle"
-                      style={{ padding: '6px' }}
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(tpl.id, tpl.title)}
-                      className="btn btn-secondary btn-icon"
-                      style={{ padding: '6px', color: '#C81E1E' }}
-                      title="Supprimer ce modèle"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid #ECE7DE', fontSize: '13px', color: 'var(--text-muted)', whiteSpace: 'pre-wrap', maxHeight: '100px', overflowY: 'auto' }}>
-                  {tpl.body}
-                </div>
-              </div>
+                <span>{cat}</span>
+                <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '10px', backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : '#EAE4D8' }}>
+                  {count}
+                </span>
+              </button>
             );
           })}
         </div>
+
+        {/* Accordéon de la liste des templates */}
+        {filteredTemplates.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '36px 20px', color: 'var(--text-muted)', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)' }}>
+            Aucun modèle d'e-mail dans cette catégorie.
+            <div style={{ marginTop: '10px' }}>
+              <button onClick={handleCreateNew} className="btn btn-secondary btn-sm">
+                + Créer un modèle ici
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {filteredTemplates.map((tpl) => {
+              const isExpanded = expandedTemplateId === tpl.id;
+              const isSelectedEditing = editingTemplate?.id === tpl.id;
+
+              return (
+                <div
+                  key={tpl.id}
+                  style={{
+                    borderRadius: 'var(--radius-md)',
+                    border: isSelectedEditing ? '2px solid var(--primary)' : isExpanded ? '1px solid var(--primary)' : '1px solid var(--border)',
+                    backgroundColor: isSelectedEditing ? 'var(--primary-light)' : '#FFFFFF',
+                    boxShadow: isExpanded ? 'var(--shadow-sm)' : 'none',
+                    transition: 'all 0.15s ease',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {/* Header / Titre cliquable pour dérouler */}
+                  <div
+                    onClick={() => setExpandedTemplateId(isExpanded ? null : tpl.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '14px 16px',
+                      cursor: 'pointer',
+                      backgroundColor: isExpanded ? 'var(--primary-light)' : '#FFFFFF',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 700, padding: '3px 9px', borderRadius: '12px', backgroundColor: '#EFEBF6', color: '#533B82' }}>
+                        {tpl.category || 'Général'}
+                      </span>
+
+                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
+                        {tpl.title}
+                      </h4>
+
+                      {tpl.shortcut && (
+                        <span style={{ fontSize: '12px', fontWeight: 600, padding: '2px 8px', borderRadius: '6px', backgroundColor: '#FFF4E5', color: '#B76E00', border: '1px solid #FFE2B7', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Zap size={12} /> {tpl.shortcut}
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                        {isExpanded ? 'Réduire' : 'Dérouler'}
+                      </span>
+                      <ChevronDown size={18} style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease', color: 'var(--text-muted)' }} />
+                    </div>
+                  </div>
+
+                  {/* Contenu déroulé (Sujet, Corps, Actions) */}
+                  {isExpanded && (
+                    <div className="animate-fade-in" style={{ padding: '16px', borderTop: '1px solid var(--border)', backgroundColor: '#FAF8F5' }}>
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>
+                          SUJET DE L'E-MAIL :
+                        </span>
+                        <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', backgroundColor: '#FFFFFF', padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid #ECE7DE' }}>
+                          {tpl.subject}
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: '16px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>
+                          CORPS DE DU MESSAGE :
+                        </span>
+                        <div style={{ padding: '12px', backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid #ECE7DE', fontSize: '13px', color: 'var(--text-main)', whiteSpace: 'pre-wrap', maxHeight: '220px', overflowY: 'auto', lineHeight: 1.5 }}>
+                          {tpl.body}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTemplate(tpl);
+                            setIsCreating(false);
+                          }}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          <Edit size={14} />
+                          Modifier ce modèle
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(tpl.id, tpl.title);
+                          }}
+                          className="btn btn-secondary btn-sm"
+                          style={{ color: '#C81E1E' }}
+                        >
+                          <Trash2 size={14} />
+                          Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Éditeur de template */}
@@ -137,7 +399,7 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
           <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                Titre du modèle (en interne pour l'équipe) *
+                Titre du modèle (en interne) *
               </label>
               <input
                 type="text"
@@ -147,6 +409,38 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
                 onChange={(e) => setEditingTemplate({ ...editingTemplate, title: e.target.value })}
                 placeholder="Ex: Relance devis après 1 semaine"
               />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                  Catégorie *
+                </label>
+                <select
+                  className="input-field"
+                  value={editingTemplate.category || 'Général'}
+                  onChange={(e) => setEditingTemplate({ ...editingTemplate, category: e.target.value })}
+                  style={{ fontWeight: 600 }}
+                >
+                  {categories.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                  Raccourci (ex: /intro) *
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  required
+                  value={editingTemplate.shortcut || ''}
+                  onChange={(e) => setEditingTemplate({ ...editingTemplate, shortcut: e.target.value })}
+                  placeholder="Ex: /intro, /relance, #devis"
+                />
+              </div>
             </div>
 
             <div>
@@ -164,11 +458,9 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
             </div>
 
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
-                  Corps du message *
-                </label>
-              </div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                Corps du message *
+              </label>
               <textarea
                 rows={9}
                 className="input-field"

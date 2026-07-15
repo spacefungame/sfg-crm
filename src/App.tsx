@@ -40,6 +40,7 @@ const AppContent: React.FC = () => {
   const [isNewContactOpen, setIsNewContactOpen] = useState<boolean>(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [emailPickerContact, setEmailPickerContact] = useState<Contact | null>(null);
+  const [emailPickerTemplateId, setEmailPickerTemplateId] = useState<string | null>(null);
 
   // Load and refresh contacts from storage
   const loadContacts = () => {
@@ -150,7 +151,14 @@ const AppContent: React.FC = () => {
       return;
     }
 
-    // Open email template picker modal before launching email
+    let initialTplId: string | null = null;
+    if (eOrTemplate && 'id' in eOrTemplate && 'body' in eOrTemplate) {
+      initialTplId = (eOrTemplate as EmailTemplate).id;
+    } else if (_maybeTemplate && 'id' in _maybeTemplate && 'body' in _maybeTemplate) {
+      initialTplId = (_maybeTemplate as EmailTemplate).id;
+    }
+
+    setEmailPickerTemplateId(initialTplId);
     setEmailPickerContact(contact);
   };
 
@@ -250,7 +258,11 @@ const AppContent: React.FC = () => {
       <EmailTemplatePickerModal
         contact={emailPickerContact}
         isOpen={emailPickerContact !== null}
-        onClose={() => setEmailPickerContact(null)}
+        initialTemplateId={emailPickerTemplateId || undefined}
+        onClose={() => {
+          setEmailPickerContact(null);
+          setEmailPickerTemplateId(null);
+        }}
         onMailSent={loadContacts}
       />
 

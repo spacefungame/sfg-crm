@@ -46,6 +46,20 @@ export class StorageService {
           }
         }
 
+        const rawTemplates = parsed.emailTemplates || DEFAULT_CRM_DATA.emailTemplates;
+        const loadedTemplates = rawTemplates.map((t, idx) => {
+          const defaultT = DEFAULT_CRM_DATA.emailTemplates.find(dt => dt.id === t.id) || DEFAULT_CRM_DATA.emailTemplates[idx];
+          return {
+            ...t,
+            category: t.category || defaultT?.category || 'Général',
+            shortcut: t.shortcut || defaultT?.shortcut || `/${t.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) || 'mail'}`
+          };
+        });
+
+        const loadedCategories = parsed.templateCategories && parsed.templateCategories.length > 0
+          ? parsed.templateCategories
+          : [...(DEFAULT_CRM_DATA.templateCategories || ['Prospection', 'Relance', 'Suivi & Fidélisation', 'Evénements & Devis', 'Général'])];
+
         return {
           contacts: parsed.contacts || DEFAULT_CRM_DATA.contacts,
           users: loadedUsers,
@@ -53,7 +67,8 @@ export class StorageService {
           statuses: parsed.statuses || DEFAULT_CRM_DATA.statuses,
           tags: parsed.tags || DEFAULT_CRM_DATA.tags,
           roles: parsed.roles || DEFAULT_CRM_DATA.roles,
-          emailTemplates: parsed.emailTemplates || DEFAULT_CRM_DATA.emailTemplates,
+          templateCategories: loadedCategories,
+          emailTemplates: loadedTemplates,
           cloudConfig: parsed.cloudConfig || DEFAULT_CRM_DATA.cloudConfig
         };
       }
@@ -309,7 +324,56 @@ export class StorageService {
     this.saveToLocalStorage();
   }
 
-  // --- Email Templates ---
+  // --- Email Templates & Categories ---
+  public getTemplateCategories(): string[] {
+    if (!this.data.templateCategories || this.data.templateCategories.length === 0) {
+      this.data.templateCategories = [...(DEFAULT_CRM_DATA.templateCategories || ['Prospection', 'Relance', 'Suivi & Fidélisation', 'Evénements & Devis', 'Général'])];
+      this.saveToLocalStorage();
+    }
+    return this.data.templateCategories;
+  }
+
+  public addTemplateCategory(categoryName: string): void {
+    const trimmed = categoryName.trim();
+    if (trimmed && !this.getTemplateCategories().includes(trimmed)) {
+      this.data.templateCategories!.push(trimmed);
+      this.saveToLocalStorage();
+    }
+  }
+
+  public updateTemplateCategory(oldCategory: string, newCategory: string): void {
+    const trimmed = newCategory.trim();
+    if (!trimmed || oldCategory === trimmed) return;
+    const categories = this.getTemplateCategories();
+    const index = categories.indexOf(oldCategory);
+    if (index >= 0) {
+      this.data.templateCategories![index] = trimmed;
+    } else {
+      this.data.templateCategories!.push(trimmed);
+    }
+    // Update existing templates using oldCategory
+    this.data.emailTemplates.forEach(t => {
+      if (t.category === oldCategory) {
+        t.category = trimmed;
+      }
+    });
+    this.saveToLocalStorage();
+  }
+
+  public deleteTemplateCategory(categoryName: string): void {
+    const categories = this.getTemplateCategories();
+    if (categories.length <= 1) return; // Ne pas supprimer si c'est la seule
+    this.data.templateCategories = categories.filter(c => c !== categoryName);
+    // Move templates with deleted category to 'Général' or first available
+    const fallback = this.data.templateCategories[0] || 'Général';
+    this.data.emailTemplates.forEach(t => {
+      if (t.category === categoryName) {
+        t.category = fallback;
+      }
+    });
+    this.saveToLocalStorage();
+  }
+
   public getEmailTemplates(): EmailTemplate[] {
     return this.data.emailTemplates;
   }

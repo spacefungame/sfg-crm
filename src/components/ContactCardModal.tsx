@@ -235,10 +235,22 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
                     key={tpl.id}
                     type="button"
                     onClick={() => { setShowTemplateSelector(false); onInitiateMail(formData, tpl); }}
-                    style={{ padding: '10px 14px', textAlign: 'left', borderRadius: 'var(--radius-sm)', border: '1px solid #E3D9F2', backgroundColor: '#FAF7FF', color: '#3B235E', cursor: 'pointer' }}
+                    style={{ padding: '10px 14px', textAlign: 'left', borderRadius: 'var(--radius-sm)', border: '1px solid #E3D9F2', backgroundColor: '#FAF7FF', color: '#3B235E', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
                   >
-                    <div style={{ fontWeight: 600, fontSize: '14px' }}>{tpl.title}</div>
-                    <div style={{ fontSize: '12px', color: '#7E699B' }}>Sujet : {tpl.subject}</div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 6px', borderRadius: '8px', backgroundColor: '#EFEBF6', color: '#533B82' }}>
+                          {tpl.category || 'Général'}
+                        </span>
+                        <span style={{ fontWeight: 600, fontSize: '14px' }}>{tpl.title}</span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#7E699B' }}>Sujet : {tpl.subject}</div>
+                    </div>
+                    {tpl.shortcut && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 7px', borderRadius: '6px', backgroundColor: '#FFF4E5', color: '#B76E00', border: '1px solid #FFE2B7', flexShrink: 0 }}>
+                        ⚡ {tpl.shortcut}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
