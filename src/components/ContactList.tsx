@@ -217,7 +217,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                   style={{ cursor: 'pointer', transition: 'background-color 0.15s ease' }}
                 >
                   {/* Nom + Société */}
-                  <td>
+                  <td onClick={() => onSelectContact(c)} style={{ cursor: 'pointer' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '12.5px' }}>
                       {c.lastName} {c.firstName}
                     </div>
@@ -230,7 +230,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                   </td>
 
                   {/* Établissement & Type + Tags */}
-                  <td>
+                  <td onClick={() => onSelectContact(c)} style={{ cursor: 'pointer' }}>
                     <div style={{ marginBottom: '4px' }}>
                       {getEstablishmentBadge(c.establishment)}
                     </div>
@@ -243,11 +243,12 @@ export const ContactList: React.FC<ContactListProps> = ({
                   </td>
 
                   {/* Coordonnées + boutons action rapide */}
-                  <td>
+                  <td onClick={() => onSelectContact(c)} style={{ cursor: 'pointer' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                       {c.phone && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <button
+                            type="button"
                             onClick={(e) => { e.stopPropagation(); onQuickCall(c, e); }}
                             className="btn btn-sm"
                             style={{ padding: '2px 5px', fontSize: '11px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', border: 'none' }}
@@ -261,6 +262,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                       {c.email && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <button
+                            type="button"
                             onClick={(e) => { e.stopPropagation(); onQuickMail(c, e); }}
                             className="btn btn-sm"
                             style={{ padding: '2px 5px', fontSize: '11px', backgroundColor: '#EDE8F5', color: '#4A306D', border: 'none' }}
@@ -275,7 +277,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                   </td>
 
                   {/* Statut modifiable manuellement en 1 clic */}
-                  <td>
+                  <td onClick={() => onSelectContact(c)} style={{ cursor: 'pointer' }}>
                     <select
                       value={c.status}
                       onClick={(e) => e.stopPropagation()}
@@ -295,7 +297,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                   </td>
 
                   {/* Dead line d'action */}
-                  <td>
+                  <td onClick={() => onSelectContact(c)} style={{ cursor: 'pointer' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                       {getUrgencyBadge(c.deadline)}
                       <input
@@ -310,7 +312,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                   </td>
 
                   {/* Dernière activité */}
-                  <td>
+                  <td onClick={() => onSelectContact(c)} style={{ cursor: 'pointer' }}>
                     {c.logs && c.logs.length > 0 ? (
                       <div>
                         <div style={{ fontSize: '11px', color: 'var(--text-main)', maxWidth: '170px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -326,8 +328,8 @@ export const ContactList: React.FC<ContactListProps> = ({
                   </td>
 
                   {/* Bouton flèche */}
-                  <td>
-                    <button className="btn btn-secondary btn-icon" style={{ padding: '3px', border: 'none' }}>
+                  <td onClick={() => onSelectContact(c)} style={{ cursor: 'pointer' }}>
+                    <button type="button" onClick={() => onSelectContact(c)} className="btn btn-secondary btn-icon" style={{ padding: '3px', border: 'none' }}>
                       <ChevronRight size={14} />
                     </button>
                   </td>
@@ -372,11 +374,12 @@ export const ContactList: React.FC<ContactListProps> = ({
               </div>
 
               {/* Statut & Deadline (Selects en 1 clic) */}
-              <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: '4px', backgroundColor: 'var(--surface-warm)', padding: '6px', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', backgroundColor: 'var(--surface-warm)', padding: '6px', borderRadius: 'var(--radius-sm)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Statut :</span>
                   <select
                     value={c.status}
+                    onClick={(e) => e.stopPropagation()}
                     onChange={(e) => handleQuickStatusChange(c, e.target.value, e)}
                     className="input-field"
                     style={{
@@ -399,6 +402,7 @@ export const ContactList: React.FC<ContactListProps> = ({
                     <input
                       type="date"
                       className="input-field"
+                      onClick={(e) => e.stopPropagation()}
                       value={c.deadline || ''}
                       onChange={(e) => handleQuickDeadlineChange(c, e.target.value, e)}
                       style={{ padding: '2px 4px', fontSize: '11px' }}
@@ -408,10 +412,11 @@ export const ContactList: React.FC<ContactListProps> = ({
               </div>
 
               {/* Action Buttons (Appeler & Envoyer Mail) */}
-              <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
+              <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
                 {c.phone ? (
                   <button
-                    onClick={(e) => onQuickCall(c, e)}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onQuickCall(c, e); }}
                     className="btn btn-primary btn-sm"
                     style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '3px 6px', fontSize: '11px' }}
                   >
@@ -426,7 +431,8 @@ export const ContactList: React.FC<ContactListProps> = ({
 
                 {c.email ? (
                   <button
-                    onClick={(e) => onQuickMail(c, e)}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onQuickMail(c, e); }}
                     className="btn btn-secondary btn-sm"
                     style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', backgroundColor: '#EDE8F5', color: '#4A306D', border: 'none', padding: '3px 6px', fontSize: '11px' }}
                   >
