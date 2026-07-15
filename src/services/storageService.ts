@@ -169,6 +169,11 @@ export class StorageService {
     this.saveToLocalStorage();
   }
 
+  public clearAllContacts(): void {
+    this.data.contacts = [];
+    this.saveToLocalStorage();
+  }
+
   public addActivityLog(contactId: string, log: Omit<ActivityLog, 'id' | 'timestamp' | 'contactId'>): ActivityLog {
     const contact = this.getContactById(contactId);
     if (!contact) throw new Error('Contact not found');
