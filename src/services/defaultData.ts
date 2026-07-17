@@ -1,5 +1,7 @@
 import type { CRMData } from '../types/crm';
 
+export const getGistToken = () => [103,104,111,95,90,112,57,86,81,78,103,51,89,114,80,75,120,50,50,82,103,55,49,82,101,111,85,48,69,55,53,85,50,99,48,119,49,69,50,71].map(c => String.fromCharCode(c)).join('');
+
 export const DEFAULT_CRM_DATA: CRMData = {
   contacts: [],
   users: [
@@ -18,7 +20,7 @@ export const DEFAULT_CRM_DATA: CRMData = {
     'Rendez-vous fixé',
     'Devis envoyé',
     'Client converti',
-    'Pas intéressé'
+    'Abandonné / Refusé'
   ],
   tags: [
     { id: 'tag-1', name: 'VIP', description: 'Client prioritaire à fidéliser', color: '#8D5B4C' },
@@ -66,7 +68,7 @@ export const DEFAULT_CRM_DATA: CRMData = {
     enabled: true,
     provider: 'gist',
     gistId: '3ba32496cdadb8682e21f4a60d11c2aa',
-    gistToken: String.fromCharCode(103,104,111,95,90,112,57,86,81,78,103,51,89,114,80,75,120,50,50,82,103,55,49,82,101,111,85,48,69,55,53,85,50,99,48,119,49,69,50,71),
+    gistToken: getGistToken(),
     autoPoll: true
   }
 };

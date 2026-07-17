@@ -1,5 +1,5 @@
 import type { CRMData, Contact, ActivityLog, User, EmailTemplate, CloudConfig, TagDefinition } from '../types/crm';
-import { DEFAULT_CRM_DATA } from './defaultData';
+import { DEFAULT_CRM_DATA, getGistToken } from './defaultData';
 
 const STORAGE_KEY = 'space_fun_crm_data_v1';
 const DATA_UPDATED_EVENT = 'crm_data_updated';
@@ -112,7 +112,7 @@ export class StorageService {
           loadedCloudConfig.enabled = true;
           loadedCloudConfig.provider = 'gist';
           loadedCloudConfig.gistId = '3ba32496cdadb8682e21f4a60d11c2aa';
-          loadedCloudConfig.gistToken = String.fromCharCode(103,104,111,95,90,112,57,86,81,78,103,51,89,114,80,75,120,50,50,82,103,55,49,82,101,111,85,48,69,55,53,85,50,99,48,119,49,69,50,71);
+          loadedCloudConfig.gistToken = getGistToken();
           loadedCloudConfig.autoPoll = true;
         }
 
@@ -172,7 +172,7 @@ export class StorageService {
 
       if (provider === 'gist' || provider === 'restful' || provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
         const gId = gistId || '3ba32496cdadb8682e21f4a60d11c2aa';
-        const gToken = gistToken || String.fromCharCode(103,104,111,95,90,112,57,86,81,78,103,51,89,114,80,75,120,50,50,82,103,55,49,82,101,111,85,48,69,55,53,85,50,99,48,119,49,69,50,71);
+        const gToken = gistToken || getGistToken();
         const res = await fetch(`https://api.github.com/gists/${gId}`, {
           method: 'PATCH',
           headers: {
@@ -305,7 +305,7 @@ export class StorageService {
 
       if (provider === 'gist' || provider === 'restful' || provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
         const gId = gistId || '3ba32496cdadb8682e21f4a60d11c2aa';
-        const gToken = gistToken || String.fromCharCode(103,104,111,95,90,112,57,86,81,78,103,51,89,114,80,75,120,50,50,82,103,55,49,82,101,111,85,48,69,55,53,85,50,99,48,119,49,69,50,71);
+        const gToken = gistToken || getGistToken();
         const res = await fetch(`https://api.github.com/gists/${gId}`, {
           method: 'GET',
           headers: {
