@@ -27,9 +27,14 @@ export class StorageService {
   }
 
   private initCloudPolling(): void {
-    setTimeout(() => {
+    setTimeout(async () => {
       if (this.data.cloudConfig?.enabled) {
-        this.pullFromCloud();
+        await this.pullFromCloud();
+        if ((this.data.contacts || []).length > 0) {
+          setTimeout(() => {
+            this.syncToCloud();
+          }, 500);
+        }
       }
     }, 1000);
 
@@ -200,6 +205,80 @@ export class StorageService {
     return false;
   }
 
+  private smartMergeData(local: CRMData, remote: CRMData): { merged: CRMData; remoteNeedsUpdate: boolean } {
+    let remoteNeedsUpdate = false;
+
+    // 1. Merge contacts by id
+    const mergedContactsMap = new Map<string, any>();
+    
+    (remote.contacts || []).forEach(rc => {
+      mergedContactsMap.set(rc.id, rc);
+    });
+
+    (local.contacts || []).forEach(lc => {
+      if (!mergedContactsMap.has(lc.id)) {
+        mergedContactsMap.set(lc.id, lc);
+        remoteNeedsUpdate = true;
+      } else {
+        const rc = mergedContactsMap.get(lc.id)!;
+        const localTime = new Date(lc.updatedAt || lc.createdAt || 0).getTime() || 0;
+        const remoteTime = new Date(rc.updatedAt || rc.createdAt || 0).getTime() || 0;
+        
+        const localRicher = (lc.notes?.length || 0) > (rc.notes?.length || 0) || (lc.logs?.length || 0) > (rc.logs?.length || 0);
+        if (localRicher || localTime >= remoteTime) {
+          mergedContactsMap.set(lc.id, lc);
+          remoteNeedsUpdate = true;
+        }
+      }
+    });
+
+    const mergedContacts = Array.from(mergedContactsMap.values());
+
+    // 2. Merge tags
+    const mergedTagsMap = new Map<string, any>();
+    (remote.tags || []).forEach(rt => mergedTagsMap.set(rt.id || rt.name, rt));
+    (local.tags || []).forEach(lt => {
+      if (!mergedTagsMap.has(lt.id || lt.name)) {
+        mergedTagsMap.set(lt.id || lt.name, lt);
+        remoteNeedsUpdate = true;
+      }
+    });
+
+    // 3. Merge contactTypes, statuses, roles
+    const mergedTypes = Array.from(new Set([...(remote.contactTypes || []), ...(local.contactTypes || [])]));
+    if (mergedTypes.length > (remote.contactTypes || []).length) remoteNeedsUpdate = true;
+
+    const mergedStatuses = Array.from(new Set([...(remote.statuses || []), ...(local.statuses || [])]));
+    if (mergedStatuses.length > (remote.statuses || []).length) remoteNeedsUpdate = true;
+
+    const mergedRoles = Array.from(new Set([...(remote.roles || []), ...(local.roles || [])]));
+    if (mergedRoles.length > (remote.roles || []).length) remoteNeedsUpdate = true;
+
+    // 4. Merge users
+    const mergedUsersMap = new Map<string, any>();
+    (remote.users || []).forEach(ru => mergedUsersMap.set(ru.username.toLowerCase(), ru));
+    (local.users || []).forEach(lu => {
+      if (!mergedUsersMap.has(lu.username.toLowerCase())) {
+        mergedUsersMap.set(lu.username.toLowerCase(), lu);
+        remoteNeedsUpdate = true;
+      }
+    });
+
+    const merged: CRMData = {
+      contacts: mergedContacts,
+      users: Array.from(mergedUsersMap.values()),
+      contactTypes: mergedTypes,
+      statuses: mergedStatuses,
+      tags: Array.from(mergedTagsMap.values()),
+      roles: mergedRoles,
+      templateCategories: remote.templateCategories || local.templateCategories,
+      emailTemplates: remote.emailTemplates || local.emailTemplates,
+      cloudConfig: { ...remote.cloudConfig, ...local.cloudConfig, lastSync: new Date().toLocaleTimeString() }
+    };
+
+    return { merged, remoteNeedsUpdate };
+  }
+
   public async pullFromCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig?.enabled) return false;
@@ -216,17 +295,22 @@ export class StorageService {
         if (res.ok) {
           const remoteData = await res.json() as CRMData;
           if (remoteData && remoteData.contacts && remoteData.users) {
+            const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
             const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
-            const remoteCheck = JSON.stringify({ ...remoteData, cloudConfig: null });
-            if (localCheck !== remoteCheck) {
-              console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Mise à jour du CRM en temps réel.');
-              this.data = {
-                ...remoteData,
-                cloudConfig: { ...remoteData.cloudConfig, ...this.data.cloudConfig, lastSync: new Date().toLocaleTimeString() }
-              };
+            const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
+
+            if (localCheck !== mergedCheck) {
+              console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Fusion intelligente sans perte de données.');
+              this.data = merged;
               this.saveToLocalStorage(true);
-              return true;
             }
+
+            if (remoteNeedsUpdate || ((this.data.contacts || []).length > 0 && (remoteData.contacts || []).length === 0)) {
+              setTimeout(() => {
+                this.syncToCloud();
+              }, 500);
+            }
+            return true;
           }
         }
       } else if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
@@ -240,17 +324,21 @@ export class StorageService {
           const json = await res.json();
           const remoteData = json.record as CRMData;
           if (remoteData && remoteData.contacts && remoteData.users) {
+            const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
             const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
-            const remoteCheck = JSON.stringify({ ...remoteData, cloudConfig: null });
-            if (localCheck !== remoteCheck) {
-              console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Mise à jour du CRM en temps réel.');
-              this.data = {
-                ...remoteData,
-                cloudConfig: { ...remoteData.cloudConfig, ...this.data.cloudConfig, lastSync: new Date().toLocaleTimeString() }
-              };
+            const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
+
+            if (localCheck !== mergedCheck) {
+              this.data = merged;
               this.saveToLocalStorage(true);
-              return true;
             }
+
+            if (remoteNeedsUpdate) {
+              setTimeout(() => {
+                this.syncToCloud();
+              }, 500);
+            }
+            return true;
           }
         }
       } else if (provider === 'supabase' && supabaseUrl && supabaseKey) {
@@ -265,16 +353,21 @@ export class StorageService {
           const rows = await res.json();
           const remoteData = rows?.[0]?.data as CRMData;
           if (remoteData && remoteData.contacts) {
+            const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
             const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
-            const remoteCheck = JSON.stringify({ ...remoteData, cloudConfig: null });
-            if (localCheck !== remoteCheck) {
-              this.data = {
-                ...remoteData,
-                cloudConfig: { ...remoteData.cloudConfig, ...this.data.cloudConfig, lastSync: new Date().toLocaleTimeString() }
-              };
+            const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
+
+            if (localCheck !== mergedCheck) {
+              this.data = merged;
               this.saveToLocalStorage(true);
-              return true;
             }
+
+            if (remoteNeedsUpdate) {
+              setTimeout(() => {
+                this.syncToCloud();
+              }, 500);
+            }
+            return true;
           }
         }
       }
