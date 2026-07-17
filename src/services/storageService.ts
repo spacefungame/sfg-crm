@@ -273,6 +273,20 @@ export class StorageService {
       }
     });
 
+    // 5. Merge templateCategories and emailTemplates
+    const mergedCategories = Array.from(new Set([...(remote.templateCategories || []), ...(local.templateCategories || [])]));
+    if (mergedCategories.length > (remote.templateCategories || []).length) remoteNeedsUpdate = true;
+
+    const mergedTemplatesMap = new Map<string, any>();
+    (remote.emailTemplates || []).forEach(rt => mergedTemplatesMap.set(rt.id || rt.title, rt));
+    (local.emailTemplates || []).forEach(lt => {
+      if (!mergedTemplatesMap.has(lt.id || lt.title)) {
+        mergedTemplatesMap.set(lt.id || lt.title, lt);
+        remoteNeedsUpdate = true;
+      }
+    });
+    const mergedTemplates = Array.from(mergedTemplatesMap.values());
+
     const merged: CRMData = {
       contacts: mergedContacts,
       deletedContactIds: Array.from(allDeletedIds),
@@ -281,10 +295,11 @@ export class StorageService {
       statuses: mergedStatuses,
       tags: Array.from(mergedTagsMap.values()),
       roles: mergedRoles,
-      templateCategories: remote.templateCategories || local.templateCategories,
-      emailTemplates: remote.emailTemplates || local.emailTemplates,
+      templateCategories: mergedCategories,
+      emailTemplates: mergedTemplates,
       cloudConfig: { ...remote.cloudConfig, ...local.cloudConfig, lastSync: new Date().toLocaleTimeString() }
     };
+
 
 
     return { merged, remoteNeedsUpdate };
