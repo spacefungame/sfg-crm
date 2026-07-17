@@ -64,6 +64,7 @@ export const DEFAULT_CRM_DATA: CRMData = {
   ],
   cloudConfig: {
     enabled: false,
-    provider: 'local'
+    provider: 'local',
+    autoPoll: true
   }
 };

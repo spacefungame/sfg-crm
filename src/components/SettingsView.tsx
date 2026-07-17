@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
-import type { TagDefinition, User } from '../types/crm';
+import type { TagDefinition, User, CloudConfig } from '../types/crm';
 import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown, X, KeyRound, ArrowUp, ArrowDown, GripVertical, Download, Upload } from 'lucide-react';
 import { TemplatesManager } from './TemplatesManager';
 import { EmailProviderSelector } from './EmailProviderSelector';
@@ -38,6 +38,12 @@ export const SettingsView: React.FC = () => {
   const [newRole, setNewRole] = useState<string>('user');
   const [inviteProvider, setInviteProvider] = useState<string>(storageService.getPreferredEmailProvider());
 
+  // --- Cloud Sync State ---
+  const [cloudConfig, setCloudConfig] = useState<CloudConfig>(
+    storageService.getData().cloudConfig || { enabled: false, provider: 'jsonbin', autoPoll: true }
+  );
+  const [syncingCloud, setSyncingCloud] = useState<boolean>(false);
+
   const colorPalette = [
     { name: 'Marron / Caramel', code: '#8B5A2B' },
     { name: 'Beige Doré', code: '#D4AF37' },
@@ -57,6 +63,7 @@ export const SettingsView: React.FC = () => {
       setStatusesList(storageService.getStatuses());
       setTypesList(storageService.getContactTypes());
       setRolesList(storageService.getRoles());
+      setCloudConfig(storageService.getData().cloudConfig || { enabled: false, provider: 'jsonbin', autoPoll: true });
     };
     window.addEventListener('crm_data_updated', handleSync);
     return () => window.removeEventListener('crm_data_updated', handleSync);
@@ -299,10 +306,10 @@ export const SettingsView: React.FC = () => {
             type="button"
             onClick={() => setActiveSection('backup')}
             className={`btn btn-sm ${activeSection === 'backup' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ border: 'none', padding: '4px 8px', fontSize: '11px', backgroundColor: activeSection === 'backup' ? 'var(--primary)' : '#FEF3C7', color: activeSection === 'backup' ? '#FFFFFF' : '#92400E', fontWeight: 700 }}
+            style={{ border: 'none', padding: '4px 8px', fontSize: '11px', backgroundColor: activeSection === 'backup' ? 'var(--primary)' : '#DEF7EC', color: activeSection === 'backup' ? '#FFFFFF' : '#03543F', fontWeight: 700 }}
           >
-            <Download size={13} />
-            Sauvegarde & Partage (.json)
+            <Shield size={13} />
+            Synchro En Ligne (.json/Cloud)
           </button>
         </div>
       </div>
@@ -950,93 +957,208 @@ export const SettingsView: React.FC = () => {
       )}
 
       {/* Section 7: SAUVEGARDE & PARTAGE (.json) */}
+      {/* Section 7: SAUVEGARDE & PARTAGE (.json) & SYNCHRO CLOUD */}
       {activeSection === 'backup' && (
-        <div className="card animate-fade-in" style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Download size={22} style={{ color: 'var(--primary)' }} />
-            Sauvegarde, Transfert & Synchronisation de votre CRM
-          </h3>
-          <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '20px' }}>
-            Ce CRM fonctionne en toute confidentialité <strong>directement dans la mémoire de ce navigateur (localStorage)</strong> sans serveur distant. 
-            <br /><br />
-            Pour <strong>partager toutes vos données</strong> (vos contacts, vos tags, vos types personnalisés ainsi que les comptes et mots de passe de votre équipe comme <em>Jérôme</em>) avec un collègue ou sur un autre ordinateur, il vous suffit de :
-            <br />
-            1️⃣ <strong>Télécharger la sauvegarde (.json)</strong> depuis cet ordinateur principal.<br />
-            2️⃣ Envoyer ce fichier par e-mail, clé USB ou messagerie au collaborateur.<br />
-            3️⃣ Le collaborateur clique sur <strong>Importer une sauvegarde (.json)</strong> ci-dessous sur son ordinateur pour se synchroniser instantanément !
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '24px' }}>
-            {/* Box Export */}
-            <div style={{ backgroundColor: 'var(--surface-warm)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  📥 Exporter la base CRM
-                </h4>
-                <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                  Génère un fichier <code>sfg-crm-data.json</code> contenant 100% de vos fiches clients, étiquettes, types, statuts et profils d'équipe actuels.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const dataStr = storageService.exportData();
-                  const blob = new Blob([dataStr], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  const dateStr = new Date().toISOString().split('T')[0];
-                  a.download = `sfg-crm-sauvegarde-${dateStr}.json`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                }}
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '12px', fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              >
-                <Download size={16} />
-                Télécharger la sauvegarde (.json)
-              </button>
+        <div className="card animate-fade-in" style={{ padding: '24px', maxWidth: '850px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          
+          {/* Bloc 1 : Synchro en Ligne Temps Réel */}
+          <div style={{ backgroundColor: 'var(--surface-warm)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '2px solid var(--primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <Shield size={22} style={{ color: 'var(--primary)' }} />
+                1. Synchronisation en Ligne Automatique (Temps Réel Équipe)
+              </h3>
+              {cloudConfig.enabled ? (
+                <span style={{ backgroundColor: '#DEF7EC', color: '#03543F', padding: '6px 12px', borderRadius: 'var(--radius-full)', fontWeight: 600, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CheckCircle2 size={14} /> Connecté en ligne {cloudConfig.lastSync ? `(à ${cloudConfig.lastSync})` : ''}
+                </span>
+              ) : (
+                <span style={{ backgroundColor: '#FDE8E8', color: '#C81E1E', padding: '6px 12px', borderRadius: 'var(--radius-full)', fontWeight: 600, fontSize: '12px' }}>
+                  Hors ligne (Mode local uniquement)
+                </span>
+              )}
             </div>
 
-            {/* Box Import */}
-            <div style={{ backgroundColor: 'var(--surface)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '2px dashed var(--border-focus)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  📤 Importer / Synchroniser une base
-                </h4>
-                <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                  Sélectionnez un fichier <code>.json</code> exporté par un autre ordinateur pour remplacer les données locales par cette sauvegarde complète.
-                </p>
+            <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '20px' }}>
+              Pour que <strong>tous les ordinateurs de l'équipe (vous, Jérôme, etc.) se synchronisent automatiquement en temps réel</strong> à chaque fois que quelqu'un travaille ou modifie une fiche client :
+              <br />
+              1️⃣ Allez sur <strong><a href="https://jsonbin.io" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>jsonbin.io</a></strong> et créez un compte gratuit (en 30 secondes).<br />
+              2️⃣ Cliquez sur <strong>+ Create Bin</strong>, collez-y <code>&#123;"status":"ok"&#125;</code> et enregistrez. Copiez l'ID du Bin (<strong>Bin ID</strong>) et votre clé d'accès (<strong>Master Key / X-Master-Key</strong> dans API Keys).<br />
+              3️⃣ Renseignez-les ci-dessous sur chaque ordinateur : <strong>la base se synchronisera en ligne toute seule sans aucune intervention de votre part !</strong>
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'var(--surface)', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
+                    ID de la Base Cloud (Bin ID)
+                  </label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="ex: 6698b31a..."
+                    value={cloudConfig.jsonbinId || ''}
+                    onChange={(e) => setCloudConfig({ ...cloudConfig, jsonbinId: e.target.value, provider: 'jsonbin' })}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
+                    Clé Secrète (X-Master-Key)
+                  </label>
+                  <input
+                    type="password"
+                    className="input"
+                    placeholder="ex: $2a$10$..."
+                    value={cloudConfig.jsonbinKey || ''}
+                    onChange={(e) => setCloudConfig({ ...cloudConfig, jsonbinKey: e.target.value, provider: 'jsonbin' })}
+                    style={{ width: '100%' }}
+                  />
+                </div>
               </div>
-              <label className="btn btn-secondary" style={{ width: '100%', padding: '12px', fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
-                <Upload size={16} />
-                Importer une sauvegarde (.json)
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <input
-                  type="file"
-                  accept=".json,application/json"
-                  style={{ display: 'none' }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      const content = event.target?.result as string;
-                      if (content) {
-                        const success = storageService.importData(content);
-                        if (success) {
-                          alert('✅ Base CRM importée et synchronisée avec succès ! La page va se rafraîchir pour afficher les nouvelles données.');
-                          window.location.reload();
-                        } else {
-                          alert('❌ Erreur : Le fichier JSON est invalide ou corrompu.');
-                        }
-                      }
-                    };
-                    reader.readAsText(file);
-                  }}
+                  type="checkbox"
+                  id="cloudToggle"
+                  checked={cloudConfig.enabled}
+                  onChange={(e) => setCloudConfig({ ...cloudConfig, enabled: e.target.checked, autoPoll: true })}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                 />
-              </label>
+                <label htmlFor="cloudToggle" style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)', cursor: 'pointer' }}>
+                  Activer la synchronisation automatique en continu en tâche de fond (Push & Pull en temps réel)
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    storageService.saveCloudConfig(cloudConfig);
+                    setSyncingCloud(true);
+                    const pushOk = await storageService.syncToCloud();
+                    const pullOk = await storageService.pullFromCloud();
+                    setSyncingCloud(false);
+                    if (pushOk || pullOk) {
+                      alert('✅ Synchronisation Cloud connectée et active ! Vos modifications sont désormais synchronisées en ligne en temps réel.');
+                      window.location.reload();
+                    } else if (cloudConfig.enabled) {
+                      alert('⚠️ Erreur de connexion Cloud : Vérifiez votre Bin ID et votre Master Key jsonbin.io.');
+                    } else {
+                      alert('ℹ️ Synchronisation Cloud désactivée.');
+                    }
+                  }}
+                  disabled={syncingCloud}
+                  className="btn btn-primary"
+                  style={{ flex: 1, padding: '10px', fontWeight: 600 }}
+                >
+                  {syncingCloud ? '⏳ Connexion en cours...' : '💾 Enregistrer et Activer la Synchro en Ligne'}
+                </button>
+
+                {cloudConfig.enabled && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setSyncingCloud(true);
+                      await storageService.syncToCloud();
+                      await storageService.pullFromCloud();
+                      setSyncingCloud(false);
+                      alert('🔄 Synchro manuelle effectuée avec succès !');
+                      window.location.reload();
+                    }}
+                    disabled={syncingCloud}
+                    className="btn btn-secondary"
+                    style={{ padding: '10px 16px', fontWeight: 600 }}
+                  >
+                    🔄 Forcer synchro maintenant
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Bloc 2 : Sauvegarde / Transfert par fichier JSON (Alternative hors-ligne) */}
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Download size={20} style={{ color: 'var(--text-muted)' }} />
+              2. Transfert ponctuel par fichier (.json) (Alternative manuelle)
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Si vous préférez transférer votre base ponctuellement par e-mail ou clé USB sans utiliser de compte cloud :
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              {/* Box Export */}
+              <div style={{ backgroundColor: 'var(--surface-warm)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    📥 Exporter le fichier CRM
+                  </h4>
+                  <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                    Télécharge 100% de vos clients, statuts, tags et profils sous forme d'un fichier <code>.json</code>.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const dataStr = storageService.exportData();
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const dateStr = new Date().toISOString().split('T')[0];
+                    a.download = `sfg-crm-sauvegarde-${dateStr}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="btn btn-primary"
+                  style={{ width: '100%', padding: '12px', fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  <Download size={16} />
+                  Télécharger le fichier (.json)
+                </button>
+              </div>
+
+              {/* Box Import */}
+              <div style={{ backgroundColor: 'var(--surface)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '2px dashed var(--border-focus)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    📤 Importer un fichier CRM
+                  </h4>
+                  <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                    Remplace les données locales par celles d'un fichier <code>.json</code> reçu d'un autre PC.
+                  </p>
+                </div>
+                <label className="btn btn-secondary" style={{ width: '100%', padding: '12px', fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <Upload size={16} />
+                  Importer un fichier (.json)
+                  <input
+                    type="file"
+                    accept=".json,application/json"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const content = event.target?.result as string;
+                        if (content) {
+                          const success = storageService.importData(content);
+                          if (success) {
+                            alert('✅ Base CRM importée et synchronisée avec succès !');
+                            window.location.reload();
+                          } else {
+                            alert('❌ Erreur : Le fichier JSON est invalide ou corrompu.');
+                          }
+                        }
+                      };
+                      reader.readAsText(file);
+                    }}
+                  />
+                </label>
+              </div>
             </div>
           </div>
         </div>

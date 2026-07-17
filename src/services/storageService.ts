@@ -22,6 +22,22 @@ export class StorageService {
         }
       }
     });
+
+    this.initCloudPolling();
+  }
+
+  private initCloudPolling(): void {
+    setTimeout(() => {
+      if (this.data.cloudConfig?.enabled) {
+        this.pullFromCloud();
+      }
+    }, 1000);
+
+    setInterval(() => {
+      if (this.data.cloudConfig?.enabled && this.data.cloudConfig.autoPoll !== false) {
+        this.pullFromCloud();
+      }
+    }, 10000);
   }
 
   public static getInstance(): StorageService {
@@ -107,13 +123,12 @@ export class StorageService {
     return JSON.parse(JSON.stringify(DEFAULT_CRM_DATA));
   }
 
-  private saveToLocalStorage(): void {
+  private saveToLocalStorage(skipCloudSync = false): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
       this.notifyListeners();
       
-      // If cloud sync is configured, trigger a background sync (mock/supabase hook)
-      if (this.data.cloudConfig.enabled && this.data.cloudConfig.supabaseUrl) {
+      if (!skipCloudSync && this.data.cloudConfig?.enabled) {
         this.syncToCloud();
       }
     } catch (err) {
@@ -125,18 +140,102 @@ export class StorageService {
     window.dispatchEvent(new CustomEvent(DATA_UPDATED_EVENT, { detail: this.data }));
   }
 
-  private async syncToCloud(): Promise<void> {
-    // Si l'utilisateur a configuré Supabase, on peut envoyer via REST / fetch
+  public async syncToCloud(): Promise<boolean> {
     try {
-      const { supabaseUrl, supabaseKey } = this.data.cloudConfig;
-      if (!supabaseUrl || !supabaseKey) return;
-      
-      // We can sync via standard REST POST/PUT or keep local sync intact
-      // This is a placeholder hook for actual Supabase/Firebase sync if user puts keys
-      console.info('[Cloud Sync] Synchro avec Supabase/Cloud : OK');
+      if (!this.data.cloudConfig?.enabled) return false;
+      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey } = this.data.cloudConfig;
+      this.data.cloudConfig.lastSync = new Date().toLocaleTimeString();
+
+      if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${jsonbinId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': jsonbinKey
+          },
+          body: JSON.stringify(this.data)
+        });
+        if (res.ok) {
+          console.info('[Realtime Cloud Sync] Push JSONBin réussi !');
+          return true;
+        }
+      } else if (provider === 'supabase' && supabaseUrl && supabaseKey) {
+        const res = await fetch(`${supabaseUrl}/rest/v1/sfg_crm_store?id=eq.1`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({ data: this.data, updated_at: new Date().toISOString() })
+        });
+        if (res.ok) return true;
+      }
     } catch (e) {
-      console.warn('[Cloud Sync] Erreur de synchro distante:', e);
+      console.warn('[Realtime Cloud Sync] Erreur push distant:', e);
     }
+    return false;
+  }
+
+  public async pullFromCloud(): Promise<boolean> {
+    try {
+      if (!this.data.cloudConfig?.enabled) return false;
+      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey } = this.data.cloudConfig;
+
+      if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${jsonbinId}/latest`, {
+          method: 'GET',
+          headers: {
+            'X-Master-Key': jsonbinKey
+          }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const remoteData = json.record as CRMData;
+          if (remoteData && remoteData.contacts && remoteData.users) {
+            const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
+            const remoteCheck = JSON.stringify({ ...remoteData, cloudConfig: null });
+            if (localCheck !== remoteCheck) {
+              console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Mise à jour du CRM en temps réel.');
+              this.data = {
+                ...remoteData,
+                cloudConfig: { ...remoteData.cloudConfig, ...this.data.cloudConfig, lastSync: new Date().toLocaleTimeString() }
+              };
+              this.saveToLocalStorage(true);
+              return true;
+            }
+          }
+        }
+      } else if (provider === 'supabase' && supabaseUrl && supabaseKey) {
+        const res = await fetch(`${supabaseUrl}/rest/v1/sfg_crm_store?id=eq.1`, {
+          method: 'GET',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`
+          }
+        });
+        if (res.ok) {
+          const rows = await res.json();
+          const remoteData = rows?.[0]?.data as CRMData;
+          if (remoteData && remoteData.contacts) {
+            const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
+            const remoteCheck = JSON.stringify({ ...remoteData, cloudConfig: null });
+            if (localCheck !== remoteCheck) {
+              this.data = {
+                ...remoteData,
+                cloudConfig: { ...remoteData.cloudConfig, ...this.data.cloudConfig, lastSync: new Date().toLocaleTimeString() }
+              };
+              this.saveToLocalStorage(true);
+              return true;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[Realtime Cloud Sync] Erreur pull distant:', e);
+    }
+    return false;
   }
 
   public getData(): CRMData {
@@ -494,10 +593,13 @@ export class StorageService {
     this.saveToLocalStorage();
   }
 
-  // --- Cloud Config ---
   public saveCloudConfig(config: CloudConfig): void {
     this.data.cloudConfig = config;
     this.saveToLocalStorage();
+    if (config.enabled) {
+      this.syncToCloud();
+      this.pullFromCloud();
+    }
   }
 
   // --- Pending Communication Tracking (Magic Return Prompt) ---

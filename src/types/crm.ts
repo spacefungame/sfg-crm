@@ -72,9 +72,13 @@ export interface PendingCommunication {
 
 export interface CloudConfig {
   enabled: boolean;
-  provider: 'local' | 'supabase';
+  provider: 'local' | 'jsonbin' | 'supabase';
+  jsonbinId?: string;
+  jsonbinKey?: string;
   supabaseUrl?: string;
   supabaseKey?: string;
+  autoPoll?: boolean;
+  lastSync?: string;
 }
 
 export interface CRMData {
