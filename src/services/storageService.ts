@@ -168,45 +168,33 @@ export class StorageService {
 
   public async syncToCloud(): Promise<boolean> {
     try {
-      if (!this.data.cloudConfig?.enabled) return false;
-      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey } = this.data.cloudConfig;
-
+      if (!this.data.cloudConfig) this.data.cloudConfig = { ...DEFAULT_CRM_DATA.cloudConfig };
+      this.data.cloudConfig.enabled = true;
+      this.data.cloudConfig.provider = 'jsonbin';
+      this.data.cloudConfig.jsonbinId = '6a5a442bf5f4af5e299ce6d0';
+      this.data.cloudConfig.jsonbinKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
       this.data.cloudConfig.lastSync = new Date().toLocaleTimeString();
 
-      if (provider === 'supabase' && supabaseUrl && supabaseKey) {
-
-        const res = await fetch(`${supabaseUrl}/rest/v1/sfg_crm_store?id=eq.1`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Prefer': 'return=representation'
-          },
-          body: JSON.stringify({ data: this.data, updated_at: new Date().toISOString() })
-        });
-        if (res.ok) return true;
-      } else {
-        const binId = jsonbinId || '6a5a442bf5f4af5e299ce6d0';
-        const binKey = jsonbinKey || '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': binKey
-          },
-          body: JSON.stringify(this.data)
-        });
-        if (res.ok) {
-          console.info('[Realtime Cloud Sync] Push JSONBin réussi !');
-          return true;
-        }
+      const binId = '6a5a442bf5f4af5e299ce6d0';
+      const binKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': binKey
+        },
+        body: JSON.stringify(this.data)
+      });
+      if (res.ok) {
+        console.info('[Realtime Cloud Sync] Push JSONBin réussi !');
+        return true;
       }
     } catch (e) {
       console.warn('[Realtime Cloud Sync] Erreur push distant:', e);
     }
     return false;
   }
+
 
   private smartMergeData(local: CRMData, remote: CRMData): { merged: CRMData; remoteNeedsUpdate: boolean } {
     let remoteNeedsUpdate = false;
@@ -307,46 +295,21 @@ export class StorageService {
 
   public async pullFromCloud(): Promise<boolean> {
     try {
-      if (!this.data.cloudConfig?.enabled) return false;
-      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey } = this.data.cloudConfig;
+      if (!this.data.cloudConfig) this.data.cloudConfig = { ...DEFAULT_CRM_DATA.cloudConfig };
+      this.data.cloudConfig.enabled = true;
+      this.data.cloudConfig.provider = 'jsonbin';
+      this.data.cloudConfig.jsonbinId = '6a5a442bf5f4af5e299ce6d0';
+      this.data.cloudConfig.jsonbinKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
 
-      if (provider === 'supabase' && supabaseUrl && supabaseKey) {
-        const res = await fetch(`${supabaseUrl}/rest/v1/sfg_crm_store?id=eq.1`, {
-          method: 'GET',
-          headers: {
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`
-          }
-        });
-        if (res.ok) {
-          const rows = await res.json();
-          const remoteData = rows?.[0]?.data as CRMData;
-          if (remoteData && remoteData.contacts && remoteData.users) {
-            const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
-            const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
-            const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
-
-            if (localCheck !== mergedCheck) {
-              console.info('[Realtime Cloud Sync] Modifications Supabase détectées -> Fusion.');
-              this.data = merged;
-              this.saveToLocalStorage(true);
-            }
-            if (remoteNeedsUpdate || ((this.data.contacts || []).length > 0 && (remoteData.contacts || []).length === 0)) {
-              setTimeout(() => { this.syncToCloud(); }, 500);
-            }
-            return true;
-          }
+      const binId = '6a5a442bf5f4af5e299ce6d0';
+      const binKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+        method: 'GET',
+        headers: {
+          'X-Master-Key': binKey
         }
-      } else {
-        const binId = jsonbinId || '6a5a442bf5f4af5e299ce6d0';
-        const binKey = jsonbinKey || '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-          method: 'GET',
-          headers: {
-            'X-Master-Key': binKey
-          }
-        });
-        if (res.ok) {
+      });
+      if (res.ok) {
           const json = await res.json();
           const remoteData = (json.record || {}) as any;
           
@@ -374,14 +337,13 @@ export class StorageService {
             }
             return true;
           }
-
         }
-      }
     } catch (e) {
       console.warn('[Realtime Cloud Sync] Erreur pull distant:', e);
     }
     return false;
   }
+
 
 
   public getData(): CRMData {

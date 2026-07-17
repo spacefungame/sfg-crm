@@ -1018,13 +1018,14 @@ export const SettingsView: React.FC = () => {
                     const forcedConfig = {
                       ...cloudConfig,
                       enabled: true,
-                      provider: cloudConfig.provider || 'jsonbin',
-                      jsonbinId: cloudConfig.jsonbinId || '6a5a442bf5f4af5e299ce6d0',
-                      jsonbinKey: cloudConfig.jsonbinKey || '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi',
+                      provider: 'jsonbin' as const,
+                      jsonbinId: '6a5a442bf5f4af5e299ce6d0',
+                      jsonbinKey: '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi',
                       autoPoll: true
                     };
                     setCloudConfig(forcedConfig);
                     storageService.saveCloudConfig(forcedConfig);
+
                     setSyncingCloud(true);
                     const pushOk = await storageService.syncToCloud();
                     const pullOk = await storageService.pullFromCloud();
