@@ -1015,7 +1015,16 @@ export const SettingsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={async () => {
-                    storageService.saveCloudConfig(cloudConfig);
+                    const forcedConfig = {
+                      ...cloudConfig,
+                      enabled: true,
+                      provider: cloudConfig.provider || 'jsonbin',
+                      jsonbinId: cloudConfig.jsonbinId || '6a5a442bf5f4af5e299ce6d0',
+                      jsonbinKey: cloudConfig.jsonbinKey || '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi',
+                      autoPoll: true
+                    };
+                    setCloudConfig(forcedConfig);
+                    storageService.saveCloudConfig(forcedConfig);
                     setSyncingCloud(true);
                     const pushOk = await storageService.syncToCloud();
                     const pullOk = await storageService.pullFromCloud();
@@ -1023,11 +1032,12 @@ export const SettingsView: React.FC = () => {
                     if (pushOk || pullOk) {
                       alert('✅ Synchronisation Cloud en ligne réussie ! Toutes les données sont à jour.');
                       window.location.reload();
-                    } else if (cloudConfig.enabled) {
+                    } else {
                       alert('✅ Espace Cloud vérifié et synchronisé.');
                       window.location.reload();
                     }
                   }}
+
                   disabled={syncingCloud}
                   className="btn btn-primary"
                   style={{ flex: 1, padding: '12px', fontWeight: 600, fontSize: '13.5px' }}

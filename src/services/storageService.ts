@@ -717,11 +717,8 @@ export class StorageService {
   public saveCloudConfig(config: CloudConfig): void {
     this.data.cloudConfig = config;
     this.saveToLocalStorage();
-    if (config.enabled) {
-      this.syncToCloud();
-      this.pullFromCloud();
-    }
   }
+
 
   // --- Pending Communication Tracking (Magic Return Prompt) ---
   public setPendingCommunication(contactId: string, type: 'call' | 'mail', templateTitle?: string): void {
