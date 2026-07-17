@@ -555,9 +555,11 @@ export class StorageService {
       const fullText = `Destinataire : ${to}\nObjet : ${subject}\n\n${body}`;
       navigator.clipboard.writeText(fullText);
       alert(`✅ Message et adresse copiés dans votre presse-papiers !\n\nDestinataire : ${to}\n\nVous pouvez maintenant coller le tout dans la boîte e-mail ou le compte de votre choix.`);
+    } else if (chosenProvider === 'thunderbird' || chosenProvider === 'mailto') {
+      // 'thunderbird' ou 'mailto' - Lance directement le logiciel de messagerie local de l'ordinateur via le protocole mailto:
+      window.location.href = `mailto:${to}?subject=${encodedSubject}&body=${encodedBody}`;
     } else {
-      // 'mailto' - App par défaut de l'ordinateur
-      window.open(`mailto:${to}?subject=${encodedSubject}&body=${encodedBody}`, '_blank');
+      window.location.href = `mailto:${to}?subject=${encodedSubject}&body=${encodedBody}`;
     }
   }
 }

@@ -84,11 +84,14 @@ export const EmailProviderSelector: React.FC<EmailProviderSelectorProps> = ({ va
           ))}
           <option value="gmail">✉️ Gmail Web (compte Google par défaut)</option>
         </optgroup>
-        <optgroup label="🏢 AUTRES MESSAGERIES WEB & POSTE DE TRAVAIL">
+        <optgroup label="🐦 LOGICIELS DE MESSAGERIE SUR POSTE DE TRAVAIL">
+          <option value="thunderbird">🐦 Mozilla Thunderbird (Logiciel de messagerie installé sur l'ordinateur)</option>
+          <option value="mailto">💻 Application e-mail par défaut du système (Outlook Bureau / Apple Mail / Windows Mail...)</option>
+        </optgroup>
+        <optgroup label="🌐 AUTRES MESSAGERIES WEB EN LIGNE & PRESSE-PAPIERS">
           <option value="outlook-pro">🏢 Outlook Office 365 / Pro en ligne (outlook.office.com)</option>
           <option value="outlook-live">☁️ Outlook.com / Hotmail Web (outlook.live.com)</option>
           <option value="yahoo">🟣 Yahoo Mail en ligne (mail.yahoo.com)</option>
-          <option value="mailto">💻 Application e-mail par défaut de l'ordinateur (Outlook Bureau / Windows Mail...)</option>
           <option value="copy">📋 Copier l'adresse et le message (pour coller dans l'onglet de votre choix)</option>
         </optgroup>
       </select>
