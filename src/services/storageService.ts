@@ -109,13 +109,14 @@ export class StorageService {
           : [...(DEFAULT_CRM_DATA.templateCategories || ['Prospection', 'Relance', 'Suivi & Fidélisation', 'Evénements & Devis', 'Général'])];
 
         const loadedCloudConfig = parsed.cloudConfig || { ...DEFAULT_CRM_DATA.cloudConfig };
-        if (!loadedCloudConfig.supabaseUrl && (loadedCloudConfig.provider === 'gist' || loadedCloudConfig.provider === 'jsonblob' || !loadedCloudConfig.provider || loadedCloudConfig.provider === 'restful' || loadedCloudConfig.jsonbinId !== '6a5a442bf5f4af5e299ce6d0')) {
+        if (!loadedCloudConfig.supabaseUrl) {
           loadedCloudConfig.enabled = true;
           loadedCloudConfig.provider = 'jsonbin';
           loadedCloudConfig.jsonbinId = '6a5a442bf5f4af5e299ce6d0';
           loadedCloudConfig.jsonbinKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
           loadedCloudConfig.autoPoll = true;
         }
+
 
         const finalData: CRMData = {
           contacts: cleanedContacts,
