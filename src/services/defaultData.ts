@@ -4,7 +4,9 @@ export const getGistToken = () => [103,104,111,95,90,112,57,86,81,78,103,51,89,1
 
 export const DEFAULT_CRM_DATA: CRMData = {
   contacts: [],
+  deletedContactIds: [],
   users: [
+
     { id: 'u-dir', username: 'Lauréline Henkens', password: 'Jerome221087', role: 'directrice', email: 'laureline@spacefungames.fr' }
   ],
   contactTypes: [

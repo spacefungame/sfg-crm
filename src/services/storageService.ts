@@ -211,14 +211,19 @@ export class StorageService {
   private smartMergeData(local: CRMData, remote: CRMData): { merged: CRMData; remoteNeedsUpdate: boolean } {
     let remoteNeedsUpdate = false;
 
+    const allDeletedIds = new Set([...(local.deletedContactIds || []), ...(remote.deletedContactIds || [])]);
+
     // 1. Merge contacts by id
     const mergedContactsMap = new Map<string, any>();
     
     (remote.contacts || []).forEach(rc => {
-      mergedContactsMap.set(rc.id, rc);
+      if (!allDeletedIds.has(rc.id)) {
+        mergedContactsMap.set(rc.id, rc);
+      }
     });
 
     (local.contacts || []).forEach(lc => {
+      if (allDeletedIds.has(lc.id)) return;
       if (!mergedContactsMap.has(lc.id)) {
         mergedContactsMap.set(lc.id, lc);
         remoteNeedsUpdate = true;
@@ -235,7 +240,8 @@ export class StorageService {
       }
     });
 
-    const mergedContacts = Array.from(mergedContactsMap.values());
+    const mergedContacts = Array.from(mergedContactsMap.values()).filter(c => !allDeletedIds.has(c.id));
+
 
     // 2. Merge tags
     const mergedTagsMap = new Map<string, any>();
@@ -269,6 +275,7 @@ export class StorageService {
 
     const merged: CRMData = {
       contacts: mergedContacts,
+      deletedContactIds: Array.from(allDeletedIds),
       users: Array.from(mergedUsersMap.values()),
       contactTypes: mergedTypes,
       statuses: mergedStatuses,
@@ -278,6 +285,7 @@ export class StorageService {
       emailTemplates: remote.emailTemplates || local.emailTemplates,
       cloudConfig: { ...remote.cloudConfig, ...local.cloudConfig, lastSync: new Date().toLocaleTimeString() }
     };
+
 
     return { merged, remoteNeedsUpdate };
   }
@@ -327,20 +335,19 @@ export class StorageService {
           const json = await res.json();
           const remoteData = (json.record || {}) as any;
           
-          if (!remoteData.contacts || (remoteData.contacts || []).length === 0) {
+          if ((!remoteData.contacts || (remoteData.contacts || []).length === 0) && !remoteData.cloudConfig?.lastSync && !remoteData.deletedContactIds?.length) {
             if ((this.data.contacts || []).length > 0) {
               setTimeout(() => {
                 this.syncToCloud();
               }, 500);
             }
-          } else if (remoteData.contacts && Array.isArray(remoteData.contacts) && remoteData.contacts.length > 0) {
-
+          } else if (remoteData.contacts && Array.isArray(remoteData.contacts)) {
             const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
             const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
             const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
 
             if (localCheck !== mergedCheck) {
-              console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Fusion intelligente sans perte de données.');
+              console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Fusion intelligente.');
               this.data = merged;
               this.saveToLocalStorage(true);
             }
@@ -352,6 +359,7 @@ export class StorageService {
             }
             return true;
           }
+
         }
       }
     } catch (e) {
@@ -411,14 +419,18 @@ export class StorageService {
   }
 
   public deleteContact(id: string): void {
+    this.data.deletedContactIds = Array.from(new Set([...(this.data.deletedContactIds || []), id]));
     this.data.contacts = this.data.contacts.filter(c => c.id !== id);
     this.saveToLocalStorage();
   }
 
   public clearAllContacts(): void {
+    const allIds = this.data.contacts.map(c => c.id);
+    this.data.deletedContactIds = Array.from(new Set([...(this.data.deletedContactIds || []), ...allIds]));
     this.data.contacts = [];
     this.saveToLocalStorage();
   }
+
 
   public addActivityLog(contactId: string, log: Omit<ActivityLog, 'id' | 'timestamp' | 'contactId'>): ActivityLog {
     const contact = this.getContactById(contactId);
