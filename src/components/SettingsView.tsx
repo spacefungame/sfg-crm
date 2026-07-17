@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import type { TagDefinition, User } from '../types/crm';
-import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown, X, KeyRound, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
+import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown, X, KeyRound, ArrowUp, ArrowDown, GripVertical, Download, Upload } from 'lucide-react';
 import { TemplatesManager } from './TemplatesManager';
 import { EmailProviderSelector } from './EmailProviderSelector';
 
 export const SettingsView: React.FC = () => {
   const { users, currentUser, registerUser, refreshUsers } = useAuth();
-  const [activeSection, setActiveSection] = useState<'tags' | 'statuses' | 'types' | 'roles' | 'users' | 'templates'>('tags');
+  const [activeSection, setActiveSection] = useState<'tags' | 'statuses' | 'types' | 'roles' | 'users' | 'templates' | 'backup'>('tags');
 
   // --- Tags State ---
   const [tagsList, setTagsList] = useState<TagDefinition[]>(storageService.getTags());
@@ -294,6 +294,15 @@ export const SettingsView: React.FC = () => {
           >
             <Mail size={13} />
             Modèles d'E-mails
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('backup')}
+            className={`btn btn-sm ${activeSection === 'backup' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ border: 'none', padding: '4px 8px', fontSize: '11px', backgroundColor: activeSection === 'backup' ? 'var(--primary)' : '#FEF3C7', color: activeSection === 'backup' ? '#FFFFFF' : '#92400E', fontWeight: 700 }}
+          >
+            <Download size={13} />
+            Sauvegarde & Partage (.json)
           </button>
         </div>
       </div>
@@ -937,6 +946,99 @@ export const SettingsView: React.FC = () => {
       {activeSection === 'templates' && (
         <div className="animate-fade-in">
           <TemplatesManager onTemplatesChanged={() => {}} />
+        </div>
+      )}
+
+      {/* Section 7: SAUVEGARDE & PARTAGE (.json) */}
+      {activeSection === 'backup' && (
+        <div className="card animate-fade-in" style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Download size={22} style={{ color: 'var(--primary)' }} />
+            Sauvegarde, Transfert & Synchronisation de votre CRM
+          </h3>
+          <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '20px' }}>
+            Ce CRM fonctionne en toute confidentialité <strong>directement dans la mémoire de ce navigateur (localStorage)</strong> sans serveur distant. 
+            <br /><br />
+            Pour <strong>partager toutes vos données</strong> (vos contacts, vos tags, vos types personnalisés ainsi que les comptes et mots de passe de votre équipe comme <em>Jérôme</em>) avec un collègue ou sur un autre ordinateur, il vous suffit de :
+            <br />
+            1️⃣ <strong>Télécharger la sauvegarde (.json)</strong> depuis cet ordinateur principal.<br />
+            2️⃣ Envoyer ce fichier par e-mail, clé USB ou messagerie au collaborateur.<br />
+            3️⃣ Le collaborateur clique sur <strong>Importer une sauvegarde (.json)</strong> ci-dessous sur son ordinateur pour se synchroniser instantanément !
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '24px' }}>
+            {/* Box Export */}
+            <div style={{ backgroundColor: 'var(--surface-warm)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  📥 Exporter la base CRM
+                </h4>
+                <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                  Génère un fichier <code>sfg-crm-data.json</code> contenant 100% de vos fiches clients, étiquettes, types, statuts et profils d'équipe actuels.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const dataStr = storageService.exportData();
+                  const blob = new Blob([dataStr], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  const dateStr = new Date().toISOString().split('T')[0];
+                  a.download = `sfg-crm-sauvegarde-${dateStr}.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '12px', fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <Download size={16} />
+                Télécharger la sauvegarde (.json)
+              </button>
+            </div>
+
+            {/* Box Import */}
+            <div style={{ backgroundColor: 'var(--surface)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '2px dashed var(--border-focus)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  📤 Importer / Synchroniser une base
+                </h4>
+                <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                  Sélectionnez un fichier <code>.json</code> exporté par un autre ordinateur pour remplacer les données locales par cette sauvegarde complète.
+                </p>
+              </div>
+              <label className="btn btn-secondary" style={{ width: '100%', padding: '12px', fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
+                <Upload size={16} />
+                Importer une sauvegarde (.json)
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const content = event.target?.result as string;
+                      if (content) {
+                        const success = storageService.importData(content);
+                        if (success) {
+                          alert('✅ Base CRM importée et synchronisée avec succès ! La page va se rafraîchir pour afficher les nouvelles données.');
+                          window.location.reload();
+                        } else {
+                          alert('❌ Erreur : Le fichier JSON est invalide ou corrompu.');
+                        }
+                      }
+                    };
+                    reader.readAsText(file);
+                  }}
+                />
+              </label>
+            </div>
+          </div>
         </div>
       )}
 

@@ -56,6 +56,12 @@ export class StorageService {
           }
         }
 
+        // Nettoyage automatique du rôle obsolète "admin" (et bascule en "user" si nécessaire)
+        const loadedRoles = (parsed.roles || DEFAULT_CRM_DATA.roles || ['directrice', 'user']).filter(r => r !== 'admin');
+        if (!loadedRoles.includes('directrice')) loadedRoles.unshift('directrice');
+        if (!loadedRoles.includes('user')) loadedRoles.push('user');
+        loadedUsers = loadedUsers.map(u => (u.role === 'admin' ? { ...u, role: 'user' } : u));
+
         const rawTemplates = parsed.emailTemplates || DEFAULT_CRM_DATA.emailTemplates;
         const loadedTemplates = rawTemplates.map((t, idx) => {
           const defaultT = DEFAULT_CRM_DATA.emailTemplates.find(dt => dt.id === t.id) || DEFAULT_CRM_DATA.emailTemplates[idx];
@@ -76,7 +82,7 @@ export class StorageService {
           contactTypes: parsed.contactTypes || DEFAULT_CRM_DATA.contactTypes,
           statuses: parsed.statuses || DEFAULT_CRM_DATA.statuses,
           tags: parsed.tags || DEFAULT_CRM_DATA.tags,
-          roles: parsed.roles || DEFAULT_CRM_DATA.roles,
+          roles: loadedRoles,
           templateCategories: loadedCategories,
           emailTemplates: loadedTemplates,
           cloudConfig: parsed.cloudConfig || DEFAULT_CRM_DATA.cloudConfig
@@ -140,6 +146,24 @@ export class StorageService {
   public resetToDefault(): void {
     this.data = JSON.parse(JSON.stringify(DEFAULT_CRM_DATA));
     this.saveToLocalStorage();
+  }
+
+  public exportData(): string {
+    return JSON.stringify(this.data, null, 2);
+  }
+
+  public importData(jsonString: string): boolean {
+    try {
+      const parsed = JSON.parse(jsonString) as CRMData;
+      if (parsed && typeof parsed === 'object') {
+        this.data = parsed;
+        this.saveToLocalStorage();
+        return true;
+      }
+    } catch (e) {
+      console.error('Erreur lors de la lecture du fichier de sauvegarde JSON:', e);
+    }
+    return false;
   }
 
   // --- Contacts ---
@@ -268,7 +292,7 @@ export class StorageService {
   // --- Roles ---
   public getRoles(): string[] {
     if (!this.data.roles || this.data.roles.length === 0) {
-      this.data.roles = [...(DEFAULT_CRM_DATA.roles || ['directrice', 'admin', 'user'])];
+      this.data.roles = [...(DEFAULT_CRM_DATA.roles || ['directrice', 'user'])];
       this.saveToLocalStorage();
     }
     return [...this.data.roles];
