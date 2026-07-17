@@ -64,8 +64,8 @@ export const DEFAULT_CRM_DATA: CRMData = {
   ],
   cloudConfig: {
     enabled: true,
-    provider: 'jsonblob',
-    jsonblobId: '019f703f-5831-7b79-8ec3-7c2629fa258a',
+    provider: 'restful',
+    restfulId: 'ff8081819d82fab6019f7053861474f2',
     autoPoll: true
   }
 };

@@ -98,10 +98,10 @@ export class StorageService {
           : [...(DEFAULT_CRM_DATA.templateCategories || ['Prospection', 'Relance', 'Suivi & Fidélisation', 'Evénements & Devis', 'Général'])];
 
         const loadedCloudConfig = parsed.cloudConfig || { ...DEFAULT_CRM_DATA.cloudConfig };
-        if (!loadedCloudConfig.jsonbinId && !loadedCloudConfig.supabaseUrl && !loadedCloudConfig.jsonblobId) {
+        if (!loadedCloudConfig.jsonbinId && !loadedCloudConfig.supabaseUrl && (loadedCloudConfig.provider === 'jsonblob' || !loadedCloudConfig.provider || loadedCloudConfig.provider === 'restful')) {
           loadedCloudConfig.enabled = true;
-          loadedCloudConfig.provider = 'jsonblob';
-          loadedCloudConfig.jsonblobId = '019f703f-5831-7b79-8ec3-7c2629fa258a';
+          loadedCloudConfig.provider = 'restful';
+          loadedCloudConfig.restfulId = 'ff8081819d82fab6019f7053861474f2';
           loadedCloudConfig.autoPoll = true;
         }
 
@@ -156,18 +156,18 @@ export class StorageService {
   public async syncToCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig?.enabled) return false;
-      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, jsonblobId } = this.data.cloudConfig;
+      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, restfulId } = this.data.cloudConfig;
       this.data.cloudConfig.lastSync = new Date().toLocaleTimeString();
 
-      if (provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
-        const blobId = jsonblobId || '019f703f-5831-7b79-8ec3-7c2629fa258a';
-        const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`, {
+      if (provider === 'restful' || provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
+        const restId = restfulId || 'ff8081819d82fab6019f7053861474f2';
+        const res = await fetch(`https://api.restful-api.dev/objects/${restId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
-          body: JSON.stringify(this.data)
+          body: JSON.stringify({ name: 'sfg_crm', data: this.data })
         });
         if (res.ok) {
           console.info('[Realtime Cloud Sync] Push sur l\'espace Cloud partagé réussi !');
@@ -282,18 +282,19 @@ export class StorageService {
   public async pullFromCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig?.enabled) return false;
-      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, jsonblobId } = this.data.cloudConfig;
+      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, restfulId } = this.data.cloudConfig;
 
-      if (provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
-        const blobId = jsonblobId || '019f703f-5831-7b79-8ec3-7c2629fa258a';
-        const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`, {
+      if (provider === 'restful' || provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
+        const restId = restfulId || 'ff8081819d82fab6019f7053861474f2';
+        const res = await fetch(`https://api.restful-api.dev/objects/${restId}`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json'
           }
         });
         if (res.ok) {
-          const remoteData = await res.json() as CRMData;
+          const json = await res.json();
+          const remoteData = (json.data || json) as CRMData;
           if (remoteData && remoteData.contacts && remoteData.users) {
             const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
             const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
