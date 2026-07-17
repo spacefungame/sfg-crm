@@ -66,9 +66,10 @@ export const DEFAULT_CRM_DATA: CRMData = {
   ],
   cloudConfig: {
     enabled: true,
-    provider: 'gist',
-    gistId: '3ba32496cdadb8682e21f4a60d11c2aa',
-    gistToken: getGistToken(),
+    provider: 'jsonbin',
+    jsonbinId: '6a5a442bf5f4af5e299ce6d0',
+    jsonbinKey: '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi',
     autoPoll: true
   }
 };
+

@@ -1,5 +1,6 @@
 import type { CRMData, Contact, ActivityLog, User, EmailTemplate, CloudConfig, TagDefinition } from '../types/crm';
-import { DEFAULT_CRM_DATA, getGistToken } from './defaultData';
+import { DEFAULT_CRM_DATA } from './defaultData';
+
 
 const STORAGE_KEY = 'space_fun_crm_data_v1';
 const DATA_UPDATED_EVENT = 'crm_data_updated';
@@ -108,11 +109,11 @@ export class StorageService {
           : [...(DEFAULT_CRM_DATA.templateCategories || ['Prospection', 'Relance', 'Suivi & Fidélisation', 'Evénements & Devis', 'Général'])];
 
         const loadedCloudConfig = parsed.cloudConfig || { ...DEFAULT_CRM_DATA.cloudConfig };
-        if (!loadedCloudConfig.jsonbinId && !loadedCloudConfig.supabaseUrl && (loadedCloudConfig.provider === 'jsonblob' || !loadedCloudConfig.provider || loadedCloudConfig.provider === 'restful' || loadedCloudConfig.provider === 'gist')) {
+        if (!loadedCloudConfig.supabaseUrl && (loadedCloudConfig.provider === 'gist' || loadedCloudConfig.provider === 'jsonblob' || !loadedCloudConfig.provider || loadedCloudConfig.provider === 'restful' || loadedCloudConfig.jsonbinId !== '6a5a442bf5f4af5e299ce6d0')) {
           loadedCloudConfig.enabled = true;
-          loadedCloudConfig.provider = 'gist';
-          loadedCloudConfig.gistId = '3ba32496cdadb8682e21f4a60d11c2aa';
-          loadedCloudConfig.gistToken = getGistToken();
+          loadedCloudConfig.provider = 'jsonbin';
+          loadedCloudConfig.jsonbinId = '6a5a442bf5f4af5e299ce6d0';
+          loadedCloudConfig.jsonbinKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
           loadedCloudConfig.autoPoll = true;
         }
 
@@ -167,45 +168,12 @@ export class StorageService {
   public async syncToCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig?.enabled) return false;
-      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, gistId, gistToken } = this.data.cloudConfig;
+      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey } = this.data.cloudConfig;
+
       this.data.cloudConfig.lastSync = new Date().toLocaleTimeString();
 
-      if (provider === 'gist' || provider === 'restful' || provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
-        const gId = gistId || '3ba32496cdadb8682e21f4a60d11c2aa';
-        const gToken = gistToken || getGistToken();
-        const res = await fetch(`https://api.github.com/gists/${gId}`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${gToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/vnd.github.v3+json'
-          },
-          body: JSON.stringify({
-            files: {
-              'sfg-crm-store.json': {
-                content: JSON.stringify(this.data)
-              }
-            }
-          })
-        });
-        if (res.ok) {
-          console.info('[Realtime Cloud Sync] Push sur l\'espace Cloud partagé (Gist) réussi !');
-          return true;
-        }
-      } else if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${jsonbinId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': jsonbinKey
-          },
-          body: JSON.stringify(this.data)
-        });
-        if (res.ok) {
-          console.info('[Realtime Cloud Sync] Push JSONBin réussi !');
-          return true;
-        }
-      } else if (provider === 'supabase' && supabaseUrl && supabaseKey) {
+      if (provider === 'supabase' && supabaseUrl && supabaseKey) {
+
         const res = await fetch(`${supabaseUrl}/rest/v1/sfg_crm_store?id=eq.1`, {
           method: 'PATCH',
           headers: {
@@ -217,6 +185,21 @@ export class StorageService {
           body: JSON.stringify({ data: this.data, updated_at: new Date().toISOString() })
         });
         if (res.ok) return true;
+      } else {
+        const binId = jsonbinId || '6a5a442bf5f4af5e299ce6d0';
+        const binKey = jsonbinKey || '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': binKey
+          },
+          body: JSON.stringify(this.data)
+        });
+        if (res.ok) {
+          console.info('[Realtime Cloud Sync] Push JSONBin réussi !');
+          return true;
+        }
       }
     } catch (e) {
       console.warn('[Realtime Cloud Sync] Erreur push distant:', e);
@@ -301,72 +284,9 @@ export class StorageService {
   public async pullFromCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig?.enabled) return false;
-      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, gistId, gistToken } = this.data.cloudConfig;
+      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey } = this.data.cloudConfig;
 
-      if (provider === 'gist' || provider === 'restful' || provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
-        const gId = gistId || '3ba32496cdadb8682e21f4a60d11c2aa';
-        const gToken = gistToken || getGistToken();
-        const res = await fetch(`https://api.github.com/gists/${gId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${gToken}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        if (res.ok) {
-          const json = await res.json();
-          const rawContent = json?.files?.['sfg-crm-store.json']?.content;
-          if (rawContent) {
-            const remoteData = JSON.parse(rawContent) as CRMData;
-            if (remoteData && remoteData.contacts && remoteData.users) {
-              const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
-              const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
-              const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
-
-              if (localCheck !== mergedCheck) {
-                console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Fusion intelligente sans perte de données.');
-                this.data = merged;
-                this.saveToLocalStorage(true);
-              }
-
-              if (remoteNeedsUpdate || ((this.data.contacts || []).length > 0 && (remoteData.contacts || []).length === 0)) {
-                setTimeout(() => {
-                  this.syncToCloud();
-                }, 500);
-              }
-              return true;
-            }
-          }
-        }
-      } else if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${jsonbinId}/latest`, {
-          method: 'GET',
-          headers: {
-            'X-Master-Key': jsonbinKey
-          }
-        });
-        if (res.ok) {
-          const json = await res.json();
-          const remoteData = json.record as CRMData;
-          if (remoteData && remoteData.contacts && remoteData.users) {
-            const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
-            const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
-            const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
-
-            if (localCheck !== mergedCheck) {
-              this.data = merged;
-              this.saveToLocalStorage(true);
-            }
-
-            if (remoteNeedsUpdate) {
-              setTimeout(() => {
-                this.syncToCloud();
-              }, 500);
-            }
-            return true;
-          }
-        }
-      } else if (provider === 'supabase' && supabaseUrl && supabaseKey) {
+      if (provider === 'supabase' && supabaseUrl && supabaseKey) {
         const res = await fetch(`${supabaseUrl}/rest/v1/sfg_crm_store?id=eq.1`, {
           method: 'GET',
           headers: {
@@ -377,12 +297,48 @@ export class StorageService {
         if (res.ok) {
           const rows = await res.json();
           const remoteData = rows?.[0]?.data as CRMData;
-          if (remoteData && remoteData.contacts) {
+          if (remoteData && remoteData.contacts && remoteData.users) {
             const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
             const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
             const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
 
             if (localCheck !== mergedCheck) {
+              console.info('[Realtime Cloud Sync] Modifications Supabase détectées -> Fusion.');
+              this.data = merged;
+              this.saveToLocalStorage(true);
+            }
+            if (remoteNeedsUpdate || ((this.data.contacts || []).length > 0 && (remoteData.contacts || []).length === 0)) {
+              setTimeout(() => { this.syncToCloud(); }, 500);
+            }
+            return true;
+          }
+        }
+      } else {
+        const binId = jsonbinId || '6a5a442bf5f4af5e299ce6d0';
+        const binKey = jsonbinKey || '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+          method: 'GET',
+          headers: {
+            'X-Master-Key': binKey
+          }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const remoteData = (json.record || {}) as any;
+          
+          if (!remoteData.contacts || (remoteData.contacts || []).length === 0) {
+            if ((this.data.contacts || []).length > 0) {
+              setTimeout(() => {
+                this.syncToCloud();
+              }, 500);
+            }
+          } else if (remoteData.contacts && remoteData.users) {
+            const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
+            const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
+            const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
+
+            if (localCheck !== mergedCheck) {
+              console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Fusion intelligente sans perte de données.');
               this.data = merged;
               this.saveToLocalStorage(true);
             }
@@ -401,6 +357,7 @@ export class StorageService {
     }
     return false;
   }
+
 
   public getData(): CRMData {
     return this.data;
