@@ -92,6 +92,14 @@ export class StorageService {
           ? parsed.templateCategories
           : [...(DEFAULT_CRM_DATA.templateCategories || ['Prospection', 'Relance', 'Suivi & Fidélisation', 'Evénements & Devis', 'Général'])];
 
+        const loadedCloudConfig = parsed.cloudConfig || { ...DEFAULT_CRM_DATA.cloudConfig };
+        if (!loadedCloudConfig.jsonbinId && !loadedCloudConfig.supabaseUrl && !loadedCloudConfig.jsonblobId) {
+          loadedCloudConfig.enabled = true;
+          loadedCloudConfig.provider = 'jsonblob';
+          loadedCloudConfig.jsonblobId = '019f703f-5831-7b79-8ec3-7c2629fa258a';
+          loadedCloudConfig.autoPoll = true;
+        }
+
         const finalData: CRMData = {
           contacts: cleanedContacts,
           users: loadedUsers,
@@ -101,7 +109,7 @@ export class StorageService {
           roles: loadedRoles,
           templateCategories: loadedCategories,
           emailTemplates: loadedTemplates,
-          cloudConfig: parsed.cloudConfig || DEFAULT_CRM_DATA.cloudConfig
+          cloudConfig: loadedCloudConfig
         };
 
         // Si le nettoyage a supprimé des données de démo du cache, on ré-enregistre silencieusement
@@ -143,10 +151,24 @@ export class StorageService {
   public async syncToCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig?.enabled) return false;
-      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey } = this.data.cloudConfig;
+      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, jsonblobId } = this.data.cloudConfig;
       this.data.cloudConfig.lastSync = new Date().toLocaleTimeString();
 
-      if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
+      if (provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
+        const blobId = jsonblobId || '019f703f-5831-7b79-8ec3-7c2629fa258a';
+        const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(this.data)
+        });
+        if (res.ok) {
+          console.info('[Realtime Cloud Sync] Push sur l\'espace Cloud partagé réussi !');
+          return true;
+        }
+      } else if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${jsonbinId}`, {
           method: 'PUT',
           headers: {
@@ -181,9 +203,33 @@ export class StorageService {
   public async pullFromCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig?.enabled) return false;
-      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey } = this.data.cloudConfig;
+      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, jsonblobId } = this.data.cloudConfig;
 
-      if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
+      if (provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
+        const blobId = jsonblobId || '019f703f-5831-7b79-8ec3-7c2629fa258a';
+        const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        if (res.ok) {
+          const remoteData = await res.json() as CRMData;
+          if (remoteData && remoteData.contacts && remoteData.users) {
+            const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
+            const remoteCheck = JSON.stringify({ ...remoteData, cloudConfig: null });
+            if (localCheck !== remoteCheck) {
+              console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Mise à jour du CRM en temps réel.');
+              this.data = {
+                ...remoteData,
+                cloudConfig: { ...remoteData.cloudConfig, ...this.data.cloudConfig, lastSync: new Date().toLocaleTimeString() }
+              };
+              this.saveToLocalStorage(true);
+              return true;
+            }
+          }
+        }
+      } else if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${jsonbinId}/latest`, {
           method: 'GET',
           headers: {

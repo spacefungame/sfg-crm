@@ -63,8 +63,9 @@ export const DEFAULT_CRM_DATA: CRMData = {
     }
   ],
   cloudConfig: {
-    enabled: false,
-    provider: 'local',
+    enabled: true,
+    provider: 'jsonblob',
+    jsonblobId: '019f703f-5831-7b79-8ec3-7c2629fa258a',
     autoPoll: true
   }
 };
