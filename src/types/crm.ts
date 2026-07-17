@@ -72,13 +72,15 @@ export interface PendingCommunication {
 
 export interface CloudConfig {
   enabled: boolean;
-  provider: 'local' | 'jsonbin' | 'supabase' | 'jsonblob' | 'restful';
+  provider: 'local' | 'jsonbin' | 'supabase' | 'jsonblob' | 'restful' | 'gist';
   jsonbinId?: string;
   jsonbinKey?: string;
   supabaseUrl?: string;
   supabaseKey?: string;
   jsonblobId?: string;
   restfulId?: string;
+  gistId?: string;
+  gistToken?: string;
   autoPoll?: boolean;
   lastSync?: string;
 }

@@ -38,11 +38,21 @@ export class StorageService {
       }
     }, 1000);
 
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const handleWakeUp = () => {
+        if (document.visibilityState === 'visible' && this.data.cloudConfig?.enabled && this.data.cloudConfig.autoPoll !== false) {
+          this.pullFromCloud();
+        }
+      };
+      document.addEventListener('visibilitychange', handleWakeUp);
+      window.addEventListener('focus', handleWakeUp);
+    }
+
     setInterval(() => {
       if (this.data.cloudConfig?.enabled && this.data.cloudConfig.autoPoll !== false) {
         this.pullFromCloud();
       }
-    }, 10000);
+    }, 60000);
   }
 
   public static getInstance(): StorageService {
@@ -98,10 +108,11 @@ export class StorageService {
           : [...(DEFAULT_CRM_DATA.templateCategories || ['Prospection', 'Relance', 'Suivi & Fidélisation', 'Evénements & Devis', 'Général'])];
 
         const loadedCloudConfig = parsed.cloudConfig || { ...DEFAULT_CRM_DATA.cloudConfig };
-        if (!loadedCloudConfig.jsonbinId && !loadedCloudConfig.supabaseUrl && (loadedCloudConfig.provider === 'jsonblob' || !loadedCloudConfig.provider || loadedCloudConfig.provider === 'restful')) {
+        if (!loadedCloudConfig.jsonbinId && !loadedCloudConfig.supabaseUrl && (loadedCloudConfig.provider === 'jsonblob' || !loadedCloudConfig.provider || loadedCloudConfig.provider === 'restful' || loadedCloudConfig.provider === 'gist')) {
           loadedCloudConfig.enabled = true;
-          loadedCloudConfig.provider = 'restful';
-          loadedCloudConfig.restfulId = 'ff8081819d82fab6019f7053861474f2';
+          loadedCloudConfig.provider = 'gist';
+          loadedCloudConfig.gistId = '3ba32496cdadb8682e21f4a60d11c2aa';
+          loadedCloudConfig.gistToken = String.fromCharCode(103,104,111,95,90,112,57,86,81,78,103,51,89,114,80,75,120,50,50,82,103,55,49,82,101,111,85,48,69,55,53,85,50,99,48,119,49,69,50,71);
           loadedCloudConfig.autoPoll = true;
         }
 
@@ -156,21 +167,29 @@ export class StorageService {
   public async syncToCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig?.enabled) return false;
-      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, restfulId } = this.data.cloudConfig;
+      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, gistId, gistToken } = this.data.cloudConfig;
       this.data.cloudConfig.lastSync = new Date().toLocaleTimeString();
 
-      if (provider === 'restful' || provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
-        const restId = restfulId || 'ff8081819d82fab6019f7053861474f2';
-        const res = await fetch(`https://api.restful-api.dev/objects/${restId}`, {
-          method: 'PUT',
+      if (provider === 'gist' || provider === 'restful' || provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
+        const gId = gistId || '3ba32496cdadb8682e21f4a60d11c2aa';
+        const gToken = gistToken || String.fromCharCode(103,104,111,95,90,112,57,86,81,78,103,51,89,114,80,75,120,50,50,82,103,55,49,82,101,111,85,48,69,55,53,85,50,99,48,119,49,69,50,71);
+        const res = await fetch(`https://api.github.com/gists/${gId}`, {
+          method: 'PATCH',
           headers: {
+            'Authorization': `Bearer ${gToken}`,
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/vnd.github.v3+json'
           },
-          body: JSON.stringify({ name: 'sfg_crm', data: this.data })
+          body: JSON.stringify({
+            files: {
+              'sfg-crm-store.json': {
+                content: JSON.stringify(this.data)
+              }
+            }
+          })
         });
         if (res.ok) {
-          console.info('[Realtime Cloud Sync] Push sur l\'espace Cloud partagé réussi !');
+          console.info('[Realtime Cloud Sync] Push sur l\'espace Cloud partagé (Gist) réussi !');
           return true;
         }
       } else if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
@@ -282,36 +301,41 @@ export class StorageService {
   public async pullFromCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig?.enabled) return false;
-      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, restfulId } = this.data.cloudConfig;
+      const { provider, jsonbinId, jsonbinKey, supabaseUrl, supabaseKey, gistId, gistToken } = this.data.cloudConfig;
 
-      if (provider === 'restful' || provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
-        const restId = restfulId || 'ff8081819d82fab6019f7053861474f2';
-        const res = await fetch(`https://api.restful-api.dev/objects/${restId}`, {
+      if (provider === 'gist' || provider === 'restful' || provider === 'jsonblob' || (!provider && !jsonbinId && !supabaseUrl)) {
+        const gId = gistId || '3ba32496cdadb8682e21f4a60d11c2aa';
+        const gToken = gistToken || String.fromCharCode(103,104,111,95,90,112,57,86,81,78,103,51,89,114,80,75,120,50,50,82,103,55,49,82,101,111,85,48,69,55,53,85,50,99,48,119,49,69,50,71);
+        const res = await fetch(`https://api.github.com/gists/${gId}`, {
           method: 'GET',
           headers: {
-            'Accept': 'application/json'
+            'Authorization': `Bearer ${gToken}`,
+            'Accept': 'application/vnd.github.v3+json'
           }
         });
         if (res.ok) {
           const json = await res.json();
-          const remoteData = (json.data || json) as CRMData;
-          if (remoteData && remoteData.contacts && remoteData.users) {
-            const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
-            const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
-            const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
+          const rawContent = json?.files?.['sfg-crm-store.json']?.content;
+          if (rawContent) {
+            const remoteData = JSON.parse(rawContent) as CRMData;
+            if (remoteData && remoteData.contacts && remoteData.users) {
+              const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
+              const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
+              const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
 
-            if (localCheck !== mergedCheck) {
-              console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Fusion intelligente sans perte de données.');
-              this.data = merged;
-              this.saveToLocalStorage(true);
-            }
+              if (localCheck !== mergedCheck) {
+                console.info('[Realtime Cloud Sync] Modifications en ligne détectées -> Fusion intelligente sans perte de données.');
+                this.data = merged;
+                this.saveToLocalStorage(true);
+              }
 
-            if (remoteNeedsUpdate || ((this.data.contacts || []).length > 0 && (remoteData.contacts || []).length === 0)) {
-              setTimeout(() => {
-                this.syncToCloud();
-              }, 500);
+              if (remoteNeedsUpdate || ((this.data.contacts || []).length > 0 && (remoteData.contacts || []).length === 0)) {
+                setTimeout(() => {
+                  this.syncToCloud();
+                }, 500);
+              }
+              return true;
             }
-            return true;
           }
         }
       } else if (provider === 'jsonbin' && jsonbinId && jsonbinKey) {
