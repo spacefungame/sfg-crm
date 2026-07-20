@@ -1,5 +1,6 @@
 import type { CRMData, Contact, ActivityLog, User, EmailTemplate, CloudConfig, TagDefinition } from '../types/crm';
 import { DEFAULT_CRM_DATA } from './defaultData';
+import LZString from 'lz-string';
 
 
 const STORAGE_KEY = 'space_fun_crm_data_v1';
@@ -64,28 +65,13 @@ export class StorageService {
   }
 
   private async compressData(dataStr: string): Promise<string> {
-    const stream = new Blob([dataStr], { type: 'application/json' }).stream();
-    const compressedStream = stream.pipeThrough(new CompressionStream('gzip'));
-    const response = new Response(compressedStream);
-    const buffer = await response.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
+    return LZString.compressToBase64(dataStr);
   }
 
   private async decompressData(base64Str: string): Promise<string> {
-    const binary = atob(base64Str);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    const stream = new Blob([bytes]).stream();
-    const decompressedStream = stream.pipeThrough(new DecompressionStream('gzip'));
-    const response = new Response(decompressedStream);
-    return await response.text();
+    const res = LZString.decompressFromBase64(base64Str);
+    if (res === null) throw new Error('LZString decompression returned null');
+    return res;
   }
 
   private loadFromLocalStorage(): CRMData {
@@ -201,10 +187,8 @@ export class StorageService {
       
       let payloadToPush: any = this.data;
       try {
-        if (typeof CompressionStream !== 'undefined') {
-          const compressed = await this.compressData(JSON.stringify(this.data));
-          payloadToPush = { _compressed_v1: compressed };
-        }
+        const compressed = await this.compressData(JSON.stringify(this.data));
+        payloadToPush = { _compressed_v1: compressed };
       } catch (e) {
         console.warn('Compression failed, falling back to raw data', e);
       }
