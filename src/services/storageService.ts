@@ -63,6 +63,31 @@ export class StorageService {
     return StorageService.instance;
   }
 
+  private async compressData(dataStr: string): Promise<string> {
+    const stream = new Blob([dataStr], { type: 'application/json' }).stream();
+    const compressedStream = stream.pipeThrough(new CompressionStream('gzip'));
+    const response = new Response(compressedStream);
+    const buffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
+  private async decompressData(base64Str: string): Promise<string> {
+    const binary = atob(base64Str);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const stream = new Blob([bytes]).stream();
+    const decompressedStream = stream.pipeThrough(new DecompressionStream('gzip'));
+    const response = new Response(decompressedStream);
+    return await response.text();
+  }
+
   private loadFromLocalStorage(): CRMData {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -110,12 +135,12 @@ export class StorageService {
 
         const loadedCloudConfig = parsed.cloudConfig || { ...DEFAULT_CRM_DATA.cloudConfig };
         loadedCloudConfig.enabled = true;
-        loadedCloudConfig.provider = 'jsonbin';
-        loadedCloudConfig.jsonbinId = '6a5a442bf5f4af5e299ce6d0';
-        loadedCloudConfig.jsonbinKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
-        loadedCloudConfig.autoPoll = true;
-        loadedCloudConfig.supabaseUrl = '';
-        loadedCloudConfig.supabaseKey = '';
+        if (!loadedCloudConfig.provider) loadedCloudConfig.provider = 'jsonbin';
+        if (!loadedCloudConfig.jsonbinId) loadedCloudConfig.jsonbinId = '6a5a442bf5f4af5e299ce6d0';
+        if (!loadedCloudConfig.jsonbinKey) loadedCloudConfig.jsonbinKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
+        if (loadedCloudConfig.autoPoll === undefined) loadedCloudConfig.autoPoll = true;
+        if (!loadedCloudConfig.supabaseUrl) loadedCloudConfig.supabaseUrl = '';
+        if (!loadedCloudConfig.supabaseKey) loadedCloudConfig.supabaseKey = '';
 
 
         const finalData: CRMData = {
@@ -169,25 +194,44 @@ export class StorageService {
   public async syncToCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig) this.data.cloudConfig = { ...DEFAULT_CRM_DATA.cloudConfig };
-      this.data.cloudConfig.enabled = true;
-      this.data.cloudConfig.provider = 'jsonbin';
-      this.data.cloudConfig.jsonbinId = '6a5a442bf5f4af5e299ce6d0';
-      this.data.cloudConfig.jsonbinKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
       this.data.cloudConfig.lastSync = new Date().toLocaleTimeString();
 
-      const binId = '6a5a442bf5f4af5e299ce6d0';
-      const binKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
+      const binId = this.data.cloudConfig.jsonbinId || '6a5a442bf5f4af5e299ce6d0';
+      const binKey = this.data.cloudConfig.jsonbinKey || '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
+      
+      let payloadToPush: any = this.data;
+      try {
+        if (typeof CompressionStream !== 'undefined') {
+          const compressed = await this.compressData(JSON.stringify(this.data));
+          payloadToPush = { _compressed_v1: compressed };
+        }
+      } catch (e) {
+        console.warn('Compression failed, falling back to raw data', e);
+      }
+
       const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-Master-Key': binKey
+          'X-Master-Key': binKey,
+          'X-Bin-Versioning': 'false'
         },
-        body: JSON.stringify(this.data)
+        body: JSON.stringify(payloadToPush)
       });
       if (res.ok) {
         console.info('[Realtime Cloud Sync] Push JSONBin réussi !');
         return true;
+      } else {
+        const errText = await res.text();
+        console.warn('[Realtime Cloud Sync] Push rejeté:', res.status, errText);
+        if (res.status === 403 && errText.toLowerCase().includes('100kb')) {
+          console.error("⚠️ LIMITE JSONBIN ATTEINTE: 100 Ko dépassés. La synchronisation en ligne est bloquée.");
+          // Only alert if we are in the main window
+          if (typeof window !== 'undefined' && !(window as any)._hasAlerted100kb) {
+            (window as any)._hasAlerted100kb = true;
+            alert("⚠️ Erreur de synchronisation Cloud\n\nLe volume de vos données (contacts et paramètres) a dépassé la limite gratuite de 100 Ko de JSONBin.\n\nVos modifications sont sauvegardées sur ce PC, mais elles ne seront plus envoyées en ligne vers les autres utilisateurs tant que vous n'aurez pas changé de fournisseur Cloud (ex: Supabase, Gist) ou purgé vos données.");
+          }
+        }
       }
     } catch (e) {
       console.warn('[Realtime Cloud Sync] Erreur push distant:', e);
@@ -296,13 +340,9 @@ export class StorageService {
   public async pullFromCloud(): Promise<boolean> {
     try {
       if (!this.data.cloudConfig) this.data.cloudConfig = { ...DEFAULT_CRM_DATA.cloudConfig };
-      this.data.cloudConfig.enabled = true;
-      this.data.cloudConfig.provider = 'jsonbin';
-      this.data.cloudConfig.jsonbinId = '6a5a442bf5f4af5e299ce6d0';
-      this.data.cloudConfig.jsonbinKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
 
-      const binId = '6a5a442bf5f4af5e299ce6d0';
-      const binKey = '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
+      const binId = this.data.cloudConfig.jsonbinId || '6a5a442bf5f4af5e299ce6d0';
+      const binKey = this.data.cloudConfig.jsonbinKey || '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
       const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
         method: 'GET',
         headers: {
@@ -311,7 +351,17 @@ export class StorageService {
       });
       if (res.ok) {
           const json = await res.json();
-          const remoteData = (json.record || {}) as any;
+          let remoteData = (json.record || {}) as any;
+          
+          if (remoteData._compressed_v1) {
+            try {
+              const decompressed = await this.decompressData(remoteData._compressed_v1);
+              remoteData = JSON.parse(decompressed);
+            } catch (e) {
+              console.error('Failed to decompress remote data:', e);
+              return false;
+            }
+          }
           
           if ((!remoteData.contacts || (remoteData.contacts || []).length === 0) && !remoteData.cloudConfig?.lastSync && !remoteData.deletedContactIds?.length) {
             if ((this.data.contacts || []).length > 0) {
