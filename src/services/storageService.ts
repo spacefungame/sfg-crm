@@ -1,6 +1,6 @@
 import type { CRMData, Contact, ActivityLog, User, EmailTemplate, CloudConfig, TagDefinition } from '../types/crm';
 import { DEFAULT_CRM_DATA } from './defaultData';
-import { compressToBase64, decompressFromBase64 } from 'lz-string';
+import * as LZString from 'lz-string';
 
 
 const STORAGE_KEY = 'space_fun_crm_data_v1';
@@ -65,11 +65,11 @@ export class StorageService {
   }
 
   private async compressData(dataStr: string): Promise<string> {
-    return compressToBase64(dataStr);
+    return LZString.compressToBase64(dataStr);
   }
 
   private async decompressData(base64Str: string): Promise<string> {
-    const res = decompressFromBase64(base64Str);
+    const res = LZString.decompressFromBase64(base64Str);
     if (res === null) throw new Error('LZString decompression returned null');
     return res;
   }
@@ -189,8 +189,12 @@ export class StorageService {
       try {
         const compressed = await this.compressData(JSON.stringify(this.data));
         payloadToPush = { _compressed_v1: compressed };
-      } catch (e) {
+      } catch (e: any) {
         console.warn('Compression failed, falling back to raw data', e);
+        if (typeof window !== 'undefined' && !(window as any)._hasAlertedCompress) {
+          (window as any)._hasAlertedCompress = true;
+          alert("Erreur de compression interne : " + (e.message || e));
+        }
       }
 
       const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
