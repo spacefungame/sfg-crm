@@ -276,11 +276,7 @@ export class StorageService {
             console.error("⚠️ LIMITE JSONBIN ATTEINTE: 100 Ko dépassés. La synchronisation en ligne est bloquée.");
             if (typeof window !== 'undefined' && !(window as any)._hasAlerted100kb) {
               (window as any)._hasAlerted100kb = true;
-              alert("⚠️ Erreur de synchronisation Cloud
-
-Le volume de vos données (contacts et paramètres) a dépassé la limite gratuite de 100 Ko de JSONBin.
-
-Vos modifications sont sauvegardées sur ce PC, mais elles ne seront plus envoyées en ligne vers les autres utilisateurs tant que vous n'aurez pas configuré Github Gist dans les paramètres.");
+              alert(`⚠️ Erreur de synchronisation Cloud\n\nLe volume de vos données (contacts et paramètres) a dépassé la limite gratuite de 100 Ko de JSONBin.\n\nVos modifications sont sauvegardées sur ce PC, mais elles ne seront plus envoyées en ligne vers les autres utilisateurs tant que vous n'aurez pas configuré Github Gist dans les paramètres.`);
             }
           }
         }
