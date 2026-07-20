@@ -1,6 +1,6 @@
 import type { CRMData, Contact, ActivityLog, User, EmailTemplate, CloudConfig, TagDefinition } from '../types/crm';
 import { DEFAULT_CRM_DATA } from './defaultData';
-import LZString from 'lz-string';
+import { compressToBase64, decompressFromBase64 } from 'lz-string';
 
 
 const STORAGE_KEY = 'space_fun_crm_data_v1';
@@ -65,11 +65,11 @@ export class StorageService {
   }
 
   private async compressData(dataStr: string): Promise<string> {
-    return LZString.compressToBase64(dataStr);
+    return compressToBase64(dataStr);
   }
 
   private async decompressData(base64Str: string): Promise<string> {
-    const res = LZString.decompressFromBase64(base64Str);
+    const res = decompressFromBase64(base64Str);
     if (res === null) throw new Error('LZString decompression returned null');
     return res;
   }
