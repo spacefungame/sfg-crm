@@ -188,19 +188,11 @@ export class StorageService {
         payloadToPush = { _compressed_v1: compressed };
       } catch (e: any) {
         console.warn('Compression failed, falling back to raw data', e);
-        if (typeof window !== 'undefined' && !(window as any)._hasAlertedCompress) {
-          (window as any)._hasAlertedCompress = true;
-          alert("Erreur de compression interne : " + (e.message || e));
-        }
       }
 
-      if (this.data.cloudConfig.provider === 'gist') {
+      if (this.data.cloudConfig.provider === 'gist' && this.data.cloudConfig.gistToken) {
         const token = this.data.cloudConfig.gistToken;
         let gistId = this.data.cloudConfig.gistId;
-        if (!token) {
-          console.warn('Gist token manquant');
-          return false;
-        }
 
         const files = {
           "sfg_crm_data.json": { content: JSON.stringify(payloadToPush) }
@@ -224,12 +216,9 @@ export class StorageService {
             const data = await res.json();
             this.data.cloudConfig.gistId = data.id;
             this.saveToLocalStorage(true);
-            console.info('[Realtime Cloud Sync] Gist créé avec succès !');
             return true;
-          } else {
-            console.error('Erreur création Gist:', await res.text());
-            return false;
           }
+          return false;
         } else {
           const res = await fetch(`https://api.github.com/gists/${gistId}`, {
             method: 'PATCH',
@@ -240,45 +229,26 @@ export class StorageService {
             },
             body: JSON.stringify({ files })
           });
-          if (res.ok) {
-            console.info('[Realtime Cloud Sync] Push Gist réussi !');
-            return true;
-          } else {
-             const txt = await res.text();
-             if (res.status === 404) {
-               this.data.cloudConfig.gistId = '';
-               this.saveToLocalStorage(true);
-             }
-             console.error('Erreur maj Gist:', txt);
-             return false;
-          }
+          if (res.ok) return true;
+          return false;
         }
       } else {
-        const binId = this.data.cloudConfig.jsonbinId || '6a5a442bf5f4af5e299ce6d0';
-        const binKey = this.data.cloudConfig.jsonbinKey || '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
-        
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+        // Firebase par défaut pour tout le monde (Zéro config)
+        const firebaseUrl = 'https://sfg-crm-default-rtdb.europe-west1.firebasedatabase.app/crm_data.json';
+        const res = await fetch(firebaseUrl, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': binKey,
-            'X-Bin-Versioning': 'false'
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify(payloadToPush)
         });
+        
         if (res.ok) {
-          console.info('[Realtime Cloud Sync] Push JSONBin réussi !');
+          console.info('[Realtime Cloud Sync] Push Firebase réussi !');
           return true;
         } else {
-          const errText = await res.text();
-          console.warn('[Realtime Cloud Sync] Push rejeté:', res.status, errText);
-          if (res.status === 403 && errText.toLowerCase().includes('100kb')) {
-            console.error("⚠️ LIMITE JSONBIN ATTEINTE: 100 Ko dépassés. La synchronisation en ligne est bloquée.");
-            if (typeof window !== 'undefined' && !(window as any)._hasAlerted100kb) {
-              (window as any)._hasAlerted100kb = true;
-              alert(`⚠️ Erreur de synchronisation Cloud\n\nLe volume de vos données (contacts et paramètres) a dépassé la limite gratuite de 100 Ko de JSONBin.\n\nVos modifications sont sauvegardées sur ce PC, mais elles ne seront plus envoyées en ligne vers les autres utilisateurs tant que vous n'aurez pas configuré Github Gist dans les paramètres.`);
-            }
-          }
+          console.error('[Realtime Cloud Sync] Push Firebase échoué:', await res.text());
+          return false;
         }
       }
     } catch (e) {

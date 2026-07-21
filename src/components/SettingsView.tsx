@@ -1047,88 +1047,16 @@ export const SettingsView: React.FC = () => {
                 </button>
               </div>
 
-              {/* Options Avancées (JSONBin personnel optionnel) */}
-              <details style={{ marginTop: '12px', borderTop: '1px dashed var(--border)', paddingTop: '12px' }} open>
-                <summary style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>
-                  ⚙️ Options Avancées : Configurer le fournisseur Cloud
-                </summary>
-                <div style={{ marginTop: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>Fournisseur Cloud</label>
-                  <select 
-                    className="input" 
-                    value={cloudConfig.provider || 'jsonbin'} 
-                    onChange={(e) => setCloudConfig({ ...cloudConfig, provider: e.target.value as any })}
-                    style={{ width: '100%', fontSize: '12px', marginBottom: '16px' }}
-                  >
-                    <option value="jsonbin">JSONBin.io (Défaut, Limité à 100 Ko)</option>
-                    <option value="gist">GitHub Gist (Recommandé, Gratuit jusqu'à 1 Mo)</option>
-                  </select>
-
-                  {cloudConfig.provider === 'gist' && (
-                    <div style={{ padding: '12px', backgroundColor: 'var(--surface-warm)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                        <strong>Recommandé pour les grandes bases de données.</strong><br/>
-                        1. Allez sur <a href="https://github.com/settings/tokens/new" target="_blank" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>GitHub Tokens</a>.<br/>
-                        2. Cochez la case <b>"gist"</b> et générez le token.<br/>
-                        3. Collez le token ci-dessous.
-                      </p>
-                      <div style={{ marginBottom: '12px' }}>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>Github Token (PAT)</label>
-                        <input
-                          type="password"
-                          className="input"
-                          placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                          value={cloudConfig.gistToken || ''}
-                          onChange={(e) => setCloudConfig({ ...cloudConfig, gistToken: e.target.value })}
-                          style={{ width: '100%', fontSize: '12px', fontFamily: 'monospace' }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>Gist ID (généré automatiquement)</label>
-                        <input
-                          type="text"
-                          className="input"
-                          placeholder="Laisser vide"
-                          value={cloudConfig.gistId || ''}
-                          onChange={(e) => setCloudConfig({ ...cloudConfig, gistId: e.target.value })}
-                          style={{ width: '100%', fontSize: '12px', fontFamily: 'monospace' }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {cloudConfig.provider !== 'gist' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
-                          ID du Bin personnalisé (Bin ID)
-                        </label>
-                        <input
-                          type="text"
-                          className="input"
-                          placeholder="Laisser vide pour l'espace par défaut"
-                          value={cloudConfig.jsonbinId || ''}
-                          onChange={(e) => setCloudConfig({ ...cloudConfig, jsonbinId: e.target.value })}
-                          style={{ width: '100%', fontSize: '12px' }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
-                          Clé Master personnalisée (X-Master-Key)
-                        </label>
-                        <input
-                          type="password"
-                          className="input"
-                          placeholder="Laisser vide pour l'espace par défaut"
-                          value={cloudConfig.jsonbinKey || ''}
-                          onChange={(e) => setCloudConfig({ ...cloudConfig, jsonbinKey: e.target.value })}
-                          style={{ width: '100%', fontSize: '12px' }}
-                        />
-                      </div>
-                    </div>
-                  )}
+              {/* Options Avancées (Firebase par défaut) */}
+              <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'var(--surface-warm)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }}></div>
+                  <strong style={{ fontSize: '13px', color: 'var(--text-main)' }}>Base de données centralisée (Zéro-config)</strong>
                 </div>
-              </details>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  L'application est connectée de manière transparente à Firebase. Aucun paramétrage n'est requis pour les nouveaux appareils, la synchronisation est automatique.
+                </p>
+              </div>
             </div>
           </div>
 
