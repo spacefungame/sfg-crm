@@ -661,10 +661,10 @@ export class StorageService {
     this.saveToLocalStorage();
   }
 
-  public deleteTag(id: string): void {
-    const tagToDelete = this.data.tags.find(t => t.id === id);
+  public deleteTag(identifier: string): void {
+    const tagToDelete = this.data.tags.find(t => t.id === identifier || t.name === identifier);
     if (tagToDelete) {
-      this.data.tags = this.data.tags.filter(t => t.id !== id);
+      this.data.tags = this.data.tags.filter(t => t !== tagToDelete);
       this.data.contacts.forEach(c => {
         if (c.tags && c.tags.includes(tagToDelete.name)) {
           c.tags = c.tags.filter(name => name !== tagToDelete.name);

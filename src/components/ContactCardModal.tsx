@@ -699,7 +699,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
                             </button>
                             <button
                               type="button"
-                              onClick={(e) => handleDeleteTagModal(t.id, t.name, e)}
+                              onClick={(e) => handleDeleteTagModal(t.id || t.name, t.name, e)}
                               className="btn btn-secondary btn-sm"
                               style={{ padding: '2px 8px', fontSize: '10.5px', color: '#C81E1E', borderColor: '#F8B4B4', backgroundColor: '#FDE8E8' }}
                               title="Supprimer ce tag du CRM"

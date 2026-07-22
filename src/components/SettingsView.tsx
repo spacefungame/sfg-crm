@@ -456,11 +456,11 @@ export const SettingsView: React.FC = () => {
                     >
                       <Edit3 size={13} />
                     </button>
-                    <button
-                      type="button"
-                      onClick={(e) => handleDeleteTag(tag.id, e)}
-                      className="btn-icon"
-                      style={{ border: 'none', background: '#FDE8E8', cursor: 'pointer', color: '#C81E1E', padding: '4px' }}
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteTag(tag.id || tag.name, e)}
+                        className="btn-icon"
+                        style={{ border: 'none', background: '#FDE8E8', cursor: 'pointer', color: '#C81E1E', padding: '4px' }}
                       title="Supprimer"
                     >
                       <Trash2 size={13} />
