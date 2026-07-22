@@ -294,6 +294,19 @@ export class StorageService {
 
     const allDeletedItems = new Set<string>([...(remote.deletedItemIds || []), ...(local.deletedItemIds || [])]);
 
+    // Merge authorized emails
+    const mergedAuthEmailsMap = new Map<string, string>();
+    (remote.authorizedEmails || []).forEach(e => {
+      if (!allDeletedItems.has(e)) mergedAuthEmailsMap.set(e, e);
+    });
+    (local.authorizedEmails || []).forEach(e => {
+      if (allDeletedItems.has(e)) return;
+      if (!mergedAuthEmailsMap.has(e)) {
+        mergedAuthEmailsMap.set(e, e);
+        remoteNeedsUpdate = true;
+      }
+    });
+
     // 2. Merge tags
     const mergedTagsMap = new Map<string, any>();
     (remote.tags || []).forEach(rt => {
@@ -681,6 +694,31 @@ export class StorageService {
       this.data.deletedItemIds.push(tagToDelete.name);
       this.saveToLocalStorage();
     }
+  }
+
+  
+  // --- Authorized Emails ---
+  public getAuthorizedEmails(): string[] {
+    return [...(this.data.authorizedEmails || [])];
+  }
+
+  public addAuthorizedEmail(email: string): void {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) return;
+    if (!this.data.authorizedEmails) this.data.authorizedEmails = [];
+    if (!this.data.authorizedEmails.includes(trimmed)) {
+      this.data.authorizedEmails.push(trimmed);
+      this.saveToLocalStorage();
+    }
+  }
+
+  public removeAuthorizedEmail(email: string): void {
+    if (!this.data.authorizedEmails) return;
+    const trimmed = email.trim().toLowerCase();
+    this.data.authorizedEmails = this.data.authorizedEmails.filter(e => e !== trimmed);
+    if (!this.data.deletedItemIds) this.data.deletedItemIds = [];
+    this.data.deletedItemIds.push(trimmed);
+    this.saveToLocalStorage();
   }
 
   // --- Users ---

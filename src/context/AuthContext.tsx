@@ -7,7 +7,7 @@ interface AuthContextType {
   users: User[];
   login: (username: string, password?: string) => boolean;
   logout: () => void;
-  registerUser: (username: string, role?: string, email?: string, password?: string, autoLogin?: boolean) => User;
+  registerUser: (loginEmail: string, firstName: string, lastName: string, role?: string, email?: string, password?: string, autoLogin?: boolean) => User | null;
   updateUser: (user: User) => void;
   refreshUsers: () => void;
 }
@@ -43,7 +43,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (username: string, password?: string): boolean => {
     const allUsers = storageService.getUsers();
-    let found = allUsers.find(u => u.username.toLowerCase() === username.trim().toLowerCase() || u.id === username);
+    let found = allUsers.find(u => 
+      (u.loginEmail && u.loginEmail.toLowerCase() === username.trim().toLowerCase()) ||
+      u.username.toLowerCase() === username.trim().toLowerCase() || 
+      u.id === username
+    );
     
     if (found && found.password && found.password.trim() !== '') {
       if (password !== found.password) {
@@ -68,11 +72,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem(SESSION_USER_KEY);
   };
 
-  const registerUser = (username: string, role: string = 'user', email?: string, password?: string, autoLogin: boolean = true): User => {
+  const registerUser = (loginEmail: string, firstName: string, lastName: string, role: string = 'user', email?: string, password?: string, autoLogin: boolean = true): User | null => {
+    const authorized = storageService.getAuthorizedEmails();
+    if (!authorized.includes(loginEmail.trim().toLowerCase())) {
+      return null; // Not authorized
+    }
+    const username = `${firstName.trim()} ${lastName.trim()}`;
     const newUser = storageService.addUser(username, role, email, password);
+    newUser.loginEmail = loginEmail.trim().toLowerCase();
+    storageService.saveUser(newUser); // Save the loginEmail
     setUsers(storageService.getUsers());
     if (autoLogin) {
-      login(newUser.username, password);
+      login(newUser.loginEmail || newUser.username, password);
     }
     return newUser;
   };

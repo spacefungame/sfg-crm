@@ -36,7 +36,8 @@ export const SettingsView: React.FC = () => {
   const [newUsername, setNewUsername] = useState<string>('');
   const [newEmail, setNewEmail] = useState<string>('');
   const [newRole, setNewRole] = useState<string>('user');
-  const [inviteProvider, setInviteProvider] = useState<string>(storageService.getPreferredEmailProvider());
+  const [authEmailsList, setAuthEmailsList] = useState<string[]>(storageService.getAuthorizedEmails());
+  const [newAuthEmail, setNewAuthEmail] = useState<string>('');
 
   // --- Cloud Sync State ---
   const [cloudConfig, setCloudConfig] = useState<CloudConfig>(
@@ -203,20 +204,20 @@ export const SettingsView: React.FC = () => {
     refreshUsers();
   };
 
-  const handleInviteUser = (e: React.FormEvent) => {
+  const handleAddAuthEmail = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUsername.trim()) return;
-    registerUser(newUsername.trim(), newRole, newEmail.trim() || undefined, undefined, false);
+    if (!newAuthEmail.trim()) return;
+    storageService.addAuthorizedEmail(newAuthEmail.trim());
+    setNewAuthEmail('');
+    setAuthEmailsList(storageService.getAuthorizedEmails());
+  };
 
-    if (newEmail.trim()) {
-      const inviteSubject = `Invitation au CRM Space Fun Games & Share & Fun`;
-      const inviteBody = `Bonjour ${newUsername.trim()},\n\nVous avez été invité(e) à rejoindre le CRM de l'établissement Space Fun Games & Share & Fun en tant que ${newRole === 'directrice' ? 'Directrice' : newRole === 'admin' ? 'Administrateur' : newRole === 'user' ? 'Collaborateur' : newRole}.\n\nAccédez au CRM en ligne ici : https://spacefungame.github.io/sfg-crm/\n\nIdentifiant : ${newUsername.trim()}\n\nLors de votre première connexion sur le site, cliquez sur votre profil et vous pourrez définir et enregistrer vous-même votre mot de passe personnel.\n\nÀ très bientôt,\nL'équipe`;
-      storageService.dispatchEmail(newEmail.trim(), inviteSubject, inviteBody, inviteProvider);
+  const handleRemoveAuthEmail = (email: string, e?: React.MouseEvent) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (window.confirm(`Voulez-vous vraiment retirer l'autorisation pour ${email} ?`)) {
+      storageService.removeAuthorizedEmail(email);
+      setAuthEmailsList(storageService.getAuthorizedEmails());
     }
-
-    setNewUsername('');
-    setNewEmail('');
-    refreshUsers();
   };
 
   const handleDeleteUser = (userToDelete: User, e?: React.MouseEvent) => {

@@ -47,6 +47,7 @@ export interface Contact {
 
 export interface User {
   id: string;
+  loginEmail?: string;
   username: string;
   email?: string;
   password?: string;
@@ -97,6 +98,7 @@ export interface CRMData {
   cloudConfig: CloudConfig;
   deletedContactIds?: string[];
   deletedItemIds?: string[];
+  authorizedEmails?: string[];
 }
 
 
