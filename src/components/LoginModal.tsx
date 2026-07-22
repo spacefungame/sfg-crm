@@ -91,7 +91,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const availableRoles = storageService.getRoles().filter(r => r !== 'admin' && r !== 'directrice');
+  const availableRoles = storageService.getRoles().filter(r => r !== 'admin' && r !== 'coo');
 
   return (
     <div className="overlay-backdrop animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>

@@ -7,7 +7,7 @@ export const DEFAULT_CRM_DATA: CRMData = {
   deletedContactIds: [],
   users: [
 
-    { id: 'u-dir', username: 'Lauréline Henkens', password: 'Jerome221087', role: 'directrice', email: 'laureline@spacefungames.fr' }
+    { id: 'u-dir', username: 'Lauréline Henkens', password: 'Jerome221087', role: 'coo', email: 'laureline@spacefungames.fr' }
   ],
   contactTypes: [
     'Entreprise',
@@ -30,7 +30,7 @@ export const DEFAULT_CRM_DATA: CRMData = {
     { id: 'tag-3', name: 'Urgent', description: 'Événement à organiser dans moins de 7 jours', color: '#C62828' }
   ],
   roles: [
-    'directrice',
+    'coo',
     'user'
   ],
   templateCategories: [

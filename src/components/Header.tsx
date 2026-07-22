@@ -171,15 +171,15 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onOpenLogin}
             className="btn btn-secondary btn-sm"
             style={{ 
-              backgroundColor: currentUser?.role === 'directrice' ? '#FEF3C7' : 'var(--primary-light)', 
-              borderColor: currentUser?.role === 'directrice' ? '#F59E0B' : 'var(--border-focus)',
-              color: currentUser?.role === 'directrice' ? '#92400E' : 'var(--primary)',
+              backgroundColor: currentUser?.role === 'coo' ? '#FEF3C7' : 'var(--primary-light)', 
+              borderColor: currentUser?.role === 'coo' ? '#F59E0B' : 'var(--border-focus)',
+              color: currentUser?.role === 'coo' ? '#92400E' : 'var(--primary)',
               fontWeight: 600,
               padding: '3px 8px'
             }}
             title="Changer d'utilisateur ou gérer l'équipe"
           >
-            {currentUser?.role === 'directrice' ? <Crown size={13} style={{ color: '#D97706' }} /> : <UserCheck size={13} />}
+            {currentUser?.role === 'coo' ? <Crown size={13} style={{ color: '#D97706' }} /> : <UserCheck size={13} />}
             <span>{currentUser ? currentUser.username : 'Connexion'}</span>
             {currentUser?.role === 'admin' && <Shield size={12} style={{ color: 'var(--accent)' }} />}
           </button>

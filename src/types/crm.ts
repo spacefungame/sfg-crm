@@ -51,7 +51,7 @@ export interface User {
   username: string;
   email?: string;
   password?: string;
-  role: string; // 'directrice', 'admin', 'user' ou rôle personnalisé
+  role: string; // 'coo', 'admin', 'user' ou rôle personnalisé
   isInvited?: boolean;
 }
 
