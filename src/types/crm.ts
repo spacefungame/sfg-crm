@@ -51,7 +51,8 @@ export interface User {
   username: string;
   email?: string;
   password?: string;
-  role: string; // 'coo', 'admin', 'user' ou rôle personnalisé
+  role: string; // Intitulé du poste
+  isAdmin?: boolean; // Droits d'administration
   isInvited?: boolean;
 }
 

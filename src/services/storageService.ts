@@ -99,13 +99,18 @@ export class StorageService {
           }
         }
 
-                const loadedRoles = parsed.roles || DEFAULT_CRM_DATA.roles || ['coo', 'admin', 'user'];
+                const loadedRoles = (parsed.roles || DEFAULT_CRM_DATA.roles || ['coo', 'user']).filter(r => r.toLowerCase() !== 'admin');
         if (!loadedRoles.map(r => r.toLowerCase()).includes('coo')) loadedRoles.unshift('coo');
-        if (!loadedRoles.map(r => r.toLowerCase()).includes('admin')) loadedRoles.push('admin');
         if (!loadedRoles.map(r => r.toLowerCase()).includes('user')) loadedRoles.push('user');
         loadedUsers = loadedUsers.map(u => {
-          if (u.role === 'directrice') u.role = 'coo';
-          // if (u.role === 'admin') return { ...u, role: 'user' }; // remove the downgrade of admin just in case
+          if (u.role === 'directrice' || u.role?.toLowerCase() === 'coo') {
+            u.role = 'coo';
+            u.isAdmin = true;
+          }
+          if (u.role?.toLowerCase() === 'admin') {
+            u.role = 'user';
+            u.isAdmin = true;
+          }
           return u;
         });
 

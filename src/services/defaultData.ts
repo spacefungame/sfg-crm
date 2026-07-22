@@ -7,7 +7,7 @@ export const DEFAULT_CRM_DATA: CRMData = {
   deletedContactIds: [],
   users: [
 
-    { id: 'u-dir', username: 'Lauréline Henkens', password: 'Jerome221087', role: 'coo', email: 'laureline@spacefungames.fr' }
+    { id: 'u-dir', username: 'Lauréline Henkens', password: 'Jerome221087', role: 'coo', isAdmin: true, email: 'laureline@spacefungames.fr' }
   ],
   contactTypes: [
     'Entreprise',
@@ -31,7 +31,6 @@ export const DEFAULT_CRM_DATA: CRMData = {
   ],
   roles: [
     'coo',
-    'admin',
     'user'
   ],
   templateCategories: [

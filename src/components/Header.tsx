@@ -181,7 +181,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {currentUser?.role === 'coo' ? <Crown size={13} style={{ color: '#D97706' }} /> : <UserCheck size={13} />}
             <span>{currentUser ? currentUser.username : 'Connexion'}</span>
-            {currentUser?.role === 'admin' && <Shield size={12} style={{ color: 'var(--accent)' }} />}
+            {currentUser?.isAdmin && <Shield size={12} style={{ color: 'var(--accent)' }} />}
           </button>
         </div>
 

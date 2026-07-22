@@ -724,7 +724,7 @@ export const SettingsView: React.FC = () => {
                         <div style={{ fontWeight: 600, fontSize: '12px', color: isDir ? '#D97706' : 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {isDir ? <Crown size={14} /> : <Shield size={14} style={{ color: 'var(--primary)' }} />}
                           <span>
-                            {role?.toLowerCase() === 'coo' ? 'COO' : role?.toLowerCase() === 'admin' ? 'Administrateur' : role?.toLowerCase() === 'user' ? 'Collaborateur' : role}
+                            {role?.toLowerCase() === 'coo' ? 'COO' : role?.toLowerCase() === 'user' ? 'Collaborateur' : role}
                           </span>
                           {isDir && <span className="badge" style={{ backgroundColor: '#D97706', color: '#FFF', fontSize: '9.5px', padding: '1px 5px' }}>Système</span>}
                         </div>
@@ -836,7 +836,7 @@ export const SettingsView: React.FC = () => {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: isDir ? '#FDE68A' : 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isDir ? '#D97706' : 'var(--primary)' }}>
-                        {isDir ? <Crown size={14} /> : <UserCheck size={14} />}
+                        {isDir ? <Crown size={14} /> : u.isAdmin ? <Shield size={14} style={{ color: 'var(--accent)' }} /> : <UserCheck size={14} />}
                       </div>
                       <div>
                         <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
