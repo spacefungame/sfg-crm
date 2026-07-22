@@ -92,17 +92,17 @@ export class StorageService {
         );
         
         // S'assurer que le profil COO (Lauréline Henkens) est toujours présent dans les comptes existants
-        if (!loadedUsers.some(u => u.role === 'coo' || u.username.toLowerCase().includes('laur'))) {
-          const dirUser = DEFAULT_CRM_DATA.users.find(u => u.role === 'coo');
+        if (!loadedUsers.some(u => u.role?.toLowerCase() === 'coo' || u.username.toLowerCase().includes('laur'))) {
+          const dirUser = DEFAULT_CRM_DATA.users.find(u => u.role?.toLowerCase() === 'coo');
           if (dirUser) {
             loadedUsers = [dirUser, ...loadedUsers];
           }
         }
 
                 const loadedRoles = parsed.roles || DEFAULT_CRM_DATA.roles || ['coo', 'admin', 'user'];
-        if (!loadedRoles.includes('coo')) loadedRoles.unshift('coo');
-        if (!loadedRoles.includes('admin')) loadedRoles.push('admin');
-        if (!loadedRoles.includes('user')) loadedRoles.push('user');
+        if (!loadedRoles.map(r => r.toLowerCase()).includes('coo')) loadedRoles.unshift('coo');
+        if (!loadedRoles.map(r => r.toLowerCase()).includes('admin')) loadedRoles.push('admin');
+        if (!loadedRoles.map(r => r.toLowerCase()).includes('user')) loadedRoles.push('user');
         loadedUsers = loadedUsers.map(u => {
           if (u.role === 'directrice') u.role = 'coo';
           // if (u.role === 'admin') return { ...u, role: 'user' }; // remove the downgrade of admin just in case
@@ -650,7 +650,7 @@ export class StorageService {
   }
 
   public deleteRole(roleName: string): void {
-    if (roleName === 'coo') return; // protection du rôle principal
+    if (roleName?.toLowerCase() === 'coo') return; // protection du rôle principal
     this.data.roles = (this.data.roles || []).filter(r => r !== roleName);
     // Switch users with deleted role to 'user'
     this.data.users.forEach(u => {
@@ -730,8 +730,8 @@ export class StorageService {
     if (!this.data.users || this.data.users.length === 0) {
       this.data.users = [...DEFAULT_CRM_DATA.users];
       this.saveToLocalStorage();
-    } else if (!this.data.users.some(u => u.role === 'coo' || u.username.toLowerCase().includes('laur'))) {
-      const dirUser = DEFAULT_CRM_DATA.users.find(u => u.role === 'coo');
+    } else if (!this.data.users.some(u => u.role?.toLowerCase() === 'coo' || u.username.toLowerCase().includes('laur'))) {
+      const dirUser = DEFAULT_CRM_DATA.users.find(u => u.role?.toLowerCase() === 'coo');
       if (dirUser) {
         this.data.users = [dirUser, ...this.data.users];
         this.saveToLocalStorage();

@@ -174,7 +174,7 @@ export const SettingsView: React.FC = () => {
 
   const handleDeleteRole = (role: string, e?: React.MouseEvent) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
-    if (role === 'coo') {
+    if (role?.toLowerCase() === 'coo') {
       alert("Le rôle COO ne peut pas être supprimé car c'est le rôle principal du système.");
       return;
     }
@@ -685,7 +685,7 @@ export const SettingsView: React.FC = () => {
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {rolesList.map((role, idx) => {
-                const isDir = role === 'coo';
+                const isDir = role?.toLowerCase() === 'coo';
                 const isEditing = editingRoleOldName === role;
                 return (
                   <div
@@ -724,7 +724,7 @@ export const SettingsView: React.FC = () => {
                         <div style={{ fontWeight: 600, fontSize: '12px', color: isDir ? '#D97706' : 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {isDir ? <Crown size={14} /> : <Shield size={14} style={{ color: 'var(--primary)' }} />}
                           <span>
-                            {role === 'coo' ? 'COO' : role === 'admin' ? 'Administrateur' : role === 'user' ? 'Collaborateur' : role}
+                            {role?.toLowerCase() === 'coo' ? 'COO' : role?.toLowerCase() === 'admin' ? 'Administrateur' : role?.toLowerCase() === 'user' ? 'Collaborateur' : role}
                           </span>
                           {isDir && <span className="badge" style={{ backgroundColor: '#D97706', color: '#FFF', fontSize: '9.5px', padding: '1px 5px' }}>Système</span>}
                         </div>
@@ -818,7 +818,7 @@ export const SettingsView: React.FC = () => {
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {users.map((u) => {
-                const isDir = u.role === 'coo';
+                const isDir = u.role?.toLowerCase() === 'coo';
                 const isMe = currentUser?.id === u.id;
                 return (
                   <div
@@ -849,7 +849,7 @@ export const SettingsView: React.FC = () => {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '4px' }}>
-                      {!isDir && (currentUser?.role === 'admin' || currentUser?.role === 'coo') && (
+                      {!isDir && (currentUser?.role === 'admin' || currentUser?.role?.toLowerCase() === 'coo') && (
                         <select
                           className="input-field"
                           value={u.role}
