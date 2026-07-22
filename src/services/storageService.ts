@@ -330,14 +330,14 @@ export class StorageService {
     });
 
     // 3. Merge contactTypes, statuses, roles
-    const mergedTypes = Array.from(new Set([...(remote.contactTypes || []), ...(local.contactTypes || [])]));
-    if (mergedTypes.length > (remote.contactTypes || []).length) remoteNeedsUpdate = true;
+    const mergedTypes = Array.from(new Set([...(remote.contactTypes || []), ...(local.contactTypes || [])])).filter(x => !allDeletedItems.has(x));
+    if (mergedTypes.length !== (remote.contactTypes || []).length) remoteNeedsUpdate = true;
 
-    const mergedStatuses = Array.from(new Set([...(remote.statuses || []), ...(local.statuses || [])]));
-    if (mergedStatuses.length > (remote.statuses || []).length) remoteNeedsUpdate = true;
+    const mergedStatuses = Array.from(new Set([...(remote.statuses || []), ...(local.statuses || [])])).filter(x => !allDeletedItems.has(x));
+    if (mergedStatuses.length !== (remote.statuses || []).length) remoteNeedsUpdate = true;
 
-    const mergedRoles = Array.from(new Set([...(remote.roles || []), ...(local.roles || [])]));
-    if (mergedRoles.length > (remote.roles || []).length) remoteNeedsUpdate = true;
+    const mergedRoles = Array.from(new Set([...(remote.roles || []), ...(local.roles || [])])).filter(x => !allDeletedItems.has(x));
+    if (mergedRoles.length !== (remote.roles || []).length) remoteNeedsUpdate = true;
 
     // 4. Merge users
     const mergedUsersMap = new Map<string, any>();
@@ -350,8 +350,8 @@ export class StorageService {
     });
 
     // 5. Merge templateCategories and emailTemplates
-    const mergedCategories = Array.from(new Set([...(remote.templateCategories || []), ...(local.templateCategories || [])]));
-    if (mergedCategories.length > (remote.templateCategories || []).length) remoteNeedsUpdate = true;
+    const mergedCategories = Array.from(new Set([...(remote.templateCategories || []), ...(local.templateCategories || [])])).filter(x => !allDeletedItems.has(x));
+    if (mergedCategories.length !== (remote.templateCategories || []).length) remoteNeedsUpdate = true;
 
     const mergedTemplatesMap = new Map<string, any>();
     (remote.emailTemplates || []).forEach(rt => mergedTemplatesMap.set(rt.id || rt.title, rt));
@@ -663,6 +663,8 @@ export class StorageService {
         u.role = 'user';
       }
     });
+    if (!this.data.deletedItemIds) this.data.deletedItemIds = [];
+    this.data.deletedItemIds.push(roleName);
     this.saveToLocalStorage();
   }
 

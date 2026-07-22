@@ -848,22 +848,36 @@ export const SettingsView: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      {!isDir && (currentUser?.role === 'admin' || currentUser?.role?.toLowerCase() === 'coo') && (
-                        <select
-                          className="input-field"
-                          value={u.role}
-                          onChange={(e) => {
-                            const updatedUser = { ...u, role: e.target.value };
-                            storageService.saveUser(updatedUser);
-                            refreshUsers();
-                          }}
-                          style={{ fontSize: '11px', padding: '2px 6px', height: 'auto', minHeight: '24px' }}
-                        >
-                          {storageService.getRoles().map(r => (
-                            <option key={r} value={r}>{r}</option>
-                          ))}
-                        </select>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      {!isDir && (currentUser?.isAdmin || currentUser?.role?.toLowerCase() === 'coo') && (
+                        <>
+                          <select
+                            className="input-field"
+                            value={u.role}
+                            onChange={(e) => {
+                              const updatedUser = { ...u, role: e.target.value };
+                              storageService.saveUser(updatedUser);
+                              refreshUsers();
+                            }}
+                            style={{ fontSize: '11px', padding: '2px 6px', height: 'auto', minHeight: '24px' }}
+                          >
+                            {storageService.getRoles().map(r => (
+                              <option key={r} value={r}>{r}</option>
+                            ))}
+                          </select>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-main)', cursor: 'pointer' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={!!u.isAdmin} 
+                              onChange={(e) => {
+                                const updatedUser = { ...u, isAdmin: e.target.checked };
+                                storageService.saveUser(updatedUser);
+                                refreshUsers();
+                              }}
+                            />
+                            Admin
+                          </label>
+                        </>
                       )}
                       {!isDir && !isMe && (
                         <button
