@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { storageService } from '../services/storageService';
 import { LogIn, UserPlus, X, Mail, Shield, CheckCircle } from 'lucide-react';
-import { EmailProviderSelector } from './EmailProviderSelector';
+
 
 interface LoginModalProps {
   isOpen: boolean;

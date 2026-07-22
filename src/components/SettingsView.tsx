@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import type { TagDefinition, User, CloudConfig } from '../types/crm';
-import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Lock, Shield, Crown, X, KeyRound, ArrowUp, ArrowDown, GripVertical, Download, Upload } from 'lucide-react';
+import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Shield, Crown, X, ArrowUp, ArrowDown, GripVertical, Download, Upload, UserCheck } from 'lucide-react';
 import { TemplatesManager } from './TemplatesManager';
-import { EmailProviderSelector } from './EmailProviderSelector';
+
 
 export const SettingsView: React.FC = () => {
   const { users, currentUser, refreshUsers } = useAuth();
