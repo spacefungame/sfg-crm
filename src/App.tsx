@@ -13,7 +13,7 @@ import { ReturnPromptModal } from './components/ReturnPromptModal';
 import { ImportModal } from './components/ImportModal';
 import { LoginModal } from './components/LoginModal';
 import { NewContactModal } from './components/NewContactModal';
-import { TemplatesManager } from './components/TemplatesManager';
+
 import { ReportsView } from './components/ReportsView';
 import { SettingsView } from './components/SettingsView';
 import { EmailTemplatePickerModal } from './components/EmailTemplatePickerModal';
@@ -22,7 +22,7 @@ const AppContent: React.FC = () => {
   const { currentUser } = useAuth();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [currentTab, setCurrentTab] = useState<'contacts' | 'reports' | 'templates' | 'settings'>('contacts');
+  const [currentTab, setCurrentTab] = useState<'contacts' | 'reports' | 'settings'>('contacts');
   
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
@@ -204,12 +204,7 @@ const AppContent: React.FC = () => {
           </div>
         )}
 
-        {/* Tab 3: Modèles d'E-mails */}
-        {currentTab === 'templates' && (
-          <div className="animate-fade-in">
-            <TemplatesManager onTemplatesChanged={loadContacts} />
-          </div>
-        )}
+
 
         {/* Tab 4: Paramètres & Personnalisation */}
         {currentTab === 'settings' && (

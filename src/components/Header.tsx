@@ -1,10 +1,10 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Users, BarChart3, Mail, Plus, Upload, UserCheck, Shield, Rocket, Dices, Settings, Crown } from 'lucide-react';
+import { Users, BarChart3, Plus, Upload, UserCheck, Shield, Rocket, Dices, Settings, Crown } from 'lucide-react';
 
 interface HeaderProps {
-  currentTab: 'contacts' | 'reports' | 'templates' | 'settings';
-  onTabChange: (tab: 'contacts' | 'reports' | 'templates' | 'settings') => void;
+  currentTab: 'contacts' | 'reports' | 'settings';
+  onTabChange: (tab: 'contacts' | 'reports' | 'settings') => void;
   onOpenImport: () => void;
   onOpenNewContact: () => void;
   onOpenLogin: () => void;
@@ -105,27 +105,6 @@ export const Header: React.FC<HeaderProps> = ({
             Rapports d'Activité
           </button>
 
-          <button
-            onClick={() => onTabChange('templates')}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              backgroundColor: currentTab === 'templates' ? 'var(--surface)' : 'transparent',
-              color: currentTab === 'templates' ? 'var(--primary)' : 'var(--text-muted)',
-              fontWeight: currentTab === 'templates' ? 600 : 500,
-              fontSize: '11.5px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-              boxShadow: currentTab === 'templates' ? 'var(--shadow-sm)' : 'none',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <Mail size={13} />
-            Modèles d'E-mails
-          </button>
 
           <button
             onClick={() => onTabChange('settings')}
