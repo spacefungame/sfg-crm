@@ -292,11 +292,15 @@ export class StorageService {
 
     const mergedContacts = Array.from(mergedContactsMap.values()).filter(c => !allDeletedIds.has(c.id));
 
+    const allDeletedItems = new Set<string>([...(remote.deletedItemIds || []), ...(local.deletedItemIds || [])]);
 
     // 2. Merge tags
     const mergedTagsMap = new Map<string, any>();
-    (remote.tags || []).forEach(rt => mergedTagsMap.set(rt.id || rt.name, rt));
+    (remote.tags || []).forEach(rt => {
+      if (!allDeletedItems.has(rt.id) && !allDeletedItems.has(rt.name)) mergedTagsMap.set(rt.id || rt.name, rt);
+    });
     (local.tags || []).forEach(lt => {
+      if (allDeletedItems.has(lt.id) || allDeletedItems.has(lt.name)) return;
       if (!mergedTagsMap.has(lt.id || lt.name)) {
         mergedTagsMap.set(lt.id || lt.name, lt);
         remoteNeedsUpdate = true;
@@ -340,6 +344,8 @@ export class StorageService {
     const merged: CRMData = {
       contacts: mergedContacts,
       deletedContactIds: Array.from(allDeletedIds),
+      deletedItemIds: Array.from(allDeletedItems),
+
       users: Array.from(mergedUsersMap.values()),
       contactTypes: mergedTypes,
       statuses: mergedStatuses,
@@ -670,6 +676,9 @@ export class StorageService {
           c.tags = c.tags.filter(name => name !== tagToDelete.name);
         }
       });
+      if (!this.data.deletedItemIds) this.data.deletedItemIds = [];
+      if (tagToDelete.id) this.data.deletedItemIds.push(tagToDelete.id);
+      this.data.deletedItemIds.push(tagToDelete.name);
       this.saveToLocalStorage();
     }
   }

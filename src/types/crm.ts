@@ -96,6 +96,7 @@ export interface CRMData {
   emailTemplates: EmailTemplate[];
   cloudConfig: CloudConfig;
   deletedContactIds?: string[];
+  deletedItemIds?: string[];
 }
 
 
