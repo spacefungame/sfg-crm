@@ -7,7 +7,7 @@ import { TemplatesManager } from './TemplatesManager';
 import { EmailProviderSelector } from './EmailProviderSelector';
 
 export const SettingsView: React.FC = () => {
-  const { users, currentUser, registerUser, refreshUsers } = useAuth();
+  const { users, currentUser, refreshUsers } = useAuth();
   const [activeSection, setActiveSection] = useState<'tags' | 'statuses' | 'types' | 'roles' | 'users' | 'templates' | 'backup'>('tags');
 
   // --- Tags State ---
@@ -33,10 +33,7 @@ export const SettingsView: React.FC = () => {
   const [newRoleEditName, setNewRoleEditName] = useState<string>('');
 
   // --- Users State ---
-  const [newUsername, setNewUsername] = useState<string>('');
-  const [newEmail, setNewEmail] = useState<string>('');
-  const [newRole, setNewRole] = useState<string>('user');
-  const [authEmailsList, setAuthEmailsList] = useState<string[]>(storageService.getAuthorizedEmails());
+    const [authEmailsList, setAuthEmailsList] = useState<string[]>(storageService.getAuthorizedEmails());
   const [newAuthEmail, setNewAuthEmail] = useState<string>('');
 
   // --- Cloud Sync State ---
@@ -770,62 +767,49 @@ export const SettingsView: React.FC = () => {
           <div className="card" style={{ padding: '14px' }}>
             <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Users size={15} style={{ color: 'var(--primary)' }} />
-              Inviter / Créer un profil
+              Autoriser une adresse e-mail
             </h3>
-            <form onSubmit={handleInviteUser} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '10px' }}>
+              Ajoutez l'adresse e-mail d'un collaborateur pour l'autoriser à créer son compte.
+            </p>
+            <form onSubmit={handleAddAuthEmail} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Prénom & Nom *
-                </label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="Ex: Julie Martin"
-                  value={newUsername}
-                  onChange={(e) => setNewUsername(e.target.value)}
-                  style={{ fontSize: '12px' }}
-                  required
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  E-mail du collaborateur
+                  E-mail autorisé *
                 </label>
                 <input
                   type="email"
                   className="input-field"
                   placeholder="Ex: julie@spacefungames.fr"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
+                  value={newAuthEmail}
+                  onChange={(e) => setNewAuthEmail(e.target.value)}
                   style={{ fontSize: '12px' }}
+                  required
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Rôle au sein du CRM
-                </label>
-                <select
-                  className="input-field"
-                  value={newRole}
-                  onChange={(e) => setNewRole(e.target.value)}
-                  style={{ fontSize: '12px' }}
-                >
-                  {storageService.getRoles().map((r) => (
-                    <option key={r} value={r}>
-                      {r === 'directrice' ? 'Directrice' : r === 'admin' ? 'Administrateur' : r === 'user' ? 'Collaborateur' : r}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <EmailProviderSelector value={inviteProvider} onChange={setInviteProvider} compact />
-
               <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '6px 12px', fontSize: '12px' }}>
-                Créer profil & Inviter
+                Autoriser l'adresse
               </button>
             </form>
+
+            <div style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+              <h4 style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>E-mails en attente / autorisés :</h4>
+              {authEmailsList.length === 0 ? (
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Aucun e-mail autorisé.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {authEmailsList.map(email => (
+                    <div key={email} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px', backgroundColor: 'var(--surface-warm)', borderRadius: 'var(--radius-sm)', fontSize: '11.5px' }}>
+                      <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{email}</span>
+                      <button type="button" onClick={(e) => handleRemoveAuthEmail(email, e)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '2px' }} title="Retirer l'autorisation">
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="card" style={{ padding: '14px' }}>
@@ -840,108 +824,59 @@ export const SettingsView: React.FC = () => {
                   <div
                     key={u.id}
                     style={{
-                      padding: '8px 12px',
-                      backgroundColor: isMe ? 'var(--primary-light)' : 'var(--surface-warm)',
-                      borderRadius: 'var(--radius-md)',
-                      border: isDir ? '1px solid #F59E0B' : '1px solid var(--border)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      backgroundColor: isDir ? '#FEF3C7' : 'var(--surface)',
+                      borderRadius: 'var(--radius-md)',
+                      border: isDir ? '1px solid #F59E0B' : '1px solid var(--border)',
                       gap: '10px'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: 'var(--radius-full)',
-                        backgroundColor: isDir ? '#FEF3C7' : 'var(--surface)',
-                        color: isDir ? '#D97706' : 'var(--primary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        fontSize: '13px',
-                        border: '1px solid var(--border)'
-                      }}>
-                        {isDir ? <Crown size={15} /> : u.username.charAt(0).toUpperCase()}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: isDir ? '#FDE68A' : 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isDir ? '#D97706' : 'var(--primary)' }}>
+                        {isDir ? <Crown size={14} /> : <UserCheck size={14} />}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
                           {u.username}
-                          {isMe && <span className="badge" style={{ backgroundColor: 'var(--primary)', color: '#FFF', fontSize: '9.5px', padding: '1px 5px' }}>Vous</span>}
-                          {u.role === 'admin' && <span title="Administrateur" style={{ display: 'inline-flex' }}><Shield size={12} style={{ color: 'var(--accent)' }} /></span>}
+                          {isMe && <span style={{ fontSize: '10px', color: 'var(--primary)', marginLeft: '6px', fontWeight: 500 }}>(Moi)</span>}
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            Rôle :
-                            <select
-                              value={u.role}
-                              onChange={(e) => {
-                                u.role = e.target.value;
-                                storageService.saveUser(u);
-                                refreshUsers();
-                              }}
-                              disabled={!isDir && !isMe && currentUser?.role !== 'directrice' && currentUser?.role !== 'admin'}
-                              style={{
-                                padding: '1px 4px',
-                                borderRadius: '4px',
-                                border: '1px solid var(--border)',
-                                fontWeight: 600,
-                                fontSize: '11px',
-                                backgroundColor: 'var(--surface)',
-                                color: isDir ? '#D97706' : 'inherit',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {storageService.getRoles().map((r) => (
-                                <option key={r} value={r}>
-                                  {r === 'directrice' ? 'Directrice' : r === 'admin' ? 'Administrateur' : r === 'user' ? 'Collaborateur' : r}
-                                </option>
-                              ))}
-                            </select>
-                          </span>
-                          {u.email && <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><Mail size={11} /> {u.email}</span>}
-                          {u.password ? (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '3px', opacity: 0.7 }}><Lock size={11} /> Sécurisé</span>
-                              {!isDir && !isMe && (currentUser?.role === 'directrice' || currentUser?.role === 'admin') && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (window.confirm(`Réinitialiser le mot de passe de ${u.username} ? À sa prochaine connexion, le collaborateur devra choisir un nouveau mot de passe.`)) {
-                                      u.password = undefined;
-                                      storageService.saveUser(u);
-                                      refreshUsers();
-                                    }
-                                  }}
-                                  style={{ background: 'none', border: 'none', color: '#D97706', fontSize: '10.5px', cursor: 'pointer', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '2px', padding: 0 }}
-                                  title="Réinitialiser pour que le collaborateur crée un nouveau mot de passe à sa prochaine connexion"
-                                >
-                                  <KeyRound size={11} /> Réinitialiser mdp
-                                </button>
-                              )}
-                            </span>
-                          ) : (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#D97706', fontWeight: 600, fontSize: '11px' }}>
-                              <KeyRound size={12} /> En attente de 1ère connexion (créera son mdp)
-                            </span>
-                          )}
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          {u.loginEmail || u.email || 'Pas d\'e-mail'} • <span style={{ color: isDir ? '#D97706' : 'var(--primary)', fontWeight: 600 }}>{u.role}</span>
                         </div>
                       </div>
                     </div>
-
-                    {!isMe && (
-                      <button
-                        type="button"
-                        onClick={(e) => handleDeleteUser(u, e)}
-                        className="btn-icon"
-                        style={{ border: 'none', background: '#FDE8E8', cursor: 'pointer', color: '#C81E1E', padding: '4px' }}
-                        title="Supprimer ce compte"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    )}
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      {!isDir && currentUser?.role === 'admin' && (
+                        <select
+                          className="input-field"
+                          value={u.role}
+                          onChange={(e) => {
+                            const updatedUser = { ...u, role: e.target.value };
+                            storageService.saveUser(updatedUser);
+                            refreshUsers();
+                          }}
+                          style={{ fontSize: '11px', padding: '2px 6px', height: 'auto', minHeight: '24px' }}
+                        >
+                          {storageService.getRoles().map(r => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      )}
+                      {!isDir && !isMe && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteUser(u, e)}
+                          className="btn-icon"
+                          style={{ border: 'none', background: '#FDE8E8', cursor: 'pointer', color: '#C81E1E', padding: '4px' }}
+                          title="Supprimer ce profil"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
