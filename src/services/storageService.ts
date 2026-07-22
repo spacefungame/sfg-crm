@@ -341,8 +341,13 @@ export class StorageService {
 
     // 4. Merge users
     const mergedUsersMap = new Map<string, any>();
-    (remote.users || []).forEach(ru => mergedUsersMap.set(ru.username.toLowerCase(), ru));
+    (remote.users || []).forEach(ru => {
+      if (!allDeletedItems.has(ru.id)) {
+        mergedUsersMap.set(ru.username.toLowerCase(), ru);
+      }
+    });
     (local.users || []).forEach(lu => {
+      if (allDeletedItems.has(lu.id)) return;
       if (!mergedUsersMap.has(lu.username.toLowerCase())) {
         mergedUsersMap.set(lu.username.toLowerCase(), lu);
         remoteNeedsUpdate = true;
@@ -354,8 +359,13 @@ export class StorageService {
     if (mergedCategories.length !== (remote.templateCategories || []).length) remoteNeedsUpdate = true;
 
     const mergedTemplatesMap = new Map<string, any>();
-    (remote.emailTemplates || []).forEach(rt => mergedTemplatesMap.set(rt.id || rt.title, rt));
+    (remote.emailTemplates || []).forEach(rt => {
+      if (!allDeletedItems.has(rt.id)) {
+        mergedTemplatesMap.set(rt.id || rt.title, rt);
+      }
+    });
     (local.emailTemplates || []).forEach(lt => {
+      if (allDeletedItems.has(lt.id)) return;
       if (!mergedTemplatesMap.has(lt.id || lt.title)) {
         mergedTemplatesMap.set(lt.id || lt.title, lt);
         remoteNeedsUpdate = true;
@@ -782,6 +792,8 @@ export class StorageService {
 
   public deleteUser(id: string): void {
     this.data.users = this.data.users.filter(u => u.id !== id);
+    if (!this.data.deletedItemIds) this.data.deletedItemIds = [];
+    this.data.deletedItemIds.push(id);
     this.saveToLocalStorage();
   }
 
@@ -851,6 +863,8 @@ export class StorageService {
 
   public deleteEmailTemplate(id: string): void {
     this.data.emailTemplates = this.data.emailTemplates.filter(t => t.id !== id);
+    if (!this.data.deletedItemIds) this.data.deletedItemIds = [];
+    this.data.deletedItemIds.push(id);
     this.saveToLocalStorage();
   }
 
