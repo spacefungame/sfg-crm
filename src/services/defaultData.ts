@@ -31,6 +31,7 @@ export const DEFAULT_CRM_DATA: CRMData = {
   ],
   roles: [
     'coo',
+    'admin',
     'user'
   ],
   templateCategories: [

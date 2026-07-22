@@ -99,9 +99,9 @@ export class StorageService {
           }
         }
 
-        // Nettoyage automatique du rôle obsolète "admin" (et bascule en "user" si nécessaire)
-        const loadedRoles = (parsed.roles || DEFAULT_CRM_DATA.roles || ['coo', 'user']).filter(r => r !== 'admin');
+                const loadedRoles = parsed.roles || DEFAULT_CRM_DATA.roles || ['coo', 'admin', 'user'];
         if (!loadedRoles.includes('coo')) loadedRoles.unshift('coo');
+        if (!loadedRoles.includes('admin')) loadedRoles.push('admin');
         if (!loadedRoles.includes('user')) loadedRoles.push('user');
         loadedUsers = loadedUsers.map(u => {
           if (u.role === 'directrice') u.role = 'coo';
