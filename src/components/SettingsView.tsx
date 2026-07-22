@@ -849,7 +849,7 @@ export const SettingsView: React.FC = () => {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '4px' }}>
-                      {!isDir && currentUser?.role === 'admin' && (
+                      {!isDir && (currentUser?.role === 'admin' || currentUser?.role === 'directrice') && (
                         <select
                           className="input-field"
                           value={u.role}
