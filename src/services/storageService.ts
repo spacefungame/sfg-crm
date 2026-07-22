@@ -359,18 +359,41 @@ export class StorageService {
     try {
       if (!this.data.cloudConfig) this.data.cloudConfig = { ...DEFAULT_CRM_DATA.cloudConfig };
 
-      const binId = this.data.cloudConfig.jsonbinId || '6a5a442bf5f4af5e299ce6d0';
-      const binKey = this.data.cloudConfig.jsonbinKey || '$2a$10$ef5q0hmsrglb4cCJeE5mGebf9IdiM75IE.TW6EbK5kXQfg9sBiKIi';
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-        method: 'GET',
-        headers: {
-          'X-Master-Key': binKey
+      let remoteData: any = null;
+
+      if (this.data.cloudConfig.provider === 'gist' && this.data.cloudConfig.gistToken && this.data.cloudConfig.gistId) {
+        const token = this.data.cloudConfig.gistToken;
+        const gistId = this.data.cloudConfig.gistId;
+
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        if (res.ok) {
+           const gistData = await res.json();
+           const file = gistData.files['sfg_crm_data.json'];
+           if (file && file.content) {
+              remoteData = JSON.parse(file.content);
+           }
         }
-      });
-      if (res.ok) {
-          const json = await res.json();
-          let remoteData = (json.record || {}) as any;
-          
+      } else {
+        // Firebase par défaut pour tout le monde
+        const firebaseUrl = 'https://sfg-crm-default-rtdb.europe-west1.firebasedatabase.app/crm_data.json';
+        const res = await fetch(firebaseUrl, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
+        if (res.ok) {
+            remoteData = await res.json();
+        }
+      }
+      
+      if (remoteData) {
           if (remoteData._compressed_v1) {
             try {
               const decompressed = await this.decompressData(remoteData._compressed_v1);
@@ -405,7 +428,7 @@ export class StorageService {
             }
             return true;
           }
-        }
+      }
     } catch (e) {
       console.warn('[Realtime Cloud Sync] Erreur pull distant:', e);
     }
