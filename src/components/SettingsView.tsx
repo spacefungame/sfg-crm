@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import type { TagDefinition, User } from '../types/crm';
-import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Shield, Crown, X, ArrowUp, ArrowDown, GripVertical, Download, Upload, UserCheck } from 'lucide-react';
+import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Shield, Crown, X, ArrowUp, ArrowDown, GripVertical, UserCheck } from 'lucide-react';
 import { TemplatesManager } from './TemplatesManager';
 
 
 export const SettingsView: React.FC = () => {
   const { users, currentUser, refreshUsers } = useAuth();
-  const [activeSection, setActiveSection] = useState<'tags' | 'statuses' | 'types' | 'roles' | 'users' | 'templates' | 'backup'>('tags');
+  const [activeSection, setActiveSection] = useState<'tags' | 'statuses' | 'types' | 'roles' | 'users' | 'templates'>('tags');
 
   // --- Tags State ---
   const [tagsList, setTagsList] = useState<TagDefinition[]>(storageService.getTags());
@@ -294,15 +294,7 @@ export const SettingsView: React.FC = () => {
             <Mail size={13} />
             Modèles d'E-mails
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveSection('backup')}
-            className={`btn btn-sm ${activeSection === 'backup' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ border: 'none', padding: '4px 8px', fontSize: '11px', backgroundColor: activeSection === 'backup' ? 'var(--primary)' : '#DEF7EC', color: activeSection === 'backup' ? '#FFFFFF' : '#03543F', fontWeight: 700 }}
-          >
-            <Shield size={13} />
-            Sauvegarde Locale (.json)
-          </button>
+
         </div>
       </div>
 
@@ -900,96 +892,7 @@ export const SettingsView: React.FC = () => {
         </div>
       )}
 
-      {/* Section 7: SAUVEGARDE & EXPORT (.json) */}
-      {activeSection === 'backup' && (
-        <div className="card animate-fade-in" style={{ padding: '24px', maxWidth: '850px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
-          {/* Bloc 2 : Sauvegarde / Transfert par fichier JSON (Alternative hors-ligne) */}
-          <div style={{ paddingTop: '10px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Download size={20} style={{ color: 'var(--text-muted)' }} />
-              Sauvegarde et Import par fichier (.json)
-            </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              Si vous préférez transférer votre base ponctuellement par e-mail ou clé USB sans utiliser de compte cloud :
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              {/* Box Export */}
-              <div style={{ backgroundColor: 'var(--surface-warm)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    📥 Exporter le fichier CRM
-                  </h4>
-                  <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                    Télécharge 100% de vos clients, statuts, tags et profils sous forme d'un fichier <code>.json</code>.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const dataStr = storageService.exportData();
-                    const blob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    const dateStr = new Date().toISOString().split('T')[0];
-                    a.download = `sfg-crm-sauvegarde-${dateStr}.json`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                  }}
-                  className="btn btn-primary"
-                  style={{ width: '100%', padding: '12px', fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                >
-                  <Download size={16} />
-                  Télécharger le fichier (.json)
-                </button>
-              </div>
-
-              {/* Box Import */}
-              <div style={{ backgroundColor: 'var(--surface)', padding: '20px', borderRadius: 'var(--radius-lg)', border: '2px dashed var(--border-focus)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    📤 Importer un fichier CRM
-                  </h4>
-                  <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                    Remplace les données locales par celles d'un fichier <code>.json</code> reçu d'un autre PC.
-                  </p>
-                </div>
-                <label className="btn btn-secondary" style={{ width: '100%', padding: '12px', fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <Upload size={16} />
-                  Importer un fichier (.json)
-                  <input
-                    type="file"
-                    accept=".json,application/json"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        const content = event.target?.result as string;
-                        if (content) {
-                          const success = storageService.importData(content);
-                          if (success) {
-                            alert('✅ Base CRM importée et synchronisée avec succès !');
-                            window.location.reload();
-                          } else {
-                            alert('❌ Erreur : Le fichier JSON est invalide ou corrompu.');
-                          }
-                        }
-                      };
-                      reader.readAsText(file);
-                    }}
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
