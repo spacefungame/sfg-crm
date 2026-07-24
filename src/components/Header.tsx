@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Users, BarChart3, Plus, Upload, UserCheck, Shield, Rocket, Dices, Settings, Crown } from 'lucide-react';
+import { Users, BarChart3, Plus, Upload, UserCheck, Shield, Rocket, Dices, Settings, Crown, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   currentTab: 'contacts' | 'reports' | 'settings';
@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNewContact,
   onOpenLogin
 }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
 
   return (
     <header style={{ 
@@ -156,12 +156,28 @@ export const Header: React.FC<HeaderProps> = ({
               fontWeight: 600,
               padding: '3px 8px'
             }}
-            title="Changer d'utilisateur ou gérer l'équipe"
+            title={currentUser ? "Mon profil" : "Se connecter"}
           >
             {currentUser?.role === 'coo' ? <Crown size={13} style={{ color: '#D97706' }} /> : <UserCheck size={13} />}
             <span>{currentUser ? currentUser.username : 'Connexion'}</span>
             {currentUser?.isAdmin && <Shield size={12} style={{ color: 'var(--accent)' }} />}
           </button>
+
+          {currentUser && (
+            <button
+              onClick={() => logout()}
+              className="btn btn-secondary btn-sm"
+              style={{
+                borderColor: '#DC2626',
+                color: '#DC2626',
+                fontWeight: 600,
+                padding: '3px 8px'
+              }}
+              title="Se déconnecter"
+            >
+              <LogOut size={13} />
+            </button>
+          )}
         </div>
 
       </div>
