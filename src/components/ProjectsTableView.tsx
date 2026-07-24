@@ -18,6 +18,23 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
     return evEst === filterEst;
   });
 
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    const aType = a.eventDetails?.dateType || 'tbd';
+    const bType = b.eventDetails?.dateType || 'tbd';
+    const aDate = a.eventDetails?.dateValue || '';
+    const bDate = b.eventDetails?.dateValue || '';
+
+    // "TBD" at the top
+    if (aType === 'tbd' && bType !== 'tbd') return -1;
+    if (bType === 'tbd' && aType !== 'tbd') return 1;
+    if (aType === 'tbd' && bType === 'tbd') return 0;
+    
+    // Compare dates chronologically (YYYY-MM-DD or YYYY-MM)
+    if (aDate < bDate) return -1;
+    if (aDate > bDate) return 1;
+    return 0;
+  });
+
   const handleInlineChange = (contactId: string, field: keyof NonNullable<Contact['eventDetails']>, value: string) => {
     const contact = contacts.find(c => c.id === contactId);
     if (!contact) return;
@@ -66,7 +83,7 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
             </tr>
           </thead>
           <tbody>
-            {filtered.map(contact => {
+            {sortedFiltered.map(contact => {
               const ev = contact.eventDetails || {};
               return (
                 <tr key={contact.id} style={{ borderBottom: '1px solid #ECE7DE' }}>
@@ -120,7 +137,7 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                 </tr>
               );
             })}
-            {filtered.length === 0 && (
+            {sortedFiltered.length === 0 && (
               <tr>
                 <td colSpan={13} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                   Aucun projet correspondant trouvé.
