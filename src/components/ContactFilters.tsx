@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Establishment } from '../types/crm';
 import { storageService } from '../services/storageService';
-import { Search, Calendar, Building2, Tag as TagIcon, CheckCircle2, RotateCcw, Filter, Bookmark } from 'lucide-react';
+import { Search, Calendar, Building2, Tag as TagIcon, CheckCircle2, RotateCcw, Filter, Bookmark, User as UserIcon } from 'lucide-react';
 
 export interface FilterState {
   search: string;
@@ -10,6 +10,7 @@ export interface FilterState {
   status: string;
   tag: string;
   urgency: 'all' | 'late' | 'today' | 'future' | 'none';
+  assignedTo: string;
 }
 
 interface ContactFiltersProps {
@@ -28,6 +29,7 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
   const contactTypes = storageService.getContactTypes();
   const statuses = storageService.getStatuses();
   const tags = storageService.getTags();
+  const users = storageService.getUsers();
 
   const resetFilters = () => {
     onFilterChange({
@@ -36,7 +38,8 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
       type: 'all',
       status: 'all',
       tag: 'all',
-      urgency: 'all'
+      urgency: 'all',
+      assignedTo: 'all'
     });
   };
 
@@ -46,7 +49,8 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
     filters.type !== 'all' ||
     filters.status !== 'all' ||
     (filters.tag && filters.tag !== 'all') ||
-    filters.urgency !== 'all';
+    filters.urgency !== 'all' ||
+    filters.assignedTo !== 'all';
 
   return (
     <div className="card" style={{ padding: '6px 10px', marginBottom: '8px' }}>
@@ -164,6 +168,22 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
             <option value="today">🔥 Pour aujourd'hui</option>
             <option value="future">📅 Futures actions</option>
             <option value="none">ℹ️ Sans dead line</option>
+          </select>
+        </div>
+
+        {/* Menu déroulant Attribué à */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+          <UserIcon size={12} style={{ color: 'var(--text-light)' }} />
+          <select
+            className="input-field"
+            value={filters.assignedTo}
+            onChange={(e) => onFilterChange({ ...filters, assignedTo: e.target.value })}
+            style={{ width: 'auto', minWidth: '110px', padding: '3px 6px', fontSize: '11px', fontWeight: filters.assignedTo !== 'all' ? 600 : 400, borderColor: filters.assignedTo !== 'all' ? 'var(--primary)' : 'var(--border)' }}
+          >
+            <option value="all">Attribué à : Tous</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>{u.username}</option>
+            ))}
           </select>
         </div>
 

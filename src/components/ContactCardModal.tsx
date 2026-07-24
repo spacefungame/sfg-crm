@@ -44,8 +44,8 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
   const [editingNewTypeName, setEditingNewTypeName] = useState<string>('');
 
   const emailTemplates = storageService.getEmailTemplates();
-
   const statuses = storageService.getStatuses();
+  const users = storageService.getUsers();
 
   const handleToggleTag = (tagName: string) => {
     if (!formData) return;
@@ -456,6 +456,18 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
             <div style={{ flex: '1 1 160px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>Dead line</label>
               <input type="date" className="input-field" value={formData.deadline || ''} onChange={(e) => handleStatusOrDeadlineChange(formData.status, e.target.value)} style={{ padding: '5px 8px', fontSize: '12.5px', height: 'auto' }} />
+            </div>
+            <div style={{ flex: '1 1 160px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>Attribué à</label>
+              <select 
+                value={formData.assignedTo || ''} 
+                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })} 
+                className="input-field" 
+                style={{ padding: '5px 8px', fontSize: '12.5px', height: 'auto' }}
+              >
+                <option value="">-- Non attribué --</option>
+                {users.map(u => <option key={u.id} value={u.id}>{u.username}</option>)}
+              </select>
             </div>
           </div>
 

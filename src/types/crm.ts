@@ -60,6 +60,7 @@ export interface Contact {
   updatedAt: string;
   logs: ActivityLog[];
   eventDetails?: EventDetails;
+  assignedTo?: string;
 }
 
 export interface User {

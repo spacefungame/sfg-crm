@@ -35,7 +35,8 @@ const AppContent: React.FC = () => {
     type: 'all',
     status: 'all',
     tag: 'all',
-    urgency: 'all'
+    urgency: 'all',
+    assignedTo: 'all'
   });
 
   // Modals state
@@ -111,18 +112,20 @@ const AppContent: React.FC = () => {
 
     // Urgency deadline
     if (filters.urgency !== 'all') {
+      const today = new Date().toISOString().split('T')[0];
       if (filters.urgency === 'none') {
         if (c.deadline) return false;
       } else if (filters.urgency === 'late') {
-        const today = new Date().toISOString().split('T')[0];
         if (!c.deadline || c.deadline >= today) return false;
       } else if (filters.urgency === 'today') {
-        const today = new Date().toISOString().split('T')[0];
         if (c.deadline !== today) return false;
       } else if (filters.urgency === 'future') {
-        const today = new Date().toISOString().split('T')[0];
         if (!c.deadline || c.deadline <= today) return false;
       }
+    }
+
+    if (filters.assignedTo && filters.assignedTo !== 'all') {
+      if (c.assignedTo !== filters.assignedTo) return false;
     }
 
     return true;
