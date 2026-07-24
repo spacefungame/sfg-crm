@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Contact, ContactStatus } from '../types/crm';
+import type { Contact } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { Phone, Mail, Building2, ChevronRight, AlertTriangle, Clock, Rocket, Dices, Sparkles, LayoutGrid, List } from 'lucide-react';

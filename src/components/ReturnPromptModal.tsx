@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Contact, ContactStatus } from '../types/crm';
+import type { Contact } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { Phone, Mail, CheckCircle, X, Sparkles } from 'lucide-react';
