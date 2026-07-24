@@ -216,12 +216,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                Adresse e-mail
+                E-mail ou Identifiant
               </label>
               <input
                 type="text"
                 className="input-field"
-                placeholder="Votre e-mail"
+                placeholder="Votre e-mail ou identifiant"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 autoFocus
@@ -263,16 +263,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         ) : activeTab === 'forgot' ? (
           <form onSubmit={handleForgotPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-              Entrez votre e-mail pour définir un nouveau mot de passe.
+              Entrez votre e-mail ou identifiant pour définir un nouveau mot de passe.
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                Adresse e-mail
+                E-mail ou Identifiant
               </label>
               <input
                 type="text"
                 className="input-field"
-                placeholder="Votre e-mail"
+                placeholder="Votre e-mail ou identifiant"
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
                 autoFocus
