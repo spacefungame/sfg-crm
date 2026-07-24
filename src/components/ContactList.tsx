@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { Contact } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
-import { Phone, Mail, Building2, ChevronRight, AlertTriangle, Clock, Rocket, Dices, Sparkles, LayoutGrid, List } from 'lucide-react';
+import { Phone, Mail, Building2, ChevronRight, AlertTriangle, Clock, Rocket, Dices, Sparkles, LayoutGrid, List, User as UserIcon } from 'lucide-react';
 
 interface ContactListProps {
   contacts: Contact[];
@@ -22,6 +22,12 @@ export const ContactList: React.FC<ContactListProps> = ({
   const { currentUser } = useAuth();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const allTags = storageService.getTags();
+  const users = storageService.getUsers();
+
+  const getAssigneeName = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    return user ? user.username : 'Inconnu';
+  };
 
   const getTagBadge = (tagName: string) => {
     const found = allTags.find(t => t.name.toLowerCase() === tagName.toLowerCase());
@@ -220,6 +226,12 @@ export const ContactList: React.FC<ContactListProps> = ({
                         {c.company}
                       </div>
                     )}
+                    {c.assignedTo && (
+                      <div style={{ fontSize: '10.5px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px', fontWeight: 600 }}>
+                        <UserIcon size={11} />
+                        {getAssigneeName(c.assignedTo)}
+                      </div>
+                    )}
                   </td>
 
                   {/* Établissement & Type + Tags */}
@@ -350,12 +362,18 @@ export const ContactList: React.FC<ContactListProps> = ({
                     {c.lastName} {c.firstName}
                   </h4>
                   {c.company && (
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '1px' }}>
-                      <Building2 size={11} />
-                      {c.company}
-                    </div>
-                  )}
-                </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px' }}>
+                    <Building2 size={11} />
+                    {c.company}
+                  </div>
+                )}
+                {c.assignedTo && (
+                  <div style={{ fontSize: '10.5px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px', fontWeight: 600 }}>
+                    <UserIcon size={11} />
+                    {getAssigneeName(c.assignedTo)}
+                  </div>
+                )}
+              </div>
                 <ChevronRight size={16} style={{ color: 'var(--text-light)' }} />
               </div>
 
