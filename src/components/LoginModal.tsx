@@ -30,12 +30,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [regRole, setRegRole] = useState('user');
   const [regError, setRegError] = useState('');
 
-  // Forgot Password State
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotNewPassword, setForgotNewPassword] = useState('');
-  const [forgotError, setForgotError] = useState('');
-  const [forgotSuccess, setForgotSuccess] = useState('');
-
   // Email Config State
   const [activeEmailConfig, setActiveEmailConfig] = useState<string>(currentUser?.email || '');
   const [emailSavedMessage, setEmailSavedMessage] = useState<boolean>(false);
@@ -127,35 +121,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-
-  const handleForgotPasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setForgotError('');
-    setForgotSuccess('');
-
-    if (!forgotEmail.trim() || !forgotNewPassword.trim()) {
-      setForgotError('Veuillez remplir tous les champs.');
-      return;
-    }
-
-    const allUsers = storageService.getUsers();
-    const found = allUsers.find(u => 
-      (u.loginEmail && u.loginEmail.toLowerCase() === forgotEmail.trim().toLowerCase()) ||
-      u.username.toLowerCase() === forgotEmail.trim().toLowerCase()
-    );
-
-    if (!found) {
-      setForgotError('Aucun compte trouvé avec cet e-mail.');
-      return;
-    }
-
-    found.password = forgotNewPassword;
-    storageService.saveUser(found);
-    setForgotSuccess('Mot de passe mis à jour avec succès ! Vous pouvez vous connecter.');
-    setForgotEmail('');
-    setForgotNewPassword('');
-    setTimeout(() => setActiveTab('login'), 2500);
-  };
 
   const availableRoles = storageService.getRoles().filter(r => r !== 'admin' && r !== 'coo');
 
