@@ -573,6 +573,8 @@ export class StorageService {
 
   public deleteContactType(type: string): void {
     this.data.contactTypes = this.data.contactTypes.filter(t => t !== type);
+    if (!this.data.deletedItemIds) this.data.deletedItemIds = [];
+    this.data.deletedItemIds.push(type);
     this.data.contacts.forEach(c => {
       if (c.type) {
         const types = c.type.split(',').map(t => t.trim());
@@ -620,6 +622,8 @@ export class StorageService {
 
   public deleteStatus(status: string): void {
     this.data.statuses = this.data.statuses.filter(s => s !== status);
+    if (!this.data.deletedItemIds) this.data.deletedItemIds = [];
+    this.data.deletedItemIds.push(status);
     this.saveToLocalStorage();
   }
 
