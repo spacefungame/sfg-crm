@@ -68,12 +68,22 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
     const contact = contacts.find(c => c.id === contactId);
     if (!contact) return;
     
+    let newEventDetails: any = {
+      ...(contact.eventDetails || {}),
+      [field]: value
+    };
+
+    if (field === 'dateValue') {
+      if (value.trim() === '') {
+        newEventDetails.dateType = 'tbd';
+      } else if (!newEventDetails.dateType || newEventDetails.dateType === 'tbd') {
+        newEventDetails.dateType = 'exact';
+      }
+    }
+
     const updated = {
       ...contact,
-      eventDetails: {
-        ...(contact.eventDetails || {}),
-        [field]: value
-      }
+      eventDetails: newEventDetails
     };
     storageService.saveContact(updated);
     onRefresh(); // Trigger a re-render from App.tsx

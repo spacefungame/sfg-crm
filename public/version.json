@@ -1,4 +1,4 @@
 {
-  "version": "1.0.5",
-  "description": "Le tableau des Projets en cours permet maintenant de redimensionner le texte sur plusieurs lignes. Ajout d'une colonne de Relance avec commentaire."
+  "version": "1.0.6",
+  "description": "Correction d'un bug où la date modifiée dans le tableau n'apparaissait pas correctement dans la fiche contact."
 }
