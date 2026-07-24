@@ -226,12 +226,10 @@ export const ContactList: React.FC<ContactListProps> = ({
                         {c.company}
                       </div>
                     )}
-                    {c.assignedTo && (
-                      <div style={{ fontSize: '10.5px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px', fontWeight: 600 }}>
-                        <UserIcon size={11} />
-                        {getAssigneeName(c.assignedTo)}
-                      </div>
-                    )}
+                    <div style={{ fontSize: '10.5px', color: c.assignedTo ? 'var(--primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px', fontWeight: 600 }}>
+                      <UserIcon size={10} />
+                      {c.assignedTo ? getAssigneeName(c.assignedTo) : 'Non attribué'}
+                    </div>
                   </td>
 
                   {/* Établissement & Type + Tags */}
@@ -367,12 +365,10 @@ export const ContactList: React.FC<ContactListProps> = ({
                     {c.company}
                   </div>
                 )}
-                {c.assignedTo && (
-                  <div style={{ fontSize: '10.5px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px', fontWeight: 600 }}>
-                    <UserIcon size={11} />
-                    {getAssigneeName(c.assignedTo)}
-                  </div>
-                )}
+                <div style={{ fontSize: '11px', color: c.assignedTo ? 'var(--primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', fontWeight: 600 }}>
+                  <UserIcon size={12} />
+                  {c.assignedTo ? getAssigneeName(c.assignedTo) : 'Non attribué'}
+                </div>
               </div>
                 <ChevronRight size={16} style={{ color: 'var(--text-light)' }} />
               </div>

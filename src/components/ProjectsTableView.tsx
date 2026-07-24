@@ -244,12 +244,10 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.2 }}>
                     {contact.firstName} {contact.lastName}<br/>
                     <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 400 }}>{contact.company}</span>
-                    {contact.assignedTo && (
-                      <div style={{ fontSize: '10px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px', fontWeight: 600 }}>
-                        <UserIcon size={10} />
-                        {getAssigneeName(contact.assignedTo)}
-                      </div>
-                    )}
+                    <div style={{ fontSize: '10px', color: contact.assignedTo ? 'var(--primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px', fontWeight: 600 }}>
+                      <UserIcon size={10} />
+                      {contact.assignedTo ? getAssigneeName(contact.assignedTo) : 'Non attribué'}
+                    </div>
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
                     <select value={ev.establishment || 'a_determiner'} onChange={e => handleInlineChange(contact.id, 'establishment', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }}>
