@@ -1,4 +1,4 @@
 {
-  "version": "1.0.14",
-  "description": "Affichage de la personne assignée directement dans la liste des prospects (tableau et cartes)."
+  "version": "1.0.15",
+  "description": "Affichage de la personne assignée également dans le tableau de suivi des projets en cours."
 }
