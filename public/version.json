@@ -1,4 +1,4 @@
 {
-  "version": "1.0.0",
-  "description": "Mise en place de la pop-up de mise à jour automatique pour assurer que tous les collaborateurs utilisent la dernière version du CRM."
+  "version": "1.0.1",
+  "description": "Correction d'un bug mineur qui effaçait la liste des e-mails autorisés lors de la synchronisation de l'application."
 }

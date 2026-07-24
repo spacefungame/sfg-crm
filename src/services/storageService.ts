@@ -385,6 +385,7 @@ export class StorageService {
       roles: mergedRoles,
       templateCategories: mergedCategories,
       emailTemplates: mergedTemplates,
+      authorizedEmails: Array.from(mergedAuthEmailsMap.values()),
       cloudConfig: { ...remote.cloudConfig, ...local.cloudConfig, lastSync: new Date().toLocaleTimeString() }
     };
 
