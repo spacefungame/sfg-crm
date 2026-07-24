@@ -1,4 +1,4 @@
 {
-  "version": "1.0.2",
-  "description": "Séparation de l'historique des contacts : vos notes apparaissent désormais dans une colonne dédiée, séparée du reste des actions automatiques."
+  "version": "1.0.3",
+  "description": "Nouveau tableau de suivi des 'Projets en cours' style Excel, avec modification rapide des données et fenêtre de détail d'événement."
 }
