@@ -1,4 +1,4 @@
 {
-  "version": "1.0.10",
-  "description": "Retrait de l'option 'Les deux' dans le filtre d'établissement principal."
+  "version": "1.0.11",
+  "description": "Amélioration du tableau : l'en-tête reste fixe lors du défilement et ajout de lignes verticales pour séparer les colonnes."
 }
