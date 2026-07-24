@@ -15,6 +15,7 @@ import { ImportModal } from './components/ImportModal';
 import { LoginModal } from './components/LoginModal';
 import { NewContactModal } from './components/NewContactModal';
 import { VersionChecker } from './components/VersionChecker';
+import { ProjectsTableView } from './components/ProjectsTableView';
 
 import { ReportsView } from './components/ReportsView';
 import { SettingsView } from './components/SettingsView';
@@ -239,20 +240,30 @@ const AppContent: React.FC = () => {
                         {activeContactCategory === 'prospect' ? '🎯 Prospects' : '🚀 Projets en cours'}
                       </h2>
                     </div>
-                    <ContactFilters
-                      filters={filters}
-                      onFilterChange={setFilters}
-                      totalCount={contacts.filter(c => storageService.getStatusCategory(c.status) === activeContactCategory).length}
-                      filteredCount={filteredContacts.length}
-                    />
+                    {activeContactCategory === 'prospect' ? (
+                      <>
+                        <ContactFilters
+                          filters={filters}
+                          onFilterChange={setFilters}
+                          totalCount={contacts.filter(c => storageService.getStatusCategory(c.status) === activeContactCategory).length}
+                          filteredCount={filteredContacts.length}
+                        />
 
-                    <ContactList
-                      contacts={filteredContacts}
-                      onSelectContact={(c) => setSelectedContact(c)}
-                      onRefresh={loadContacts}
-                      onQuickCall={(c, e) => handleInitiateCall(c, e)}
-                      onQuickMail={(c, e) => handleInitiateMail(c, e)}
-                    />
+                        <ContactList
+                          contacts={filteredContacts}
+                          onSelectContact={(c) => setSelectedContact(c)}
+                          onRefresh={loadContacts}
+                          onQuickCall={(c, e) => handleInitiateCall(c, e)}
+                          onQuickMail={(c, e) => handleInitiateMail(c, e)}
+                        />
+                      </>
+                    ) : (
+                      <ProjectsTableView
+                        contacts={filteredContacts}
+                        onContactClick={(c) => setSelectedContact(c)}
+                        onRefresh={loadContacts}
+                      />
+                    )}
                   </>
                 )}
               </div>

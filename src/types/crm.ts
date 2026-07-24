@@ -27,6 +27,21 @@ export interface ActivityLog {
   timestamp: string; // ISO format or formatted string
 }
 
+export interface EventDetails {
+  establishment?: 'space_fun_games' | 'share_and_fun' | 'les_deux' | 'a_determiner';
+  dateType?: 'exact' | 'month' | 'tbd';
+  dateValue?: string; // YYYY-MM-DD or YYYY-MM
+  guestCount?: string;
+  arrivalTime?: string;
+  departureTime?: string;
+  activities?: string;
+  catering?: string;
+  drinks?: string;
+  equipment?: string;
+  paymentStatus?: string;
+  quoteAmount?: string;
+}
+
 export interface Contact {
   id: string;
   lastName: string;
@@ -43,6 +58,7 @@ export interface Contact {
   createdAt: string;
   updatedAt: string;
   logs: ActivityLog[];
+  eventDetails?: EventDetails;
 }
 
 export interface User {

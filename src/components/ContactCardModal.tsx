@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import type { Contact, ContactStatus, Establishment, EmailTemplate, TagDefinition } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
-import { Phone, Mail, Building2, Clock, X, Save, Plus, Trash2, Rocket, Dices, Sparkles, Send, MessageSquare, Maximize2, Minimize2 } from 'lucide-react';
+import { Phone, Mail, Building2, Clock, X, Save, Plus, Trash2, Rocket, Dices, Sparkles, Send, MessageSquare, Maximize2, Minimize2, Calendar } from 'lucide-react';
+import { EventFormModal } from './EventFormModal';
 
 interface ContactCardModalProps {
   contact: Contact | null;
@@ -34,6 +35,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [editingTagName, setEditingTagName] = useState<string>('');
   const [editingTagColor, setEditingTagColor] = useState<string>('#8D5B4C');
+  const [showEventForm, setShowEventForm] = useState<boolean>(false);
 
   const [contactTypesList, setContactTypesList] = useState<string[]>(storageService.getContactTypes());
   const [showTypeManager, setShowTypeManager] = useState<boolean>(false);
@@ -258,8 +260,15 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
   };
 
   const handleStatusOrDeadlineChange = (newStatus: ContactStatus | string, newDeadline?: string) => {
+    const oldCat = storageService.getStatusCategory(formData.status);
+    const newCat = storageService.getStatusCategory(newStatus);
     const updated = { ...formData, status: newStatus as ContactStatus, deadline: newDeadline || undefined };
     setFormData(updated);
+
+    if (oldCat !== 'project' && newCat === 'project') {
+      setShowEventForm(true);
+    }
+
     storageService.saveContact(updated);
     storageService.addActivityLog(formData.id, {
       employeeName: currentUser ? currentUser.username : 'Collaborateur',
@@ -815,6 +824,72 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
               </button>
             </form>
           </div>
+
+          {/* Event Details Box (if exists or in project mode) */}
+          {(formData.eventDetails || storageService.getStatusCategory(formData.status) === 'project') && (
+            <div style={{ backgroundColor: '#F0F4F8', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid #D0DCE5' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#2C3E50', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+                  <Calendar size={16} />
+                  Détails de l'événement (Projet en cours)
+                </h4>
+                <button onClick={() => setShowEventForm(true)} className="btn btn-secondary btn-sm">
+                  ✏️ Modifier
+                </button>
+              </div>
+              
+              {formData.eventDetails ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div style={{ fontSize: '12px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Date : </span>
+                    <strong style={{ color: 'var(--text-main)' }}>
+                      {formData.eventDetails.dateType === 'exact' ? formData.eventDetails.dateValue :
+                       formData.eventDetails.dateType === 'month' ? formData.eventDetails.dateValue + ' (Mois précis)' : 'À déterminer'}
+                    </strong>
+                  </div>
+                  <div style={{ fontSize: '12px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Personnes : </span>
+                    <strong style={{ color: 'var(--text-main)' }}>{formData.eventDetails.guestCount || '-'}</strong>
+                  </div>
+                  <div style={{ fontSize: '12px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Horaires : </span>
+                    <strong style={{ color: 'var(--text-main)' }}>{formData.eventDetails.arrivalTime || '?'} - {formData.eventDetails.departureTime || '?'}</strong>
+                  </div>
+                  <div style={{ fontSize: '12px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Devis : </span>
+                    <strong style={{ color: 'var(--text-main)' }}>{formData.eventDetails.quoteAmount ? formData.eventDetails.quoteAmount + ' €' : '-'}</strong>
+                  </div>
+                  <div style={{ fontSize: '12px', gridColumn: '1 / -1' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Activités : </span>
+                    <strong style={{ color: 'var(--text-main)' }}>{formData.eventDetails.activities || '-'}</strong>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                  Aucun détail renseigné. Cliquez sur Modifier pour compléter la fiche de cet événement.
+                </div>
+              )}
+            </div>
+          )}
+
+          {showEventForm && (
+            <EventFormModal 
+              contact={formData}
+              onClose={() => setShowEventForm(false)}
+              onSave={(eventDetails) => {
+                const updated = { ...formData, eventDetails };
+                setFormData(updated);
+                storageService.saveContact(updated);
+                storageService.addActivityLog(formData.id, {
+                  employeeName: currentUser ? currentUser.username : 'Collaborateur',
+                  actionType: 'note',
+                  summary: 'Mise à jour des informations du projet (événement).'
+                });
+                setShowEventForm(false);
+                onUpdate();
+              }}
+            />
+          )}
 
           {/* History Timeline */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
