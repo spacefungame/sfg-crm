@@ -1,4 +1,4 @@
 {
-  "version": "1.0.8",
-  "description": "Amélioration de la reconnaissance des dates tapées manuellement et ajout d'un bouton voir plus/moins pour les textes longs."
+  "version": "1.0.9",
+  "description": "Mise en évidence (en rouge) des dates de relance lorsqu'elles sont à moins de 3 jours."
 }

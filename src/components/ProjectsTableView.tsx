@@ -217,6 +217,18 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                   currentMonth = month;
                 }
 
+                let isDeadlineUrgent = false;
+                if (contact.deadline) {
+                  const deadlineDate = new Date(contact.deadline);
+                  deadlineDate.setHours(0, 0, 0, 0);
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const diffDays = (deadlineDate.getTime() - today.getTime()) / (1000 * 3600 * 24);
+                  if (diffDays <= 3) {
+                    isDeadlineUrgent = true;
+                  }
+                }
+
                 rows.push(
                   <tr key={contact.id} style={{ borderBottom: '1px solid #ECE7DE' }}>
                   <td style={{ padding: '6px', textAlign: 'center' }}>
@@ -268,7 +280,7 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                   </td>
                   <td style={{ padding: '6px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <input type="date" value={contact.deadline || ''} onChange={e => handleRootChange(contact.id, 'deadline', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent', color: 'var(--text-main)' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                      <input type="date" value={contact.deadline || ''} onChange={e => handleRootChange(contact.id, 'deadline', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: isDeadlineUrgent ? '#FEE2E2' : 'transparent', color: isDeadlineUrgent ? '#DC2626' : 'var(--text-main)', fontWeight: isDeadlineUrgent ? 'bold' : 'normal' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
                       <AutoResizingTextarea value={ev.followUpComment || ''} onChange={val => handleInlineChange(contact.id, 'followUpComment', val)} placeholder="Commentaire..." style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} />
                     </div>
                   </td>
