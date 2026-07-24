@@ -1,4 +1,4 @@
 {
-  "version": "1.0.3",
-  "description": "Nouveau tableau de suivi des 'Projets en cours' style Excel, avec modification rapide des données et fenêtre de détail d'événement."
+  "version": "1.0.4",
+  "description": "Le tableau des Projets en cours est désormais trié chronologiquement (dates À déterminer en premier, puis dans l'ordre du calendrier)."
 }
