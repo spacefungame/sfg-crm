@@ -40,6 +40,7 @@ export interface EventDetails {
   equipment?: string;
   paymentStatus?: string;
   quoteAmount?: string;
+  followUpComment?: string;
 }
 
 export interface Contact {

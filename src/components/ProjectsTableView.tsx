@@ -9,6 +9,35 @@ interface ProjectsTableViewProps {
   onRefresh: () => void;
 }
 
+const AutoResizingTextarea: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  style?: React.CSSProperties;
+}> = ({ value, onChange, placeholder, style }) => {
+  return (
+    <textarea
+      value={value}
+      placeholder={placeholder}
+      onChange={(e) => {
+        onChange(e.target.value);
+        e.target.style.height = 'auto';
+        e.target.style.height = e.target.scrollHeight + 'px';
+      }}
+      rows={1}
+      style={{
+        ...style,
+        resize: 'none',
+        overflow: 'hidden',
+        minHeight: '26px',
+        lineHeight: '1.2'
+      }}
+      onFocus={e => { e.target.style.border='1px solid var(--border)'; e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} 
+      onBlur={e => e.target.style.border='1px solid transparent'}
+    />
+  );
+};
+
 export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, onContactClick, onRefresh }) => {
   const [filterEst, setFilterEst] = useState<'all' | Establishment | 'a_determiner'>('all');
 
@@ -50,6 +79,14 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
     onRefresh(); // Trigger a re-render from App.tsx
   };
 
+  const handleRootChange = (contactId: string, field: keyof Contact, value: string) => {
+    const contact = contacts.find(c => c.id === contactId);
+    if (!contact) return;
+    const updated = { ...contact, [field]: value };
+    storageService.saveContact(updated);
+    onRefresh();
+  };
+
   return (
     <div className="animate-fade-in" style={{ backgroundColor: '#FFF', borderRadius: 'var(--radius-md)', padding: '16px', boxShadow: 'var(--shadow-sm)' }}>
       <div style={{ marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -80,6 +117,7 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
               <th style={{ padding: '10px 6px', minWidth: '120px' }}>Matériel</th>
               <th style={{ padding: '10px 6px', width: '100px' }}>Paiement</th>
               <th style={{ padding: '10px 6px', width: '80px' }}>Devis (€)</th>
+              <th style={{ padding: '10px 6px', minWidth: '140px' }}>Relance</th>
             </tr>
           </thead>
           <tbody>
@@ -117,22 +155,28 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                     <input type="text" value={ev.departureTime || ''} onChange={e => handleInlineChange(contact.id, 'departureTime', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'center' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
                   </td>
                   <td style={{ padding: '6px' }}>
-                    <input type="text" value={ev.activities || ''} onChange={e => handleInlineChange(contact.id, 'activities', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                    <AutoResizingTextarea value={ev.activities || ''} onChange={val => handleInlineChange(contact.id, 'activities', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} />
                   </td>
                   <td style={{ padding: '6px' }}>
-                    <input type="text" value={ev.catering || ''} onChange={e => handleInlineChange(contact.id, 'catering', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                    <AutoResizingTextarea value={ev.catering || ''} onChange={val => handleInlineChange(contact.id, 'catering', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} />
                   </td>
                   <td style={{ padding: '6px' }}>
-                    <input type="text" value={ev.drinks || ''} onChange={e => handleInlineChange(contact.id, 'drinks', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                    <AutoResizingTextarea value={ev.drinks || ''} onChange={val => handleInlineChange(contact.id, 'drinks', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} />
                   </td>
                   <td style={{ padding: '6px' }}>
-                    <input type="text" value={ev.equipment || ''} onChange={e => handleInlineChange(contact.id, 'equipment', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                    <AutoResizingTextarea value={ev.equipment || ''} onChange={val => handleInlineChange(contact.id, 'equipment', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} />
                   </td>
                   <td style={{ padding: '6px' }}>
-                    <input type="text" value={ev.paymentStatus || ''} onChange={e => handleInlineChange(contact.id, 'paymentStatus', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                    <AutoResizingTextarea value={ev.paymentStatus || ''} onChange={val => handleInlineChange(contact.id, 'paymentStatus', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} />
                   </td>
                   <td style={{ padding: '6px' }}>
                     <input type="text" value={ev.quoteAmount || ''} onChange={e => handleInlineChange(contact.id, 'quoteAmount', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'right', fontWeight: 600 }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                  </td>
+                  <td style={{ padding: '6px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <input type="date" value={contact.deadline || ''} onChange={e => handleRootChange(contact.id, 'deadline', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent', color: 'var(--text-main)' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                      <AutoResizingTextarea value={ev.followUpComment || ''} onChange={val => handleInlineChange(contact.id, 'followUpComment', val)} placeholder="Commentaire..." style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} />
+                    </div>
                   </td>
                 </tr>
               );

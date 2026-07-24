@@ -1,4 +1,4 @@
 {
-  "version": "1.0.4",
-  "description": "Le tableau des Projets en cours est désormais trié chronologiquement (dates À déterminer en premier, puis dans l'ordre du calendrier)."
+  "version": "1.0.5",
+  "description": "Le tableau des Projets en cours permet maintenant de redimensionner le texte sur plusieurs lignes. Ajout d'une colonne de Relance avec commentaire."
 }
