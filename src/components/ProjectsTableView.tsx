@@ -160,7 +160,6 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
           <option value="all">Tous</option>
           <option value="space_fun_games">Space Fun Games</option>
           <option value="share_and_fun">Share & Fun</option>
-          <option value="les_deux">Les deux</option>
           <option value="a_determiner">À déterminer</option>
         </select>
       </div>

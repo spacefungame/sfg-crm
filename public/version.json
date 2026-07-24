@@ -1,4 +1,4 @@
 {
-  "version": "1.0.9",
-  "description": "Mise en évidence (en rouge) des dates de relance lorsqu'elles sont à moins de 3 jours."
+  "version": "1.0.10",
+  "description": "Retrait de l'option 'Les deux' dans le filtre d'établissement principal."
 }
