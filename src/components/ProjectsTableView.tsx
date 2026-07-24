@@ -131,10 +131,38 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
             </tr>
           </thead>
           <tbody>
-            {sortedFiltered.map(contact => {
-              const ev = contact.eventDetails || {};
-              return (
-                <tr key={contact.id} style={{ borderBottom: '1px solid #ECE7DE' }}>
+            {(() => {
+              const rows: React.ReactNode[] = [];
+              let currentMonth = '';
+
+              sortedFiltered.forEach(contact => {
+                const ev = contact.eventDetails || {};
+                let month = 'À déterminer';
+                
+                if (ev.dateType !== 'tbd' && ev.dateValue) {
+                  const match = ev.dateValue.match(/^(\d{4})-(\d{2})/);
+                  if (match) {
+                    const year = match[1];
+                    const monthNum = match[2];
+                    const dateObj = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+                    const monthName = dateObj.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                    month = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+                  }
+                }
+
+                if (month !== currentMonth) {
+                  rows.push(
+                    <tr key={`month-${month}`} style={{ backgroundColor: '#E2E8F0', borderBottom: '2px solid #CBD5E1' }}>
+                      <td colSpan={14} style={{ padding: '8px 12px', fontWeight: 700, color: '#1E293B', fontSize: '13px' }}>
+                        {month}
+                      </td>
+                    </tr>
+                  );
+                  currentMonth = month;
+                }
+
+                rows.push(
+                  <tr key={contact.id} style={{ borderBottom: '1px solid #ECE7DE' }}>
                   <td style={{ padding: '6px', textAlign: 'center' }}>
                     <button onClick={() => onContactClick(contact)} className="btn btn-secondary btn-sm" style={{ padding: '4px 6px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       <ExternalLink size={12} /> Fiche
@@ -189,15 +217,21 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                     </div>
                   </td>
                 </tr>
-              );
-            })}
-            {sortedFiltered.length === 0 && (
-              <tr>
-                <td colSpan={13} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                  Aucun projet correspondant trouvé.
-                </td>
-              </tr>
-            )}
+                );
+              });
+              
+              if (sortedFiltered.length === 0) {
+                rows.push(
+                  <tr key="empty">
+                    <td colSpan={14} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                      Aucun projet correspondant trouvé.
+                    </td>
+                  </tr>
+                );
+              }
+              
+              return rows;
+            })()}
           </tbody>
         </table>
       </div>
