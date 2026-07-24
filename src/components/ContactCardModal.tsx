@@ -817,25 +817,24 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
           </div>
 
           {/* History Timeline */}
-          <div>
-            <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Clock size={15} />
-              Historique complet et chronologique ({formData.logs ? formData.logs.length : 0} actions)
-            </h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+            
+            {/* Notes Section */}
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <MessageSquare size={15} />
+                Suivi des notes ({formData.logs ? formData.logs.filter(l => l.actionType === 'note').length : 0})
+              </h4>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {formData.logs && formData.logs.map((log) => {
-                const isMail = log.actionType === 'mail';
-                const isCall = log.actionType === 'call';
-
-                return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {formData.logs && formData.logs.filter(l => l.actionType === 'note').map((log) => (
                   <div
                     key={log.id}
                     style={{
                       padding: '8px 10px',
                       borderRadius: 'var(--radius-md)',
                       border: '1px solid #ECE7DE',
-                      backgroundColor: isMail ? '#FAF7FF' : isCall ? '#F4FAF6' : 'var(--surface)',
+                      backgroundColor: 'var(--surface-warm)',
                       position: 'relative'
                     }}
                   >
@@ -844,29 +843,78 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
                         <span style={{ fontWeight: 700, fontSize: '11.5px', color: 'var(--primary)' }}>
                           👤 {log.employeeName}
                         </span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                          • {log.actionType === 'call' ? '📞 Appel téléphonique' : log.actionType === 'mail' ? '✉️ Courriel envoyé' : log.actionType === 'status_change' ? '🔄 Changement de statut' : log.actionType === 'import' ? '📥 Import Excel' : '📝 Note'}
-                        </span>
                       </div>
                       <span style={{ fontSize: '10.5px', color: 'var(--text-light)', fontWeight: 500 }}>
                         {new Date(log.timestamp).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })} à {new Date(log.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-
                     <div style={{ fontSize: '12px', color: 'var(--text-main)', lineHeight: 1.35 }}>
                       {log.summary}
                     </div>
-
-                    {log.newStatus && (
-                      <div style={{ marginTop: '4px', fontSize: '11px', display: 'flex', gap: '6px' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Nouveau statut :</span>
-                        <span style={{ fontWeight: 600 }}>{log.newStatus}</span>
-                      </div>
-                    )}
                   </div>
-                );
-              })}
+                ))}
+                {(!formData.logs || formData.logs.filter(l => l.actionType === 'note').length === 0) && (
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>Aucune note pour le moment.</div>
+                )}
+              </div>
             </div>
+
+            {/* Actions Section */}
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Clock size={15} />
+                Historique des actions ({formData.logs ? formData.logs.filter(l => l.actionType !== 'note').length : 0})
+              </h4>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {formData.logs && formData.logs.filter(l => l.actionType !== 'note').map((log) => {
+                  const isMail = log.actionType === 'mail';
+                  const isCall = log.actionType === 'call';
+
+                  return (
+                    <div
+                      key={log.id}
+                      style={{
+                        padding: '8px 10px',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid #ECE7DE',
+                        backgroundColor: isMail ? '#FAF7FF' : isCall ? '#F4FAF6' : 'var(--surface)',
+                        position: 'relative'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '11.5px', color: 'var(--primary)' }}>
+                            👤 {log.employeeName}
+                          </span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                            • {log.actionType === 'call' ? '📞 Appel' : log.actionType === 'mail' ? '✉️ Courriel' : log.actionType === 'status_change' ? '🔄 Statut' : '📥 Import'}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '10.5px', color: 'var(--text-light)', fontWeight: 500 }}>
+                          {new Date(log.timestamp).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })} à {new Date(log.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+
+                      <div style={{ fontSize: '12px', color: 'var(--text-main)', lineHeight: 1.35 }}>
+                        {log.summary}
+                      </div>
+
+                      {log.newStatus && (
+                        <div style={{ marginTop: '4px', fontSize: '11px', display: 'flex', gap: '6px' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Nouveau statut :</span>
+                          <span style={{ fontWeight: 600 }}>{log.newStatus}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {(!formData.logs || formData.logs.filter(l => l.actionType !== 'note').length === 0) && (
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>Aucune action pour le moment.</div>
+                )}
+              </div>
+            </div>
+
           </div>
 
         </div>
