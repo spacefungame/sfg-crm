@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { storageService } from './services/storageService';
 import type { Contact, EmailTemplate } from './types/crm';
+import { Shield } from 'lucide-react';
 
 // Components
 import { Header } from './components/Header';
@@ -177,40 +178,59 @@ const AppContent: React.FC = () => {
       {/* Main Container */}
       <main style={{ flex: 1, maxWidth: '1680px', width: '100%', margin: '0 auto', padding: '10px 14px' }}>
         
-        {/* Tab 1: Contacts & Prospects */}
-        {currentTab === 'contacts' && (
-          <div className="animate-fade-in">
-            <ContactFilters
-              filters={filters}
-              onFilterChange={setFilters}
-              totalCount={contacts.length}
-              filteredCount={filteredContacts.length}
-            />
-
-            <ContactList
-              contacts={filteredContacts}
-              onSelectContact={(c) => setSelectedContact(c)}
-              onRefresh={loadContacts}
-              onQuickCall={(c, e) => handleInitiateCall(c, e)}
-              onQuickMail={(c, e) => handleInitiateMail(c, e)}
-            />
+        {!currentUser ? (
+          <div style={{ textAlign: 'center', padding: '100px 20px' }}>
+            <div style={{ marginBottom: '20px' }}>
+              <Shield size={48} style={{ color: 'var(--text-muted)', margin: '0 auto' }} />
+            </div>
+            <h2 style={{ fontSize: '20px', color: 'var(--text-main)', marginBottom: '10px' }}>
+              Accès Restreint
+            </h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Vous devez être connecté pour accéder aux données du CRM.
+            </p>
+            <button onClick={() => setIsLoginOpen(true)} className="btn btn-primary" style={{ margin: '0 auto' }}>
+              Se connecter
+            </button>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Tab 1: Contacts & Prospects */}
+            {currentTab === 'contacts' && (
+              <div className="animate-fade-in">
+                <ContactFilters
+                  filters={filters}
+                  onFilterChange={setFilters}
+                  totalCount={contacts.length}
+                  filteredCount={filteredContacts.length}
+                />
 
-        {/* Tab 2: Rapports d'Activité */}
-        {currentTab === 'reports' && (
-          <div className="animate-fade-in">
-            <ReportsView contacts={contacts} />
-          </div>
-        )}
+                <ContactList
+                  contacts={filteredContacts}
+                  onSelectContact={(c) => setSelectedContact(c)}
+                  onRefresh={loadContacts}
+                  onQuickCall={(c, e) => handleInitiateCall(c, e)}
+                  onQuickMail={(c, e) => handleInitiateMail(c, e)}
+                />
+              </div>
+            )}
+
+            {/* Tab 2: Rapports d'Activité */}
+            {currentTab === 'reports' && (
+              <div className="animate-fade-in">
+                <ReportsView contacts={contacts} />
+              </div>
+            )}
 
 
 
-        {/* Tab 4: Paramètres & Personnalisation */}
-        {currentTab === 'settings' && (
-          <div className="animate-fade-in">
-            <SettingsView />
-          </div>
+            {/* Tab 4: Paramètres & Personnalisation */}
+            {currentTab === 'settings' && (
+              <div className="animate-fade-in">
+                <SettingsView />
+              </div>
+            )}
+          </>
         )}
 
       </main>
