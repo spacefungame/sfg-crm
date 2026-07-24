@@ -1,4 +1,4 @@
 {
-  "version": "1.0.6",
-  "description": "Correction d'un bug où la date modifiée dans le tableau n'apparaissait pas correctement dans la fiche contact."
+  "version": "1.0.7",
+  "description": "Ajout de séparateurs visuels par mois dans le tableau des Projets en cours."
 }
