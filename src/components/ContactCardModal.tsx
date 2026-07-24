@@ -461,7 +461,12 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>Attribué à</label>
               <select 
                 value={formData.assignedTo || ''} 
-                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })} 
+                onChange={(e) => {
+                  const updated = { ...formData, assignedTo: e.target.value };
+                  setFormData(updated);
+                  storageService.saveContact(updated);
+                  onUpdate();
+                }} 
                 className="input-field" 
                 style={{ padding: '5px 8px', fontSize: '12.5px', height: 'auto' }}
               >
