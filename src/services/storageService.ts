@@ -143,6 +143,7 @@ export class StorageService {
           users: loadedUsers,
           contactTypes: parsed.contactTypes || DEFAULT_CRM_DATA.contactTypes,
           statuses: parsed.statuses || DEFAULT_CRM_DATA.statuses,
+          statusCategories: parsed.statusCategories || {},
           tags: parsed.tags || DEFAULT_CRM_DATA.tags,
           roles: loadedRoles,
           templateCategories: loadedCategories,
@@ -381,6 +382,7 @@ export class StorageService {
       users: Array.from(mergedUsersMap.values()),
       contactTypes: mergedTypes,
       statuses: mergedStatuses,
+      statusCategories: { ...(local.statusCategories || {}), ...(remote.statusCategories || {}) },
       tags: Array.from(mergedTagsMap.values()),
       roles: mergedRoles,
       templateCategories: mergedCategories,
@@ -623,6 +625,9 @@ export class StorageService {
 
   public deleteStatus(status: string): void {
     this.data.statuses = this.data.statuses.filter(s => s !== status);
+    if (this.data.statusCategories && this.data.statusCategories[status]) {
+      delete this.data.statusCategories[status];
+    }
     if (!this.data.deletedItemIds) this.data.deletedItemIds = [];
     this.data.deletedItemIds.push(status);
     this.saveToLocalStorage();
@@ -631,6 +636,21 @@ export class StorageService {
   public reorderStatuses(newOrder: string[]): void {
     if (!newOrder || !Array.isArray(newOrder) || newOrder.length === 0) return;
     this.data.statuses = [...newOrder];
+    this.saveToLocalStorage();
+  }
+
+  public getStatusCategory(status: string): string {
+    if (this.data.statusCategories && this.data.statusCategories[status]) {
+      return this.data.statusCategories[status];
+    }
+    return 'prospect';
+  }
+
+  public setStatusCategory(status: string, category: string): void {
+    if (!this.data.statusCategories) {
+      this.data.statusCategories = {};
+    }
+    this.data.statusCategories[status] = category;
     this.saveToLocalStorage();
   }
 

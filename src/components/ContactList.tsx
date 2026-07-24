@@ -33,14 +33,7 @@ export const ContactList: React.FC<ContactListProps> = ({
     );
   };
 
-  const statuses: ContactStatus[] = [
-    'Nouveau : à contacter',
-    'À relancer',
-    'Rendez-vous fixé',
-    'Devis envoyé',
-    'Client converti',
-    'Pas intéressé'
-  ];
+  const statuses = storageService.getStatuses();
 
   const handleQuickStatusChange = (contact: Contact, newStatus: string, e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();

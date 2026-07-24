@@ -92,6 +92,7 @@ export interface CRMData {
   users: User[];
   contactTypes: string[];
   statuses: string[];
+  statusCategories?: Record<string, string>;
   tags: TagDefinition[];
   roles?: string[];
   templateCategories?: string[];

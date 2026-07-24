@@ -18,14 +18,7 @@ export const ReturnPromptModal: React.FC<ReturnPromptModalProps> = ({ onUpdate }
   const [customDeadline, setCustomDeadline] = useState<string>('');
   const [summaryInput, setSummaryInput] = useState<string>('');
 
-  const statuses: ContactStatus[] = [
-    'À relancer',
-    'Rendez-vous fixé',
-    'Devis envoyé',
-    'Client converti',
-    'Pas intéressé',
-    'Nouveau : à contacter'
-  ];
+  const statuses = storageService.getStatuses();
 
   useEffect(() => {
     const checkPending = () => {

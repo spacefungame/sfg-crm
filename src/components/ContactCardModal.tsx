@@ -43,14 +43,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
 
   const emailTemplates = storageService.getEmailTemplates();
 
-  const statuses: ContactStatus[] = [
-    'Nouveau : à contacter',
-    'À relancer',
-    'Rendez-vous fixé',
-    'Devis envoyé',
-    'Client converti',
-    'Pas intéressé'
-  ];
+  const statuses = storageService.getStatuses();
 
   const handleToggleTag = (tagName: string) => {
     if (!formData) return;

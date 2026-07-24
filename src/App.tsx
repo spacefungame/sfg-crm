@@ -25,6 +25,7 @@ const AppContent: React.FC = () => {
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [currentTab, setCurrentTab] = useState<'contacts' | 'reports' | 'settings'>('contacts');
+  const [activeContactCategory, setActiveContactCategory] = useState<'prospect' | 'project' | null>(null);
   
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
@@ -70,6 +71,12 @@ const AppContent: React.FC = () => {
 
   // Compute filtered contacts
   const filteredContacts = contacts.filter((c) => {
+    // Category
+    if (activeContactCategory) {
+      const cat = storageService.getStatusCategory(c.status);
+      if (cat !== activeContactCategory) return false;
+    }
+
     // Search query
     if (filters.search) {
       const q = filters.search.toLowerCase();
@@ -196,23 +203,58 @@ const AppContent: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Tab 1: Contacts & Prospects */}
             {currentTab === 'contacts' && (
               <div className="animate-fade-in">
-                <ContactFilters
-                  filters={filters}
-                  onFilterChange={setFilters}
-                  totalCount={contacts.length}
-                  filteredCount={filteredContacts.length}
-                />
+                {!activeContactCategory ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '24px' }}>
+                    <h2 style={{ fontSize: '24px', color: 'var(--text-main)', marginBottom: '16px' }}>Sélectionnez une vue</h2>
+                    <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <button
+                        onClick={() => setActiveContactCategory('prospect')}
+                        className="card card-hover"
+                        style={{ padding: '40px', width: '300px', textAlign: 'center', cursor: 'pointer', border: '2px solid transparent', display: 'flex', flexDirection: 'column', gap: '16px' }}
+                      >
+                        <div style={{ fontSize: '48px' }}>🎯</div>
+                        <h3 style={{ fontSize: '20px', color: 'var(--primary)', margin: 0 }}>Prospects</h3>
+                        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '14px' }}>Gérez vos nouveaux contacts, devis et relances.</p>
+                      </button>
+                      <button
+                        onClick={() => setActiveContactCategory('project')}
+                        className="card card-hover"
+                        style={{ padding: '40px', width: '300px', textAlign: 'center', cursor: 'pointer', border: '2px solid transparent', display: 'flex', flexDirection: 'column', gap: '16px' }}
+                      >
+                        <div style={{ fontSize: '48px' }}>🚀</div>
+                        <h3 style={{ fontSize: '20px', color: 'var(--primary)', margin: 0 }}>Projets en cours</h3>
+                        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '14px' }}>Suivez vos clients convertis et projets actifs.</p>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center' }}>
+                      <button onClick={() => setActiveContactCategory(null)} className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px' }}>
+                        &larr; Retour
+                      </button>
+                      <h2 style={{ display: 'inline-block', marginLeft: '16px', fontSize: '20px', color: 'var(--text-main)', margin: 0 }}>
+                        {activeContactCategory === 'prospect' ? '🎯 Prospects' : '🚀 Projets en cours'}
+                      </h2>
+                    </div>
+                    <ContactFilters
+                      filters={filters}
+                      onFilterChange={setFilters}
+                      totalCount={contacts.filter(c => storageService.getStatusCategory(c.status) === activeContactCategory).length}
+                      filteredCount={filteredContacts.length}
+                    />
 
-                <ContactList
-                  contacts={filteredContacts}
-                  onSelectContact={(c) => setSelectedContact(c)}
-                  onRefresh={loadContacts}
-                  onQuickCall={(c, e) => handleInitiateCall(c, e)}
-                  onQuickMail={(c, e) => handleInitiateMail(c, e)}
-                />
+                    <ContactList
+                      contacts={filteredContacts}
+                      onSelectContact={(c) => setSelectedContact(c)}
+                      onRefresh={loadContacts}
+                      onQuickCall={(c, e) => handleInitiateCall(c, e)}
+                      onQuickMail={(c, e) => handleInitiateMail(c, e)}
+                    />
+                  </>
+                )}
               </div>
             )}
 

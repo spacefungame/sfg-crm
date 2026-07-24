@@ -543,6 +543,19 @@ export const SettingsView: React.FC = () => {
                     {st}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <select
+                      value={storageService.getStatusCategory(st)}
+                      onChange={(e) => {
+                        storageService.setStatusCategory(st, e.target.value);
+                        setStatusesList([...statusesList]);
+                      }}
+                      className="input-field"
+                      style={{ padding: '2px 5px', fontSize: '11px', width: 'auto', marginRight: '8px' }}
+                      title="Catégorie dans laquelle ce statut apparaîtra"
+                    >
+                      <option value="prospect">Prospects</option>
+                      <option value="project">Projets en cours</option>
+                    </select>
                     <button
                       type="button"
                       onClick={(e) => handleMoveStatusUp(idx, e)}
