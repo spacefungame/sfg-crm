@@ -1,4 +1,4 @@
 {
-  "version": "1.0.12",
-  "description": "Possibilité d'attribuer un contact à un collaborateur précis et de filtrer la liste selon la personne assignée."
+  "version": "1.0.13",
+  "description": "Correction d'un bug où l'attribution d'un contact n'était pas sauvegardée automatiquement."
 }
