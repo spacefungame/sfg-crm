@@ -1,4 +1,4 @@
 {
-  "version": "1.0.13",
-  "description": "Correction d'un bug où l'attribution d'un contact n'était pas sauvegardée automatiquement."
+  "version": "1.0.14",
+  "description": "Affichage de la personne assignée directement dans la liste des prospects (tableau et cartes)."
 }
