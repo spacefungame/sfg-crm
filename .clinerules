@@ -1,0 +1,9 @@
+# Règles pour les IA travaillant sur ce projet (CRM)
+
+## Déploiement et Mises à jour
+À chaque fois que vous apportez une modification fonctionnelle au code (ou résolvez un bug) et que vous allez effectuer un déploiement (`npm run build && npx gh-pages -d dist`), VOUS DEVEZ obligatoirement mettre à jour le fichier `public/version.json`.
+
+1. Incrémentez la version de manière sémantique ou logique (ex: "1.0.1" -> "1.0.2").
+2. Remplacez le champ `description` avec le résumé simple et explicite de votre intervention pour les collaborateurs (ex: "Ajout de la fonctionnalité pop-up" ou "Correction du bug d'affichage").
+
+Cette consigne est critique car le CRM côté client utilise ce fichier pour forcer le rafraîchissement (via `VersionChecker.tsx`) et afficher le patch note aux collaborateurs.

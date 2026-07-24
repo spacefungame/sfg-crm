@@ -14,6 +14,7 @@ import { ReturnPromptModal } from './components/ReturnPromptModal';
 import { ImportModal } from './components/ImportModal';
 import { LoginModal } from './components/LoginModal';
 import { NewContactModal } from './components/NewContactModal';
+import { VersionChecker } from './components/VersionChecker';
 
 import { ReportsView } from './components/ReportsView';
 import { SettingsView } from './components/SettingsView';
@@ -241,6 +242,7 @@ const AppContent: React.FC = () => {
       </footer>
 
       {/* Modals & Overlays */}
+      <VersionChecker />
       <LoginModal
         isOpen={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}
