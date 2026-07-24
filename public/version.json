@@ -1,4 +1,4 @@
 {
-  "version": "1.0.7",
-  "description": "Ajout de séparateurs visuels par mois dans le tableau des Projets en cours."
+  "version": "1.0.8",
+  "description": "Amélioration de la reconnaissance des dates tapées manuellement et ajout d'un bouton voir plus/moins pour les textes longs."
 }

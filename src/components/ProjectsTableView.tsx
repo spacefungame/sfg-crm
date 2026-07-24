@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { Contact, Establishment } from '../types/crm';
 import { ExternalLink } from 'lucide-react';
 import { storageService } from '../services/storageService';
@@ -15,27 +15,82 @@ const AutoResizingTextarea: React.FC<{
   placeholder?: string;
   style?: React.CSSProperties;
 }> = ({ value, onChange, placeholder, style }) => {
+  const [expanded, setExpanded] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+
+  const calculateHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      if (scrollHeight > 50) {
+        setIsOverflowing(true);
+      } else {
+        setIsOverflowing(false);
+      }
+      
+      if (expanded || scrollHeight <= 50) {
+        textareaRef.current.style.height = scrollHeight + 'px';
+      } else {
+        textareaRef.current.style.height = '50px';
+      }
+    }
+  };
+
+  useEffect(() => {
+    calculateHeight();
+  }, [value, expanded]);
+
   return (
-    <textarea
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => {
-        onChange(e.target.value);
-        e.target.style.height = 'auto';
-        e.target.style.height = e.target.scrollHeight + 'px';
-      }}
-      rows={1}
-      style={{
-        ...style,
-        resize: 'none',
-        overflow: 'hidden',
-        minHeight: '26px',
-        lineHeight: '1.2'
-      }}
-      onFocus={e => { e.target.style.border='1px solid var(--border)'; e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} 
-      onBlur={e => e.target.style.border='1px solid transparent'}
-    />
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+      <textarea
+        ref={textareaRef}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => {
+          onChange(e.target.value);
+        }}
+        rows={1}
+        style={{
+          ...style,
+          resize: 'none',
+          overflow: expanded ? 'auto' : 'hidden',
+          minHeight: '26px',
+          lineHeight: '1.2',
+          transition: 'height 0.2s ease'
+        }}
+        onFocus={e => { e.target.style.border='1px solid var(--border)'; }} 
+        onBlur={e => { e.target.style.border='1px solid transparent'; }}
+      />
+      {isOverflowing && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--primary)',
+            fontSize: '10px',
+            cursor: 'pointer',
+            padding: '2px 0',
+            marginTop: '2px',
+            textAlign: 'right',
+            fontWeight: 600,
+            textDecoration: 'underline'
+          }}
+        >
+          {expanded ? 'Voir moins' : 'Voir plus'}
+        </button>
+      )}
+    </div>
   );
+};
+
+const parseDateString = (dateStr: string) => {
+  const matchFR = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (matchFR) {
+    return `${matchFR[3]}-${matchFR[2]}-${matchFR[1]}`;
+  }
+  return dateStr;
 };
 
 export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, onContactClick, onRefresh }) => {
@@ -50,8 +105,8 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
   const sortedFiltered = [...filtered].sort((a, b) => {
     const aType = a.eventDetails?.dateType || 'tbd';
     const bType = b.eventDetails?.dateType || 'tbd';
-    const aDate = a.eventDetails?.dateValue || '';
-    const bDate = b.eventDetails?.dateValue || '';
+    const aDate = parseDateString(a.eventDetails?.dateValue || '');
+    const bDate = parseDateString(b.eventDetails?.dateValue || '');
 
     // "TBD" at the top
     if (aType === 'tbd' && bType !== 'tbd') return -1;
@@ -139,8 +194,9 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                 const ev = contact.eventDetails || {};
                 let month = 'À déterminer';
                 
-                if (ev.dateType !== 'tbd' && ev.dateValue) {
-                  const match = ev.dateValue.match(/^(\d{4})-(\d{2})/);
+                const parsedDate = parseDateString(ev.dateValue || '');
+                if (ev.dateType !== 'tbd' && parsedDate) {
+                  const match = parsedDate.match(/^(\d{4})-(\d{2})/);
                   if (match) {
                     const year = match[1];
                     const monthNum = match[2];
