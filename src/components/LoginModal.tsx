@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { storageService } from '../services/storageService';
-import { LogIn, UserPlus, X, Mail, Shield, CheckCircle } from 'lucide-react';
+import { LogIn, UserPlus, X, Mail, Shield, CheckCircle, LogOut, KeyRound } from 'lucide-react';
 
 
 interface LoginModalProps {
@@ -10,10 +10,10 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-  const { login, registerUser, currentUser, updateUser } = useAuth();
+  const { login, logout, registerUser, currentUser, updateUser } = useAuth();
   
   // Tabs
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
 
   // Login State
   const [loginEmail, setLoginEmail] = useState('');
@@ -29,6 +29,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [regRole, setRegRole] = useState('user');
   const [regError, setRegError] = useState('');
+
+  // Forgot Password State
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotError, setForgotError] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState('');
 
   // Email Config State
   const [activeEmailConfig, setActiveEmailConfig] = useState<string>(currentUser?.email || '');
@@ -91,6 +97,36 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+
+  const handleForgotPasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+    setForgotSuccess('');
+
+    if (!forgotEmail.trim() || !forgotNewPassword.trim()) {
+      setForgotError('Veuillez remplir tous les champs.');
+      return;
+    }
+
+    const allUsers = storageService.getUsers();
+    const found = allUsers.find(u => 
+      (u.loginEmail && u.loginEmail.toLowerCase() === forgotEmail.trim().toLowerCase()) ||
+      u.username.toLowerCase() === forgotEmail.trim().toLowerCase()
+    );
+
+    if (!found) {
+      setForgotError('Aucun compte trouvé avec cet e-mail.');
+      return;
+    }
+
+    found.password = forgotNewPassword;
+    storageService.saveUser(found);
+    setForgotSuccess('Mot de passe mis à jour avec succès ! Vous pouvez vous connecter.');
+    setForgotEmail('');
+    setForgotNewPassword('');
+    setTimeout(() => setActiveTab('login'), 2500);
+  };
+
   const availableRoles = storageService.getRoles().filter(r => r !== 'admin' && r !== 'coo');
 
   return (
@@ -141,6 +177,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                   Rôle : <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{currentUser.role}</span>
                 </div>
               </div>
+              <button 
+                onClick={() => { logout(); onClose(); }}
+                className="btn btn-secondary btn-sm" 
+                style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', color: '#DC2626', borderColor: '#DC2626' }}
+              >
+                <LogOut size={14} /> Déconnexion
+              </button>
             </div>
 
             <form onSubmit={handleSaveActiveEmail} style={{ padding: '14px', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
@@ -203,9 +246,74 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 </div>
               )}
             </div>
-            <button type="submit" className="btn btn-primary" style={{ marginTop: '10px' }}>
-              <LogIn size={16} /> Me connecter
-            </button>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+              <button 
+                type="button" 
+                onClick={() => setActiveTab('forgot')}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '12.5px', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Mot de passe oublié ?
+              </button>
+              <button type="submit" className="btn btn-primary">
+                <LogIn size={16} /> Me connecter
+              </button>
+            </div>
+          </form>
+        ) : activeTab === 'forgot' ? (
+          <form onSubmit={handleForgotPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+              Entrez votre e-mail pour définir un nouveau mot de passe.
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                Adresse e-mail
+              </label>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Votre e-mail"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                autoFocus
+                required
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                Nouveau mot de passe
+              </label>
+              <input
+                type="password"
+                className="input-field"
+                placeholder="Nouveau mot de passe"
+                value={forgotNewPassword}
+                onChange={(e) => setForgotNewPassword(e.target.value)}
+                required
+              />
+            </div>
+            {forgotError && (
+              <div style={{ fontSize: '13px', color: '#DC2626', marginTop: '6px', fontWeight: 500 }}>
+                ⚠️ {forgotError}
+              </div>
+            )}
+            {forgotSuccess && (
+              <div style={{ fontSize: '13px', color: '#16A34A', marginTop: '6px', fontWeight: 500 }}>
+                ✅ {forgotSuccess}
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+              <button 
+                type="button" 
+                onClick={() => setActiveTab('login')}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '12.5px', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Retour à la connexion
+              </button>
+              <button type="submit" className="btn btn-primary">
+                <KeyRound size={16} /> Enregistrer
+              </button>
+            </div>
           </form>
         ) : (
           <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
