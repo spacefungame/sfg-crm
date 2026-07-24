@@ -1,4 +1,4 @@
 {
-  "version": "1.0.15",
-  "description": "Affichage de la personne assignée également dans le tableau de suivi des projets en cours."
+  "version": "1.0.16",
+  "description": "Affichage explicite de l'attribution (même si non attribué) pour s'assurer que c'est visible."
 }
