@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Contact, Establishment } from '../types/crm';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, User as UserIcon } from 'lucide-react';
 import { storageService } from '../services/storageService';
 
 interface ProjectsTableViewProps {
@@ -94,7 +94,13 @@ const parseDateString = (dateStr: string) => {
 };
 
 export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, onContactClick, onRefresh }) => {
-  const [filterEst, setFilterEst] = useState<'all' | Establishment | 'a_determiner'>('all');
+  const [filterEst, setFilterEst] = useState<Establishment | 'all'>('all');
+  
+  const users = storageService.getUsers();
+  const getAssigneeName = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    return user ? user.username : 'Inconnu';
+  };
 
   const filtered = contacts.filter(c => {
     if (filterEst === 'all') return true;
@@ -238,6 +244,12 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.2 }}>
                     {contact.firstName} {contact.lastName}<br/>
                     <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 400 }}>{contact.company}</span>
+                    {contact.assignedTo && (
+                      <div style={{ fontSize: '10px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px', fontWeight: 600 }}>
+                        <UserIcon size={10} />
+                        {getAssigneeName(contact.assignedTo)}
+                      </div>
+                    )}
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
                     <select value={ev.establishment || 'a_determiner'} onChange={e => handleInlineChange(contact.id, 'establishment', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }}>
