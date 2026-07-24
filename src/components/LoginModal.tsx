@@ -40,6 +40,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [activeEmailConfig, setActiveEmailConfig] = useState<string>(currentUser?.email || '');
   const [emailSavedMessage, setEmailSavedMessage] = useState<boolean>(false);
 
+  // Change Password State (Logged in)
+  const [newPass, setNewPass] = useState('');
+  const [confirmNewPass, setConfirmNewPass] = useState('');
+  const [passChangeError, setPassChangeError] = useState('');
+  const [passChangeSuccess, setPassChangeSuccess] = useState(false);
+
   if (!isOpen) return null;
 
   const handleLoginSubmit = (e: React.FormEvent) => {
@@ -94,6 +100,30 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       updateUser({ ...currentUser, email: activeEmailConfig.trim() });
       setEmailSavedMessage(true);
       setTimeout(() => setEmailSavedMessage(false), 2500);
+    }
+  };
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPassChangeError('');
+    setPassChangeSuccess(false);
+
+    if (!newPass.trim() || !confirmNewPass.trim()) {
+      setPassChangeError('Veuillez remplir les deux champs.');
+      return;
+    }
+
+    if (newPass !== confirmNewPass) {
+      setPassChangeError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    if (currentUser) {
+      updateUser({ ...currentUser, password: newPass });
+      setPassChangeSuccess(true);
+      setNewPass('');
+      setConfirmNewPass('');
+      setTimeout(() => setPassChangeSuccess(false), 3000);
     }
   };
 
@@ -211,6 +241,45 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 </div>
               )}
             </form>
+
+            <form onSubmit={handleChangePassword} style={{ padding: '14px', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', marginTop: '14px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>
+                <KeyRound size={16} style={{ color: 'var(--primary)' }} />
+                Changer mon mot de passe personnel :
+              </label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <input
+                  type="password"
+                  className="input-field"
+                  placeholder="Nouveau mot de passe"
+                  value={newPass}
+                  onChange={(e) => setNewPass(e.target.value)}
+                  style={{ fontSize: '13px' }}
+                />
+                <input
+                  type="password"
+                  className="input-field"
+                  placeholder="Confirmer"
+                  value={confirmNewPass}
+                  onChange={(e) => setConfirmNewPass(e.target.value)}
+                  style={{ fontSize: '13px' }}
+                />
+              </div>
+              <button type="submit" className="btn btn-secondary" style={{ padding: '6px 14px', fontSize: '12px', width: '100%' }}>
+                Mettre à jour mon mot de passe
+              </button>
+              {passChangeError && (
+                <div style={{ fontSize: '12px', color: '#DC2626', marginTop: '6px', fontWeight: 500 }}>
+                  ⚠️ {passChangeError}
+                </div>
+              )}
+              {passChangeSuccess && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#16A34A', marginTop: '6px', fontWeight: 500 }}>
+                  <CheckCircle size={14} />
+                  Mot de passe modifié avec succès !
+                </div>
+              )}
+            </form>
           </div>
         ) : activeTab === 'login' ? (
           <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -261,60 +330,21 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             </div>
           </form>
         ) : activeTab === 'forgot' ? (
-          <form onSubmit={handleForgotPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-              Entrez votre e-mail ou identifiant pour définir un nouveau mot de passe.
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                E-mail ou Identifiant
-              </label>
-              <input
-                type="text"
-                className="input-field"
-                placeholder="Votre e-mail ou identifiant"
-                value={forgotEmail}
-                onChange={(e) => setForgotEmail(e.target.value)}
-                autoFocus
-                required
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                Nouveau mot de passe
-              </label>
-              <input
-                type="password"
-                className="input-field"
-                placeholder="Nouveau mot de passe"
-                value={forgotNewPassword}
-                onChange={(e) => setForgotNewPassword(e.target.value)}
-                required
-              />
-            </div>
-            {forgotError && (
-              <div style={{ fontSize: '13px', color: '#DC2626', marginTop: '6px', fontWeight: 500 }}>
-                ⚠️ {forgotError}
-              </div>
-            )}
-            {forgotSuccess && (
-              <div style={{ fontSize: '13px', color: '#16A34A', marginTop: '6px', fontWeight: 500 }}>
-                ✅ {forgotSuccess}
-              </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-              <button 
-                type="button" 
-                onClick={() => setActiveTab('login')}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '12.5px', cursor: 'pointer', textDecoration: 'underline' }}
-              >
-                Retour à la connexion
-              </button>
-              <button type="submit" className="btn btn-primary">
-                <KeyRound size={16} /> Enregistrer
-              </button>
-            </div>
-          </form>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'center', padding: '20px 10px' }}>
+            <Shield size={40} style={{ color: 'var(--primary)', margin: '0 auto' }} />
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-main)' }}>Mot de passe oublié</h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+              Pour des raisons de sécurité, veuillez contacter votre administrateur (ou votre directeur) afin qu'il réinitialise votre mot de passe depuis son espace Paramètres.
+            </p>
+            <button 
+              type="button" 
+              onClick={() => setActiveTab('login')}
+              className="btn btn-primary"
+              style={{ marginTop: '10px' }}
+            >
+              Retour à la connexion
+            </button>
+          </div>
         ) : (
           <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import type { TagDefinition, User } from '../types/crm';
-import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Shield, Crown, X, ArrowUp, ArrowDown, GripVertical, UserCheck } from 'lucide-react';
+import { Settings, Bookmark, CheckCircle2, Tag as TagIcon, Users, Plus, Trash2, Edit3, Check, Mail, Shield, Crown, X, ArrowUp, ArrowDown, GripVertical, UserCheck, KeyRound } from 'lucide-react';
 import { TemplatesManager } from './TemplatesManager';
 
 
@@ -220,6 +220,16 @@ export const SettingsView: React.FC = () => {
     if (window.confirm(`Confirmez-vous la suppression du collaborateur "${userToDelete.username}" ?`)) {
       storageService.deleteUser(userToDelete.id);
       refreshUsers();
+    }
+  };
+
+  const handleResetPassword = (userToReset: User, e?: React.MouseEvent) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    const newPass = window.prompt(`Entrez le nouveau mot de passe pour ${userToReset.username} :`);
+    if (newPass && newPass.trim() !== '') {
+      storageService.saveUser({ ...userToReset, password: newPass.trim() });
+      refreshUsers();
+      window.alert(`Mot de passe mis à jour avec succès pour ${userToReset.username}.`);
     }
   };
 
@@ -864,6 +874,17 @@ export const SettingsView: React.FC = () => {
                             Admin
                           </label>
                         </>
+                      )}
+                      {!isDir && (currentUser?.isAdmin || currentUser?.role?.toLowerCase() === 'coo') && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleResetPassword(u, e)}
+                          className="btn-icon"
+                          style={{ border: 'none', background: 'var(--surface)', cursor: 'pointer', color: 'var(--primary)', padding: '4px' }}
+                          title="Réinitialiser le mot de passe"
+                        >
+                          <KeyRound size={13} />
+                        </button>
                       )}
                       {!isDir && !isMe && (
                         <button
