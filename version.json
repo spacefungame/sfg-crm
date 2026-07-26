@@ -1,4 +1,4 @@
 {
-  "version": "1.0.21",
-  "description": "Correction d'un conflit de synchronisation qui effaçait les comptes collaborateurs s'ils utilisaient le même nom qu'un ancien compte supprimé."
+  "version": "1.0.22",
+  "description": "Ouverture automatique du formulaire d'événement lors d'un passage au statut projet depuis la liste des contacts."
 }
