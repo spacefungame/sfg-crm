@@ -343,12 +343,12 @@ export class StorageService {
     // 4. Merge users
     const mergedUsersMap = new Map<string, any>();
     (remote.users || []).forEach(ru => {
-      if (!allDeletedItems.has(ru.id)) {
+      if (!allDeletedItems.has(ru.id) && !allDeletedItems.has(ru.username?.toLowerCase())) {
         mergedUsersMap.set(ru.username.toLowerCase(), ru);
       }
     });
     (local.users || []).forEach(lu => {
-      if (allDeletedItems.has(lu.id)) return;
+      if (allDeletedItems.has(lu.id) || allDeletedItems.has(lu.username?.toLowerCase())) return;
       if (!mergedUsersMap.has(lu.username.toLowerCase())) {
         mergedUsersMap.set(lu.username.toLowerCase(), lu);
         remoteNeedsUpdate = true;
@@ -816,9 +816,13 @@ export class StorageService {
   }
 
   public deleteUser(id: string): void {
+    const user = this.data.users.find(u => u.id === id);
     this.data.users = this.data.users.filter(u => u.id !== id);
     if (!this.data.deletedItemIds) this.data.deletedItemIds = [];
-    this.data.deletedItemIds.push(id);
+    if (id) this.data.deletedItemIds.push(id);
+    if (user && user.username) {
+      this.data.deletedItemIds.push(user.username.toLowerCase());
+    }
     this.saveToLocalStorage();
   }
 

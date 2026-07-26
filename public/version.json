@@ -1,4 +1,4 @@
 {
-  "version": "1.0.16",
-  "description": "Affichage explicite de l'attribution (même si non attribué) pour s'assurer que c'est visible."
+  "version": "1.0.17",
+  "description": "Correction d'un bug mineur empêchant la suppression définitive des anciens comptes collaborateurs (qui réapparaissaient après synchronisation)."
 }
