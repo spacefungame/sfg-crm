@@ -1,4 +1,4 @@
 {
-  "version": "1.0.19",
-  "description": "Correction définitive empêchant la suppression silencieuse d'e-mails autorisés (ou autres paramètres) qui auraient été précédemment supprimés puis rajoutés."
+  "version": "1.0.20",
+  "description": "Correctif critique de la synchronisation initiale. Les nouveaux paramètres et e-mails sont désormais correctement téléchargés par les nouveaux utilisateurs même lorsque la base de contacts est vide."
 }

@@ -319,13 +319,15 @@ export class StorageService {
 
     const allDeletedItems = new Set<string>([...(remote.deletedItemIds || []), ...(local.deletedItemIds || [])]);
 
+    const localDeletedItems = new Set<string>(local.deletedItemIds || []);
+
     // Merge authorized emails
     const mergedAuthEmailsMap = new Map<string, string>();
     (remote.authorizedEmails || []).forEach(e => {
       if (!allDeletedItems.has(e)) mergedAuthEmailsMap.set(e, e);
     });
     (local.authorizedEmails || []).forEach(e => {
-      if (allDeletedItems.has(e)) return;
+      if (localDeletedItems.has(e)) return; // ONLY trust local tombstone for local items to prevent remote tombstone from overriding local additions
       if (!mergedAuthEmailsMap.has(e)) {
         mergedAuthEmailsMap.set(e, e);
         remoteNeedsUpdate = true;
@@ -466,7 +468,7 @@ export class StorageService {
                 this.syncToCloud();
               }, 500);
             }
-          } else if (remoteData.contacts && Array.isArray(remoteData.contacts)) {
+          } else if (remoteData) {
             const { merged, remoteNeedsUpdate } = this.smartMergeData(this.data, remoteData);
             const localCheck = JSON.stringify({ ...this.data, cloudConfig: null });
             const mergedCheck = JSON.stringify({ ...merged, cloudConfig: null });
