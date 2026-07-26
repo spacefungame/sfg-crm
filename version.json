@@ -1,4 +1,4 @@
 {
-  "version": "1.0.20",
-  "description": "Correctif critique de la synchronisation initiale. Les nouveaux paramètres et e-mails sont désormais correctement téléchargés par les nouveaux utilisateurs même lorsque la base de contacts est vide."
+  "version": "1.0.21",
+  "description": "Correction d'un conflit de synchronisation qui effaçait les comptes collaborateurs s'ils utilisaient le même nom qu'un ancien compte supprimé."
 }
