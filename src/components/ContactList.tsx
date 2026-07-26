@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Contact } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { Phone, Mail, Building2, ChevronRight, AlertTriangle, Clock, Rocket, Dices, Sparkles, LayoutGrid, List, User as UserIcon } from 'lucide-react';
+import { EventFormModal } from './EventFormModal';
 
 interface ContactListProps {
   contacts: Contact[];
@@ -21,6 +22,7 @@ export const ContactList: React.FC<ContactListProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [eventFormContact, setEventFormContact] = useState<Contact | null>(null);
   const allTags = storageService.getTags();
   const users = storageService.getUsers();
 
@@ -43,12 +45,24 @@ export const ContactList: React.FC<ContactListProps> = ({
 
   const handleQuickStatusChange = (contact: Contact, newStatus: string, e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();
+    
+    const oldCat = storageService.getStatusCategory(contact.status);
+    const newCat = storageService.getStatusCategory(newStatus);
+    
     storageService.addActivityLog(contact.id, {
       employeeName: currentUser ? currentUser.username : 'Collaborateur',
       actionType: 'status_change',
       summary: `Modification manuelle rapide du statut : ${newStatus}`,
       newStatus
     });
+    
+    if (oldCat !== 'project' && newCat === 'project') {
+      const updatedContact = storageService.getContactById(contact.id);
+      if (updatedContact) {
+        setEventFormContact(updatedContact);
+      }
+    }
+    
     onRefresh();
   };
 
@@ -466,6 +480,24 @@ export const ContactList: React.FC<ContactListProps> = ({
             </div>
           ))}
         </div>
+      )}
+      
+      {eventFormContact && (
+        <EventFormModal 
+          contact={eventFormContact}
+          onClose={() => setEventFormContact(null)}
+          onSave={(eventDetails) => {
+            const updated = { ...eventFormContact, eventDetails };
+            storageService.saveContact(updated);
+            storageService.addActivityLog(updated.id, {
+              employeeName: currentUser ? currentUser.username : 'Collaborateur',
+              actionType: 'note',
+              summary: 'Mise à jour des informations du projet (événement).'
+            });
+            setEventFormContact(null);
+            onRefresh();
+          }}
+        />
       )}
     </div>
   );
