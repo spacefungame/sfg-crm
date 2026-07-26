@@ -186,6 +186,18 @@ export class StorageService {
     }
   }
 
+  private resurrectItem(id: string): void {
+    if (this.data.deletedItemIds && id) {
+      this.data.deletedItemIds = this.data.deletedItemIds.filter(x => x !== id && x !== id.toLowerCase());
+    }
+  }
+
+  private resurrectContact(id: string): void {
+    if (this.data.deletedContactIds && id) {
+      this.data.deletedContactIds = this.data.deletedContactIds.filter(x => x !== id);
+    }
+  }
+
   private notifyListeners(): void {
     window.dispatchEvent(new CustomEvent(DATA_UPDATED_EVENT, { detail: this.data }));
   }
@@ -518,6 +530,7 @@ export class StorageService {
   }
 
   public saveContact(contact: Contact): void {
+    this.resurrectContact(contact.id);
     const index = this.data.contacts.findIndex(c => c.id === contact.id);
     if (index >= 0) {
       contact.updatedAt = new Date().toISOString();
@@ -572,6 +585,7 @@ export class StorageService {
   public addContactType(type: string): void {
     const trimmed = type.trim();
     if (trimmed && !this.data.contactTypes.includes(trimmed)) {
+      this.resurrectItem(trimmed);
       this.data.contactTypes.push(trimmed);
       this.saveToLocalStorage();
     }
@@ -621,6 +635,7 @@ export class StorageService {
   public addStatus(status: string): void {
     const trimmed = status.trim();
     if (trimmed && !this.data.statuses.includes(trimmed)) {
+      this.resurrectItem(trimmed);
       this.data.statuses.push(trimmed);
       this.saveToLocalStorage();
     }
@@ -669,7 +684,9 @@ export class StorageService {
   public addRole(roleName: string): void {
     const trimmed = roleName.trim();
     if (trimmed && !this.data.roles?.includes(trimmed)) {
-      this.data.roles!.push(trimmed);
+      this.resurrectItem(trimmed);
+      if (!this.data.roles) this.data.roles = [];
+      this.data.roles.push(trimmed);
       this.saveToLocalStorage();
     }
   }
@@ -681,6 +698,7 @@ export class StorageService {
     if (index >= 0) {
       this.data.roles![index] = trimmed;
     } else {
+      this.resurrectItem(trimmed);
       this.data.roles!.push(trimmed);
     }
     // Update users having this role
@@ -712,6 +730,8 @@ export class StorageService {
   }
 
   public saveTag(tag: TagDefinition): void {
+    this.resurrectItem(tag.id);
+    this.resurrectItem(tag.name);
     const index = this.data.tags.findIndex(t => t.id === tag.id);
     if (index >= 0) {
       const oldName = this.data.tags[index].name;
@@ -754,6 +774,7 @@ export class StorageService {
   public addAuthorizedEmail(email: string): void {
     const trimmed = email.trim().toLowerCase();
     if (!trimmed) return;
+    this.resurrectItem(trimmed);
     if (!this.data.authorizedEmails) this.data.authorizedEmails = [];
     if (!this.data.authorizedEmails.includes(trimmed)) {
       this.data.authorizedEmails.push(trimmed);
@@ -786,6 +807,7 @@ export class StorageService {
   }
 
   public addUser(username: string, role: string = 'user', email?: string, password?: string, isInvited?: boolean): User {
+    this.resurrectItem(username);
     const existing = this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase() || (email && u.email?.toLowerCase() === email.toLowerCase()));
     if (existing) {
       if (email && !existing.email) existing.email = email;
@@ -809,6 +831,8 @@ export class StorageService {
   }
 
   public saveUser(user: User): void {
+    this.resurrectItem(user.id);
+    this.resurrectItem(user.username);
     const index = this.data.users.findIndex(u => u.id === user.id);
     if (index >= 0) {
       this.data.users[index] = user;
@@ -840,8 +864,10 @@ export class StorageService {
 
   public addTemplateCategory(categoryName: string): void {
     const trimmed = categoryName.trim();
-    if (trimmed && !this.getTemplateCategories().includes(trimmed)) {
-      this.data.templateCategories!.push(trimmed);
+    if (trimmed && !this.data.templateCategories?.includes(trimmed)) {
+      this.resurrectItem(trimmed);
+      if (!this.data.templateCategories) this.data.templateCategories = [];
+      this.data.templateCategories.push(trimmed);
       this.saveToLocalStorage();
     }
   }
@@ -884,6 +910,8 @@ export class StorageService {
   }
 
   public saveEmailTemplate(template: EmailTemplate): void {
+    this.resurrectItem(template.id);
+    this.resurrectItem(template.title);
     const index = this.data.emailTemplates.findIndex(t => t.id === template.id);
     if (index >= 0) {
       this.data.emailTemplates[index] = template;
