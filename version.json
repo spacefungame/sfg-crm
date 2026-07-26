@@ -1,4 +1,4 @@
 {
-  "version": "1.0.18",
-  "description": "Correction majeure empêchant la perte de la liste des e-mails autorisés (et de l'historique des suppressions) lors du rafraîchissement de la page."
+  "version": "1.0.19",
+  "description": "Correction définitive empêchant la suppression silencieuse d'e-mails autorisés (ou autres paramètres) qui auraient été précédemment supprimés puis rajoutés."
 }
