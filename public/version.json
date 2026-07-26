@@ -1,4 +1,4 @@
 {
-  "version": "1.0.22",
-  "description": "Ouverture automatique du formulaire d'événement lors d'un passage au statut projet depuis la liste des contacts."
+  "version": "1.0.23",
+  "description": "Ajout de la colonne Statut dans le tableau des projets en cours."
 }

@@ -176,6 +176,7 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
             <tr style={{ backgroundColor: '#F0F4F8', borderBottom: '2px solid #D0DCE5', textAlign: 'left' }}>
               <th style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', width: '70px', textAlign: 'center' }}>Action</th>
               <th style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', minWidth: '140px' }}>Client / Société</th>
+              <th style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', width: '120px' }}>Statut</th>
               <th style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', width: '110px' }}>Établissement</th>
               <th style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', width: '100px' }}>Date</th>
               <th style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', width: '70px' }}>Personnes</th>
@@ -214,7 +215,7 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                 if (month !== currentMonth) {
                   rows.push(
                     <tr key={`month-${month}`} style={{ backgroundColor: '#E2E8F0', borderBottom: '2px solid #CBD5E1' }}>
-                      <td colSpan={14} style={{ padding: '8px 12px', fontWeight: 700, color: '#1E293B', fontSize: '13px' }}>
+                      <td colSpan={15} style={{ padding: '8px 12px', fontWeight: 700, color: '#1E293B', fontSize: '13px' }}>
                         {month}
                       </td>
                     </tr>
@@ -247,6 +248,23 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                     <div style={{ fontSize: '10px', color: contact.assignedTo ? 'var(--primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px', fontWeight: 600 }}>
                       <UserIcon size={10} />
                       {contact.assignedTo ? getAssigneeName(contact.assignedTo) : 'Non attribué'}
+                    </div>
+                  </td>
+                  <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
+                    <div style={{ 
+                      fontSize: '10.5px', 
+                      fontWeight: 600, 
+                      padding: '2px 6px', 
+                      borderRadius: '12px',
+                      display: 'inline-block',
+                      backgroundColor: '#F0ECE4',
+                      color: 'var(--text-main)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '110px'
+                    }} title={contact.status}>
+                      {contact.status}
                     </div>
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
