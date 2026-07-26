@@ -360,12 +360,16 @@ export class StorageService {
     // 4. Merge users
     const mergedUsersMap = new Map<string, any>();
     (remote.users || []).forEach(ru => {
-      if (!allDeletedItems.has(ru.id) && !allDeletedItems.has(ru.username?.toLowerCase())) {
+      const isDeletedById = ru.id && allDeletedItems.has(ru.id);
+      const isDeletedByName = !ru.id && allDeletedItems.has(ru.username?.toLowerCase());
+      if (!isDeletedById && !isDeletedByName) {
         mergedUsersMap.set(ru.username.toLowerCase(), ru);
       }
     });
     (local.users || []).forEach(lu => {
-      if (allDeletedItems.has(lu.id) || allDeletedItems.has(lu.username?.toLowerCase())) return;
+      const isDeletedById = lu.id && allDeletedItems.has(lu.id);
+      const isDeletedByName = !lu.id && allDeletedItems.has(lu.username?.toLowerCase());
+      if (isDeletedById || isDeletedByName) return;
       if (!mergedUsersMap.has(lu.username.toLowerCase())) {
         mergedUsersMap.set(lu.username.toLowerCase(), lu);
         remoteNeedsUpdate = true;
