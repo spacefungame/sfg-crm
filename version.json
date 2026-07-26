@@ -1,4 +1,4 @@
 {
-  "version": "1.0.17",
-  "description": "Correction d'un bug mineur empêchant la suppression définitive des anciens comptes collaborateurs (qui réapparaissaient après synchronisation)."
+  "version": "1.0.18",
+  "description": "Correction majeure empêchant la perte de la liste des e-mails autorisés (et de l'historique des suppressions) lors du rafraîchissement de la page."
 }
