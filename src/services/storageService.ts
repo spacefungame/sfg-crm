@@ -148,7 +148,10 @@ export class StorageService {
           roles: loadedRoles,
           templateCategories: loadedCategories,
           emailTemplates: loadedTemplates,
-          cloudConfig: loadedCloudConfig
+          cloudConfig: loadedCloudConfig,
+          deletedContactIds: parsed.deletedContactIds || [],
+          deletedItemIds: parsed.deletedItemIds || [],
+          authorizedEmails: parsed.authorizedEmails || []
         };
 
         // Si le nettoyage a supprimé des données de démo du cache, on ré-enregistre silencieusement
