@@ -354,7 +354,7 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Objet de l'e-mail *
+                  Objet de l'e-mail
                 </label>
                 <input
                   type="text"
@@ -362,13 +362,12 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
                   placeholder="Ex: Prise de contact / Devis..."
                   value={customSubject}
                   onChange={(e) => setCustomSubject(e.target.value)}
-                  required
                 />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Message *
+                  Message
                 </label>
                 <textarea
                   className="input-field"

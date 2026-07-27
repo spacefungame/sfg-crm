@@ -1,4 +1,4 @@
 {
-  "version": "1.0.25",
-  "description": "Séparation de l'historique d'action et du suivi de note dans le modal de retour."
+  "version": "1.0.26",
+  "description": "Rendre l'objet et le message de l'e-mail libre facultatifs pour permettre l'ouverture directe de la messagerie."
 }
