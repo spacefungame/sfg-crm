@@ -1,4 +1,4 @@
 {
-  "version": "1.0.28",
-  "description": "Correction d'un bug empêchant la sauvegarde de la suppression des catégories de modèles d'e-mail."
+  "version": "1.0.29",
+  "description": "Correction complète de la suppression des catégories de modèles : empêche la resynchronisation Cloud de recréer les catégories supprimées."
 }
