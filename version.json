@@ -1,4 +1,4 @@
 {
-  "version": "1.0.23",
-  "description": "Ajout de la colonne Statut dans le tableau des projets en cours."
+  "version": "1.0.24",
+  "description": "Déplacement du statut dans la même colonne que le nom et l'attribution pour gagner de la place."
 }
