@@ -31,12 +31,8 @@ export const ReturnPromptModal: React.FC<ReturnPromptModalProps> = ({ onUpdate }
           setContact(c);
           setSelectedStatus(c.status === 'Nouveau : à contacter' ? 'À relancer' : c.status);
           
-          // Default summary prefilled based on action
-          if (found.type === 'call') {
-            setSummaryInput('Appel téléphonique passé au client.');
-          } else {
-            setSummaryInput(`Courriel envoyé ${found.templateTitle ? `(Template : ${found.templateTitle})` : ''}.`);
-          }
+          // Do not pre-fill the note, let the user type it if they want
+          setSummaryInput('');
 
           // Compute 3 days from now default
           const d3 = new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0];
@@ -81,13 +77,26 @@ export const ReturnPromptModal: React.FC<ReturnPromptModalProps> = ({ onUpdate }
     e.preventDefault();
     const finalDeadline = computeFinalDeadline();
 
+    const actionSummary = pending.type === 'call' ? 'Appel téléphonique.' : `Courriel envoyé${pending.templateTitle ? ` (Template : ${pending.templateTitle})` : ''}.`;
+    const noteText = summaryInput.trim();
+
+    // Always log the action (mail or call) so it appears in the action history, along with status & deadline changes.
     storageService.addActivityLog(contact.id, {
       employeeName: currentUser ? currentUser.username : 'Collaborateur',
       actionType: pending.type,
-      summary: summaryInput.trim() || (pending.type === 'call' ? 'Appel téléphonique.' : 'Courriel envoyé.'),
+      summary: actionSummary,
       newStatus: selectedStatus,
       deadline: finalDeadline
     });
+
+    // If the user entered a note, log it separately so it appears in the notes section.
+    if (noteText) {
+      storageService.addActivityLog(contact.id, {
+        employeeName: currentUser ? currentUser.username : 'Collaborateur',
+        actionType: 'note',
+        summary: noteText
+      });
+    }
 
     setPending(null);
     setContact(null);
@@ -224,7 +233,7 @@ export const ReturnPromptModal: React.FC<ReturnPromptModalProps> = ({ onUpdate }
           {/* Note / Résumé */}
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
-              3. Note ou compte-rendu (enregistré dans l'historique)
+              3. Note ou compte-rendu (enregistré dans le suivi des notes)
             </label>
             <textarea
               rows={2}
