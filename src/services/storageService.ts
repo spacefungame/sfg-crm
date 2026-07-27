@@ -901,6 +901,10 @@ export class StorageService {
     const categories = this.getTemplateCategories();
     if (categories.length <= 1) return; // Ne pas supprimer si c'est la seule
     this.data.templateCategories = categories.filter(c => c !== categoryName);
+    
+    if (!this.data.deletedItemIds) this.data.deletedItemIds = [];
+    this.data.deletedItemIds.push(categoryName);
+
     // Move templates with deleted category to 'Général' or first available
     const fallback = this.data.templateCategories[0] || 'Général';
     this.data.emailTemplates.forEach(t => {
