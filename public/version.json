@@ -1,4 +1,4 @@
 {
-  "version": "1.0.26",
-  "description": "Rendre l'objet et le message de l'e-mail libre facultatifs pour permettre l'ouverture directe de la messagerie."
+  "version": "1.0.27",
+  "description": "Ajout d'une astuce dans la création de modèle indiquant comment insérer des pièces jointes sous forme de liens Google Drive / web."
 }

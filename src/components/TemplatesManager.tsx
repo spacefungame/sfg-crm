@@ -476,14 +476,12 @@ export const TemplatesManager: React.FC<TemplatesManagerProps> = ({ onTemplatesC
             {/* Aide balises */}
             <div style={{ backgroundColor: 'var(--surface-warm)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-muted)' }}>
               <div style={{ fontWeight: 600, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)' }}>
-                <Sparkles size={14} /> Balises dynamiques disponibles :
+                <Sparkles size={14} /> Astuces :
               </div>
-              Intégrez ces mots-clés dans votre sujet ou texte pour qu'ils soient remplacés automatiquement par les infos du client :
-              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                <span style={{ backgroundColor: '#FFFFFF', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 600 }}>{"{Prénom}"}</span>
-                <span style={{ backgroundColor: '#FFFFFF', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 600 }}>{"{Nom}"}</span>
-                <span style={{ backgroundColor: '#FFFFFF', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 600 }}>{"{Société}"}</span>
-              </div>
+              <ul style={{ margin: '0', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <li><b>Balises :</b> Utilisez <code style={{ backgroundColor: '#FFFFFF', padding: '2px 4px', borderRadius: '4px', color: 'var(--primary)', fontWeight: 600 }}>{'{Nom}'}</code>, <code style={{ backgroundColor: '#FFFFFF', padding: '2px 4px', borderRadius: '4px', color: 'var(--primary)', fontWeight: 600 }}>{'{Prénom}'}</code> ou <code style={{ backgroundColor: '#FFFFFF', padding: '2px 4px', borderRadius: '4px', color: 'var(--primary)', fontWeight: 600 }}>{'{Société}'}</code> pour personnaliser l'e-mail.</li>
+                <li><b>Pièces jointes :</b> Insérez directement les liens publics (Google Drive, Site Web...) vers vos PDF ou documents dans le texte du mail.</li>
+              </ul>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
