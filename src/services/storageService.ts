@@ -1031,13 +1031,15 @@ export class StorageService {
       if (mailtoUrl.length > 2000) {
         // Solution de contournement élégante : générer un fichier .eml en mémoire
         // L'en-tête X-Unsent: 1 indique à Thunderbird/Outlook d'ouvrir le fichier comme un brouillon à éditer, pas comme un mail reçu.
+        const safeBody = body.replace(/\r?\n/g, '\r\n');
         const emlContent = [
           `To: ${to}`,
           `Subject: ${subject}`,
           `X-Unsent: 1`,
           `Content-Type: text/plain; charset=utf-8`,
+          `Content-Transfer-Encoding: 8bit`,
           ``,
-          body
+          safeBody
         ].join('\r\n');
 
         const blob = new Blob([emlContent], { type: 'message/rfc822' });
