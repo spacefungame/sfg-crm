@@ -284,7 +284,14 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                     </select>
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
-                    <input type="text" value={ev.dateValue || ''} placeholder={ev.dateType === 'tbd' ? 'TBD' : 'Date'} onChange={e => handleInlineChange(contact.id, 'dateValue', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                    <input 
+                      type={ev.dateType === 'month' ? 'month' : 'date'} 
+                      value={parseDateString(ev.dateValue || '')} 
+                      onChange={e => handleInlineChange(contact.id, 'dateValue', e.target.value)} 
+                      style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent' }} 
+                      onFocus={e => e.target.style.border='1px solid var(--border)'} 
+                      onBlur={e => e.target.style.border='1px solid transparent'} 
+                    />
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
                     <input type="text" value={ev.guestCount || ''} onChange={e => handleInlineChange(contact.id, 'guestCount', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'center' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
