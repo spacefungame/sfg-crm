@@ -108,6 +108,13 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
     return evEst === filterEst;
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [contacts, filterEst]);
+
   const sortedFiltered = [...filtered].sort((a, b) => {
     const aType = a.eventDetails?.dateType || 'tbd';
     const bType = b.eventDetails?.dateType || 'tbd';
@@ -192,10 +199,13 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
           </thead>
           <tbody>
             {(() => {
+              const totalPages = Math.ceil(sortedFiltered.length / itemsPerPage);
+              const displayedProjects = sortedFiltered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
               const rows: React.ReactNode[] = [];
               let currentMonth = '';
 
-              sortedFiltered.forEach(contact => {
+              displayedProjects.forEach(contact => {
                 const ev = contact.eventDetails || {};
                 let month = 'À déterminer';
                 
@@ -329,6 +339,31 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {Math.ceil(sortedFiltered.length / itemsPerPage) > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '16px', padding: '10px 0' }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            style={{ padding: '6px 12px', opacity: currentPage === 1 ? 0.5 : 1 }}
+          >
+            Précédent
+          </button>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
+            Page {currentPage} sur {Math.ceil(sortedFiltered.length / itemsPerPage)}
+          </span>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(sortedFiltered.length / itemsPerPage)))}
+            disabled={currentPage === Math.ceil(sortedFiltered.length / itemsPerPage)}
+            style={{ padding: '6px 12px', opacity: currentPage === Math.ceil(sortedFiltered.length / itemsPerPage) ? 0.5 : 1 }}
+          >
+            Suivant
+          </button>
+        </div>
+      )}
     </div>
   );
 };

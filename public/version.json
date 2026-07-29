@@ -1,4 +1,4 @@
 {
-  "version": "1.0.30",
-  "description": "Rend les liens (LinkedIn, sites web, etc.) cliquables automatiquement dans les notes générales et le suivi des notes des fiches clients."
+  "version": "1.0.31",
+  "description": "Ajout de la pagination (50 éléments par page) dans la liste des clients et les projets pour résoudre les problèmes de lenteur après des imports massifs."
 }

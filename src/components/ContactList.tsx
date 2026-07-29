@@ -23,8 +23,18 @@ export const ContactList: React.FC<ContactListProps> = ({
   const { currentUser } = useAuth();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [eventFormContact, setEventFormContact] = useState<Contact | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
   const allTags = storageService.getTags();
   const users = storageService.getUsers();
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [contacts]);
+
+  const totalPages = Math.ceil(contacts.length / itemsPerPage);
+  const displayedContacts = contacts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const getAssigneeName = (userId: string) => {
     const user = users.find(u => u.id === userId);
@@ -223,7 +233,7 @@ export const ContactList: React.FC<ContactListProps> = ({
               </tr>
             </thead>
             <tbody>
-              {contacts.map((c) => (
+              {displayedContacts.map((c) => (
                 <tr
                   key={c.id}
                   onClick={() => onSelectContact(c)}
@@ -360,7 +370,7 @@ export const ContactList: React.FC<ContactListProps> = ({
       ) : (
         /* Vue Cartes Tactiles pour Smartphone & Mobile */
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px' }}>
-          {contacts.map((c) => (
+          {displayedContacts.map((c) => (
             <div
               key={c.id}
               onClick={() => onSelectContact(c)}
@@ -482,6 +492,31 @@ export const ContactList: React.FC<ContactListProps> = ({
         </div>
       )}
       
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '16px', padding: '10px 0' }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            style={{ padding: '6px 12px', opacity: currentPage === 1 ? 0.5 : 1 }}
+          >
+            Précédent
+          </button>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
+            Page {currentPage} sur {totalPages}
+          </span>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            style={{ padding: '6px 12px', opacity: currentPage === totalPages ? 0.5 : 1 }}
+          >
+            Suivant
+          </button>
+        </div>
+      )}
+
       {eventFormContact && (
         <EventFormModal 
           contact={eventFormContact}
