@@ -47,6 +47,28 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
   const statuses = storageService.getStatuses();
   const users = storageService.getUsers();
 
+  const renderTextWithLinks = (text: string | undefined | null) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: 'var(--primary)', textDecoration: 'underline' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
   const handleToggleTag = (tagName: string) => {
     if (!formData) return;
     const currentTags = formData.tags || [];
@@ -815,7 +837,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
             formData.notes && (
               <div style={{ backgroundColor: 'var(--surface-warm)', padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
                 <div style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>📝 Notes sur le client :</div>
-                <div style={{ fontSize: '12.5px', color: 'var(--text-main)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{formData.notes}</div>
+                <div style={{ fontSize: '12.5px', color: 'var(--text-main)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{renderTextWithLinks(formData.notes)}</div>
               </div>
             )
           )}
@@ -941,7 +963,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
                       </span>
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-main)', lineHeight: 1.35 }}>
-                      {log.summary}
+                      {renderTextWithLinks(log.summary)}
                     </div>
                   </div>
                 ))}
@@ -989,7 +1011,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
                       </div>
 
                       <div style={{ fontSize: '12px', color: 'var(--text-main)', lineHeight: 1.35 }}>
-                        {log.summary}
+                        {renderTextWithLinks(log.summary)}
                       </div>
 
                       {log.newStatus && (
