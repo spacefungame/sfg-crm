@@ -199,7 +199,6 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
           </thead>
           <tbody>
             {(() => {
-              const totalPages = Math.ceil(sortedFiltered.length / itemsPerPage);
               const displayedProjects = sortedFiltered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
               const rows: React.ReactNode[] = [];
