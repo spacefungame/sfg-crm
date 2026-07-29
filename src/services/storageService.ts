@@ -1023,11 +1023,26 @@ export class StorageService {
       const fullText = `Destinataire : ${to}\nObjet : ${subject}\n\n${body}`;
       navigator.clipboard.writeText(fullText);
       alert(`✅ Message et adresse copiés dans votre presse-papiers !\n\nDestinataire : ${to}\n\nVous pouvez maintenant coller le tout dans la boîte e-mail ou le compte de votre choix.`);
-    } else if (chosenProvider === 'thunderbird' || chosenProvider === 'mailto') {
-      // 'thunderbird' ou 'mailto' - Lance directement le logiciel de messagerie local de l'ordinateur via le protocole mailto:
-      window.location.href = `mailto:${to}?subject=${encodedSubject}&body=${encodedBody}`;
     } else {
-      window.location.href = `mailto:${to}?subject=${encodedSubject}&body=${encodedBody}`;
+      const mailtoUrl = `mailto:${to}?subject=${encodedSubject}&body=${encodedBody}`;
+      
+      // La limite sur Windows / navigateurs pour les liens mailto est souvent autour de 2000 caractères.
+      // Si on dépasse, l'application mail locale (ex: Thunderbird) refuse de s'ouvrir silencieusement.
+      if (mailtoUrl.length > 2000) {
+        alert("⚠️ Le texte de l'e-mail est trop long pour être ouvert automatiquement dans votre logiciel de messagerie (limite technique du navigateur d'environ 2000 caractères).\n\nLe message va être entièrement copié dans votre presse-papiers. Vous n'avez plus qu'à ouvrir Thunderbird et faire 'Coller'.");
+        this.dispatchEmail(to, subject, body, 'copy');
+        return;
+      }
+      
+      // Utilisation d'un élément <a> dynamique, souvent plus robuste que window.location.href
+      const a = document.createElement('a');
+      a.href = mailtoUrl;
+      a.target = '_self';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (document.body.contains(a)) document.body.removeChild(a);
+      }, 100);
     }
   }
 }

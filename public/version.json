@@ -1,4 +1,4 @@
 {
-  "version": "1.0.32",
-  "description": "Correction du format des dates dans le tableau des projets (utilisation du sélecteur natif au format jj/mm/aaaa) pour assurer la cohérence avec le formulaire de création."
+  "version": "1.0.33",
+  "description": "Amélioration de l'ouverture des clients mails (comme Thunderbird) : détection des limites de caractères de Windows pour éviter l'échec silencieux lors de l'envoi de longs templates."
 }
