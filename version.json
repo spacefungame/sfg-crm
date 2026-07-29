@@ -1,4 +1,4 @@
 {
-  "version": "1.0.35",
-  "description": "Correction des sauts de ligne (retours à la ligne) dans les fichiers .eml générés pour les longs e-mails."
+  "version": "1.0.36",
+  "description": "Amélioration des fichiers .eml (contournement Thunderbird) : utilisation du format HTML pour garantir le respect strict des sauts de ligne, peu importe la configuration du logiciel de messagerie."
 }
