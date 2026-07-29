@@ -1029,12 +1029,36 @@ export class StorageService {
       // La limite sur Windows / navigateurs pour les liens mailto est souvent autour de 2000 caractères.
       // Si on dépasse, l'application mail locale (ex: Thunderbird) refuse de s'ouvrir silencieusement.
       if (mailtoUrl.length > 2000) {
-        alert("⚠️ Le texte de l'e-mail est trop long pour être ouvert automatiquement dans votre logiciel de messagerie (limite technique du navigateur d'environ 2000 caractères).\n\nLe message va être entièrement copié dans votre presse-papiers. Vous n'avez plus qu'à ouvrir Thunderbird et faire 'Coller'.");
-        this.dispatchEmail(to, subject, body, 'copy');
+        // Solution de contournement élégante : générer un fichier .eml en mémoire
+        // L'en-tête X-Unsent: 1 indique à Thunderbird/Outlook d'ouvrir le fichier comme un brouillon à éditer, pas comme un mail reçu.
+        const emlContent = [
+          `To: ${to}`,
+          `Subject: ${subject}`,
+          `X-Unsent: 1`,
+          `Content-Type: text/plain; charset=utf-8`,
+          ``,
+          body
+        ].join('\r\n');
+
+        const blob = new Blob([emlContent], { type: 'message/rfc822' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `email_sfg_${Date.now()}.eml`;
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+          if (document.body.contains(a)) document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+        
+        // Optionnel : avertir l'utilisateur de ce qui vient de se passer
+        // alert("💡 L'e-mail étant très long, nous avons téléchargé un fichier .eml.\n\n👉 Cliquez simplement sur le fichier téléchargé pour l'ouvrir directement dans Thunderbird, prêt à être envoyé !");
         return;
       }
       
-      // Utilisation d'un élément <a> dynamique, souvent plus robuste que window.location.href
+      // Utilisation d'un élément <a> dynamique pour les petits mails
       const a = document.createElement('a');
       a.href = mailtoUrl;
       a.target = '_self';
