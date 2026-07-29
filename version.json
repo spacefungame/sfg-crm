@@ -1,4 +1,4 @@
 {
-  "version": "1.0.34",
-  "description": "Système de contournement pour les e-mails longs (Thunderbird) : télécharge automatiquement un brouillon .eml prêt à l'envoi si le template dépasse la limite Windows."
+  "version": "1.0.35",
+  "description": "Correction des sauts de ligne (retours à la ligne) dans les fichiers .eml générés pour les longs e-mails."
 }
