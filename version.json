@@ -1,4 +1,4 @@
 {
-  "version": "1.0.33",
-  "description": "Amélioration de l'ouverture des clients mails (comme Thunderbird) : détection des limites de caractères de Windows pour éviter l'échec silencieux lors de l'envoi de longs templates."
+  "version": "1.0.34",
+  "description": "Système de contournement pour les e-mails longs (Thunderbird) : télécharge automatiquement un brouillon .eml prêt à l'envoi si le template dépasse la limite Windows."
 }
