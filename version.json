@@ -1,4 +1,4 @@
 {
-  "version": "1.0.29",
-  "description": "Correction complète de la suppression des catégories de modèles : empêche la resynchronisation Cloud de recréer les catégories supprimées."
+  "version": "1.0.30",
+  "description": "Rend les liens (LinkedIn, sites web, etc.) cliquables automatiquement dans les notes générales et le suivi des notes des fiches clients."
 }
