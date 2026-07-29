@@ -1,4 +1,4 @@
 {
-  "version": "1.0.31",
-  "description": "Ajout de la pagination (50 éléments par page) dans la liste des clients et les projets pour résoudre les problèmes de lenteur après des imports massifs."
+  "version": "1.0.32",
+  "description": "Correction du format des dates dans le tableau des projets (utilisation du sélecteur natif au format jj/mm/aaaa) pour assurer la cohérence avec le formulaire de création."
 }
