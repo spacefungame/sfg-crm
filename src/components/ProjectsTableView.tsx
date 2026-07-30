@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { Contact, Establishment } from '../types/crm';
 import { ExternalLink, User as UserIcon } from 'lucide-react';
 import { storageService } from '../services/storageService';
+import { parseDateString } from '../utils/dateUtils';
 
 interface ProjectsTableViewProps {
   contacts: Contact[];
@@ -9,15 +10,42 @@ interface ProjectsTableViewProps {
   onRefresh: () => void;
 }
 
+const LocalInput: React.FC<{
+  value: string;
+  onChange: (val: string) => void;
+  style?: React.CSSProperties;
+}> = ({ value, onChange, style }) => {
+  const [localValue, setLocalValue] = useState(value);
+  useEffect(() => setLocalValue(value), [value]);
+  return (
+    <input
+      type="text"
+      value={localValue}
+      onChange={e => setLocalValue(e.target.value)}
+      onBlur={e => {
+        if (localValue !== value) onChange(localValue);
+        e.target.style.border = '1px solid transparent';
+      }}
+      onFocus={e => e.target.style.border = '1px solid var(--border)'}
+      style={style}
+    />
+  );
+};
+
 const AutoResizingTextarea: React.FC<{
   value: string;
-  onChange: (value: string) => void;
+  onChange: (val: string) => void;
   placeholder?: string;
   style?: React.CSSProperties;
 }> = ({ value, onChange, placeholder, style }) => {
+  const [localValue, setLocalValue] = useState(value);
   const [expanded, setExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
 
   const calculateHeight = () => {
     if (textareaRef.current) {
@@ -39,16 +67,20 @@ const AutoResizingTextarea: React.FC<{
 
   useEffect(() => {
     calculateHeight();
-  }, [value, expanded]);
+  }, [localValue, expanded]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
       <textarea
         ref={textareaRef}
-        value={value}
+        value={localValue}
         placeholder={placeholder}
-        onChange={(e) => {
-          onChange(e.target.value);
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={(e) => {
+          if (localValue !== value) {
+            onChange(localValue);
+          }
+          e.target.style.border = '1px solid transparent';
         }}
         rows={1}
         style={{
@@ -60,7 +92,6 @@ const AutoResizingTextarea: React.FC<{
           transition: 'height 0.2s ease'
         }}
         onFocus={e => { e.target.style.border='1px solid var(--border)'; }} 
-        onBlur={e => { e.target.style.border='1px solid transparent'; }}
       />
       {isOverflowing && (
         <button
@@ -294,13 +325,13 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                     />
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
-                    <input type="text" value={ev.guestCount || ''} onChange={e => handleInlineChange(contact.id, 'guestCount', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'center' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                    <LocalInput value={ev.guestCount || ''} onChange={val => handleInlineChange(contact.id, 'guestCount', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'center' }} />
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
-                    <input type="text" value={ev.arrivalTime || ''} onChange={e => handleInlineChange(contact.id, 'arrivalTime', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'center' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                    <LocalInput value={ev.arrivalTime || ''} onChange={val => handleInlineChange(contact.id, 'arrivalTime', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'center' }} />
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
-                    <input type="text" value={ev.departureTime || ''} onChange={e => handleInlineChange(contact.id, 'departureTime', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'center' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                    <LocalInput value={ev.departureTime || ''} onChange={val => handleInlineChange(contact.id, 'departureTime', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'center' }} />
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
                     <AutoResizingTextarea value={ev.activities || ''} onChange={val => handleInlineChange(contact.id, 'activities', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} />
@@ -318,7 +349,7 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                     <AutoResizingTextarea value={ev.paymentStatus || ''} onChange={val => handleInlineChange(contact.id, 'paymentStatus', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} />
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
-                    <input type="text" value={ev.quoteAmount || ''} onChange={e => handleInlineChange(contact.id, 'quoteAmount', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'right', fontWeight: 600 }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                    <LocalInput value={ev.quoteAmount || ''} onChange={val => handleInlineChange(contact.id, 'quoteAmount', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent', textAlign: 'right', fontWeight: 600 }} />
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
