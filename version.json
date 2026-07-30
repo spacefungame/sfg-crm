@@ -1,4 +1,4 @@
 {
-  "version": "1.0.39",
-  "description": "Amélioration des performances du tableau des projets : suppression des lenteurs (lags) lors de la saisie de texte dans les champs de notes."
+  "version": "1.0.40",
+  "description": "Amélioration de la fiche client : l'adresse e-mail est maintenant affichée directement sur le bouton d'envoi pour permettre de la copier facilement."
 }
