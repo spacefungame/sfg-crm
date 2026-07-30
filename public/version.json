@@ -1,4 +1,4 @@
 {
-  "version": "1.0.40",
-  "description": "Amélioration de la fiche client : l'adresse e-mail est maintenant affichée directement sur le bouton d'envoi pour permettre de la copier facilement."
+  "version": "1.0.41",
+  "description": "Ajout d'un bouton pour copier rapidement l'adresse e-mail dans le presse-papier depuis la fiche client."
 }

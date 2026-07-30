@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Contact, ContactStatus, Establishment, EmailTemplate, TagDefinition } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
-import { Phone, Mail, Building2, Clock, X, Save, Plus, Trash2, Rocket, Dices, Sparkles, MessageSquare, Maximize2, Minimize2, Calendar } from 'lucide-react';
+import { Phone, Mail, Building2, Clock, X, Save, Plus, Trash2, Rocket, Dices, Sparkles, MessageSquare, Maximize2, Minimize2, Calendar, Copy } from 'lucide-react';
 import { EventFormModal } from './EventFormModal';
 
 interface ContactCardModalProps {
@@ -407,16 +407,33 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
               Appeler le {formData.phone || '(sans numéro)'}
             </button>
 
-            <button
-              type="button"
-              onClick={() => onInitiateMail(formData)}
-              className="btn btn-primary"
-              style={{ flex: 1, padding: '7px 14px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#533B82' }}
-              disabled={!formData.email}
-            >
-              <Mail size={15} />
-              {formData.email ? `E-mail : ${formData.email}` : 'Envoyer un E-mail (sans adresse)'}
-            </button>
+            <div style={{ flex: 1, display: 'flex' }}>
+              <button
+                type="button"
+                onClick={() => onInitiateMail(formData)}
+                className="btn btn-primary"
+                style={{ flex: 1, padding: '7px 14px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#533B82', borderTopRightRadius: formData.email ? 0 : undefined, borderBottomRightRadius: formData.email ? 0 : undefined }}
+                disabled={!formData.email}
+              >
+                <Mail size={15} />
+                {formData.email ? `E-mail : ${formData.email}` : 'Envoyer un E-mail (sans adresse)'}
+              </button>
+              {formData.email && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(formData.email!);
+                    alert('E-mail copié dans le presse-papier !');
+                  }}
+                  className="btn btn-primary"
+                  style={{ padding: '7px 12px', backgroundColor: '#432C6A', borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeft: '1px solid #6c4ca8' }}
+                  title="Copier l'adresse e-mail"
+                >
+                  <Copy size={15} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
