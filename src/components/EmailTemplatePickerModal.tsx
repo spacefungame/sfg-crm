@@ -24,18 +24,16 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
   const templates = storageService.getEmailTemplates();
   const categories = storageService.getTemplateCategories();
 
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('free'); // 'free' = E-mail libre
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(templates[0]?.id || '');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [shortcutQuery, setShortcutQuery] = useState<string>('');
   const [shortcutMatchBanner, setShortcutMatchBanner] = useState<string | null>(null);
 
-  const [customSubject, setCustomSubject] = useState<string>('');
-  const [customBody, setCustomBody] = useState<string>('');
   const [provider, setProvider] = useState<string>(storageService.getPreferredEmailProvider());
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedTemplateId(initialTemplateId || 'free');
+      setSelectedTemplateId(initialTemplateId || templates[0]?.id || '');
       setSelectedCategory('all');
       setShortcutQuery('');
       setShortcutMatchBanner(null);
@@ -55,11 +53,11 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
 
   const subjectToSend = selectedTemplate 
     ? replaceTags(selectedTemplate.subject) 
-    : customSubject || `Contact Space Fun Games & Share & Fun`;
+    : '';
 
   const bodyToSend = selectedTemplate 
     ? replaceTags(selectedTemplate.body) 
-    : customBody || `Bonjour ${contact.firstName},\n\n\nCordialement,\n${currentUser ? currentUser.username : 'L\'équipe'}`;
+    : '';
 
   // Handle shortcut or search input
   const handleShortcutOrSearchChange = (query: string) => {
@@ -109,6 +107,10 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
       alert(`Aucune adresse e-mail enregistrée pour ce contact.`);
       return;
     }
+    
+    if (!selectedTemplate) {
+      return;
+    }
 
     // Record pending communication for magic return prompt
     storageService.setPendingCommunication(contact.id, 'mail', selectedTemplate?.title || 'E-mail libre');
@@ -123,6 +125,18 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
     // Launch via selected email provider
     storageService.dispatchEmail(contact.email, subjectToSend, bodyToSend, provider);
 
+    onMailSent();
+    onClose();
+  };
+
+  const handleDirectFreeMail = () => {
+    storageService.setPendingCommunication(contact.id, 'mail', 'E-mail libre');
+    storageService.addActivityLog(contact.id, {
+      employeeName: currentUser ? currentUser.username : 'Collaborateur',
+      actionType: 'mail',
+      summary: `E-mail lancé (E-mail libre) via ${provider} vers ${contact.email}`
+    });
+    storageService.dispatchEmail(contact.email, '', '', provider);
     onMailSent();
     onClose();
   };
@@ -248,13 +262,13 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto', paddingRight: '4px' }}>
               <button
                 type="button"
-                onClick={() => setSelectedTemplateId('free')}
+                onClick={handleDirectFreeMail}
                 style={{
                   padding: '10px 12px',
                   textAlign: 'left',
                   borderRadius: 'var(--radius-sm)',
-                  border: selectedTemplateId === 'free' ? '2px solid var(--primary)' : '1px dashed var(--border)',
-                  backgroundColor: selectedTemplateId === 'free' ? 'var(--primary-light)' : 'var(--surface)',
+                  border: '1px solid var(--primary)',
+                  backgroundColor: 'var(--primary-light)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -262,13 +276,11 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
                 }}
               >
                 <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
-                  ✉️ E-mail libre (Saisie manuelle / vide)
+                  ✉️ Ouvrir un e-mail vierge directement dans ma boite mail
                 </span>
-                {selectedTemplateId === 'free' && (
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', backgroundColor: '#FFFFFF', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--primary)' }}>
-                    Sélectionné
-                  </span>
-                )}
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#FFFFFF', backgroundColor: 'var(--primary)', padding: '4px 8px', borderRadius: '4px' }}>
+                  Ouvrir & Envoyer
+                </span>
               </button>
 
               {filteredTemplates.map((t) => {
@@ -351,32 +363,8 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Objet de l'e-mail
-                </label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="Ex: Prise de contact / Devis..."
-                  value={customSubject}
-                  onChange={(e) => setCustomSubject(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Message
-                </label>
-                <textarea
-                  className="input-field"
-                  rows={5}
-                  placeholder={`Bonjour ${contact.firstName},\n\n\nCordialement,\n${currentUser ? currentUser.username : 'L\'équipe'}`}
-                  value={customBody}
-                  onChange={(e) => setCustomBody(e.target.value)}
-                />
-              </div>
+            <div style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '24px', backgroundColor: '#F8F9FA', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)' }}>
+              Sélectionnez un modèle d'e-mail dans la liste ci-dessus, ou cliquez sur « Ouvrir un e-mail vierge directement dans ma boite mail » pour rédiger vous-même.
             </div>
           )}
 
@@ -394,7 +382,8 @@ export const EmailTemplatePickerModal: React.FC<EmailTemplatePickerModalProps> =
             <button
               type="submit"
               className="btn btn-primary"
-              style={{ flex: 1 }}
+              style={{ flex: 1, opacity: !selectedTemplate ? 0.5 : 1 }}
+              disabled={!selectedTemplate}
             >
               <Send size={16} />
               Ouvrir & Envoyer
