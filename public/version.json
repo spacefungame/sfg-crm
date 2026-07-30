@@ -1,4 +1,4 @@
 {
-  "version": "1.0.41",
-  "description": "Ajout d'un bouton pour copier rapidement l'adresse e-mail dans le presse-papier depuis la fiche client."
+  "version": "1.0.42",
+  "description": "Correction d'un bug : la touche Retour Arrière (Backspace) ne ferme plus l'application ou la fenêtre modale lorsqu'elle est pressée en dehors d'un champ de texte."
 }

@@ -65,9 +65,22 @@ const AppContent: React.FC = () => {
       loadContacts();
     };
 
+    // Prevent Backspace from navigating back in history when not in an input
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Backspace') {
+        const target = e.target as HTMLElement;
+        const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+        if (!isInput) {
+          e.preventDefault();
+        }
+      }
+    };
+
     window.addEventListener('crm_data_updated', handleStorageUpdate);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('crm_data_updated', handleStorageUpdate);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
