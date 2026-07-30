@@ -23,9 +23,8 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
   onInitiateMail
 }) => {
   const { currentUser } = useAuth();
-  const [formData, setFormData] = useState<Contact | null>(null);
+  const [formData, setFormData] = useState<Contact | null>(contact ? JSON.parse(JSON.stringify(contact)) : null);
   const [newNoteInput, setNewNoteInput] = useState<string>('');
-  const [showTemplateSelector, setShowTemplateSelector] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [tagsList, setTagsList] = useState<TagDefinition[]>(storageService.getTags());
@@ -43,7 +42,6 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
   const [editingOldTypeName, setEditingOldTypeName] = useState<string | null>(null);
   const [editingNewTypeName, setEditingNewTypeName] = useState<string>('');
 
-  const emailTemplates = storageService.getEmailTemplates();
   const statuses = storageService.getStatuses();
   const users = storageService.getUsers();
 
@@ -240,7 +238,6 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
     if (contact) {
       setFormData(JSON.parse(JSON.stringify(contact)));
       setIsEditing(false);
-      setShowTemplateSelector(false);
       setTagsList(storageService.getTags());
       setShowTagManager(false);
       setEditingTagId(null);
@@ -412,7 +409,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
 
             <button
               type="button"
-              onClick={() => setShowTemplateSelector(!showTemplateSelector)}
+              onClick={() => onInitiateMail(formData)}
               className="btn btn-primary"
               style={{ flex: 1, padding: '7px 14px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#533B82' }}
               disabled={!formData.email}
@@ -421,48 +418,6 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
               Envoyer un E-mail
             </button>
           </div>
-
-          {showTemplateSelector && (
-            <div className="animate-fade-in" style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid #D8CEEA', boxShadow: 'var(--shadow-sm)' }}>
-              <h5 style={{ fontSize: '13px', fontWeight: 600, color: '#4A306D', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Send size={14} />
-                Choisissez un template :
-              </h5>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
-                <button
-                  type="button"
-                  onClick={() => { setShowTemplateSelector(false); onInitiateMail(formData); }}
-                  style={{ padding: '7px 10px', textAlign: 'left', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border)', backgroundColor: 'var(--surface)', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500, fontSize: '12px' }}
-                >
-                  ✉️ E-mail vierge
-                </button>
-                {emailTemplates.map((tpl) => (
-                  <button
-                    key={tpl.id}
-                    type="button"
-                    onClick={() => { setShowTemplateSelector(false); onInitiateMail(formData, tpl); }}
-                    style={{ padding: '7px 10px', textAlign: 'left', borderRadius: 'var(--radius-sm)', border: '1px solid #E3D9F2', backgroundColor: '#FAF7FF', color: '#3B235E', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '2px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 5px', borderRadius: '6px', backgroundColor: '#EFEBF6', color: '#533B82' }}>
-                          {tpl.category || 'Général'}
-                        </span>
-                        <span style={{ fontWeight: 600, fontSize: '12.5px' }}>{tpl.title}</span>
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#7E699B' }}>Sujet : {tpl.subject}</div>
-                    </div>
-                    {tpl.shortcut && (
-                      <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 5px', borderRadius: '4px', backgroundColor: '#FFF4E5', color: '#B76E00', border: '1px solid #FFE2B7', flexShrink: 0 }}>
-                        ⚡ {tpl.shortcut}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Scrollable Body */}
