@@ -415,7 +415,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
               disabled={!formData.email}
             >
               <Mail size={15} />
-              Envoyer un E-mail
+              {formData.email ? `E-mail : ${formData.email}` : 'Envoyer un E-mail (sans adresse)'}
             </button>
           </div>
         </div>
