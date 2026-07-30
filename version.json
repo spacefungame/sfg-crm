@@ -1,4 +1,4 @@
 {
-  "version": "1.0.37",
-  "description": "Simplification de l'envoi d'e-mail : le bouton ouvre désormais directement le sélecteur principal de modèles."
+  "version": "1.0.38",
+  "description": "Amélioration de l'e-mail vierge : ouvre désormais directement la boite mail sans afficher de formulaire intermédiaire dans le CRM."
 }
