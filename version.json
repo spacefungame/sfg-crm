@@ -1,4 +1,4 @@
 {
-  "version": "1.0.38",
-  "description": "Amélioration de l'e-mail vierge : ouvre désormais directement la boite mail sans afficher de formulaire intermédiaire dans le CRM."
+  "version": "1.0.39",
+  "description": "Amélioration des performances du tableau des projets : suppression des lenteurs (lags) lors de la saisie de texte dans les champs de notes."
 }
