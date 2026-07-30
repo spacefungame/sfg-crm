@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Contact, ContactStatus, Establishment, EmailTemplate, TagDefinition } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
-import { Phone, Mail, Building2, Clock, X, Save, Plus, Trash2, Rocket, Dices, Sparkles, Send, MessageSquare, Maximize2, Minimize2, Calendar } from 'lucide-react';
+import { Phone, Mail, Building2, Clock, X, Save, Plus, Trash2, Rocket, Dices, Sparkles, MessageSquare, Maximize2, Minimize2, Calendar } from 'lucide-react';
 import { EventFormModal } from './EventFormModal';
 
 interface ContactCardModalProps {
