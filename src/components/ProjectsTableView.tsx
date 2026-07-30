@@ -2,8 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { Contact, Establishment } from '../types/crm';
 import { ExternalLink, User as UserIcon } from 'lucide-react';
 import { storageService } from '../services/storageService';
-import { parseDateString } from '../utils/dateUtils';
-
 interface ProjectsTableViewProps {
   contacts: Contact[];
   onContactClick: (contact: Contact) => void;
