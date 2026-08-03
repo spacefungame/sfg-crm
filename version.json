@@ -1,4 +1,4 @@
 {
-  "version": "1.0.42",
-  "description": "Correction d'un bug : la touche Retour Arrière (Backspace) ne ferme plus l'application ou la fenêtre modale lorsqu'elle est pressée en dehors d'un champ de texte."
+  "version": "1.0.43",
+  "description": "Amélioration de la navigation : lorsqu'on ouvre puis ferme la fiche d'un prospect, la liste reste désormais sur la page actuelle au lieu de revenir systématiquement à la page 1."
 }
