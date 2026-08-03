@@ -271,6 +271,7 @@ const AppContent: React.FC = () => {
                           onRefresh={loadContacts}
                           onQuickCall={(c, e) => handleInitiateCall(c, e)}
                           onQuickMail={(c, e) => handleInitiateMail(c, e)}
+                          resetPaginationKey={JSON.stringify(filters)}
                         />
                       </>
                     ) : (

@@ -11,6 +11,7 @@ interface ContactListProps {
   onRefresh: () => void;
   onQuickCall: (contact: Contact, e: React.MouseEvent) => void;
   onQuickMail: (contact: Contact, e: React.MouseEvent) => void;
+  resetPaginationKey?: string;
 }
 
 export const ContactList: React.FC<ContactListProps> = ({
@@ -18,7 +19,8 @@ export const ContactList: React.FC<ContactListProps> = ({
   onSelectContact,
   onRefresh,
   onQuickCall,
-  onQuickMail
+  onQuickMail,
+  resetPaginationKey
 }) => {
   const { currentUser } = useAuth();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -30,10 +32,19 @@ export const ContactList: React.FC<ContactListProps> = ({
   const users = storageService.getUsers();
 
   React.useEffect(() => {
-    setCurrentPage(1);
-  }, [contacts]);
+    if (resetPaginationKey !== undefined) {
+      setCurrentPage(1);
+    }
+  }, [resetPaginationKey]);
 
-  const totalPages = Math.ceil(contacts.length / itemsPerPage);
+  React.useEffect(() => {
+    const maxPage = Math.ceil(contacts.length / itemsPerPage) || 1;
+    if (currentPage > maxPage) {
+      setCurrentPage(maxPage);
+    }
+  }, [contacts.length, currentPage]);
+
+  const totalPages = Math.ceil(contacts.length / itemsPerPage) || 1;
   const displayedContacts = contacts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const getAssigneeName = (userId: string) => {
