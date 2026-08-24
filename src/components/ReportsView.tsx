@@ -24,17 +24,21 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
       if (!contactTypes.includes(selectedType) && c.type !== selectedType) return false;
     }
     if (selectedEmployee !== 'all') {
-      const hasEmployeeActivity = c.logs?.some(
-        (l) => l.employeeName.toLowerCase() === selectedEmployee.toLowerCase()
-      );
-      if (!hasEmployeeActivity) return false;
+      return c.assignedTo?.toLowerCase() === selectedEmployee.toLowerCase();
     }
     return true;
   });
 
-  // Extract all activity logs from all filtered contacts
+  // Extract all activity logs from all contacts (not just filtered, to include actions on unassigned contacts)
   const allLogs: { log: ActivityLog; contact: Contact }[] = [];
-  filteredContacts.forEach((c) => {
+  contacts.forEach((c) => {
+    // apply establishment and type filters to logs as well
+    if (selectedEstablishment !== 'all' && c.establishment !== selectedEstablishment && c.establishment !== 'les_deux') return;
+    if (selectedType !== 'all') {
+      const contactTypes = (c.type || '').split(',').map(t => t.trim());
+      if (!contactTypes.includes(selectedType) && c.type !== selectedType) return;
+    }
+
     c.logs?.forEach((l) => {
       if (selectedEmployee === 'all' || l.employeeName.toLowerCase() === selectedEmployee.toLowerCase()) {
         allLogs.push({ log: l, contact: c });
