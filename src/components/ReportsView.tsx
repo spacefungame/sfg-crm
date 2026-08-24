@@ -24,7 +24,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ contacts }) => {
       if (!contactTypes.includes(selectedType) && c.type !== selectedType) return false;
     }
     if (selectedEmployee !== 'all') {
-      return c.assignedTo?.toLowerCase() === selectedEmployee.toLowerCase();
+      const employeeUser = users.find(u => u.username === selectedEmployee);
+      return c.assignedTo === employeeUser?.id;
     }
     return true;
   });
