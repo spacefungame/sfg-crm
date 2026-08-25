@@ -814,8 +814,8 @@ export class StorageService {
 
   public addUser(username: string, role: string = 'user', email?: string, password?: string, isInvited?: boolean): User {
     this.resurrectItem(username);
-    const existing = this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase() || (email && u.email?.toLowerCase() === email.toLowerCase()));
-    if (existing) {
+    const existing = this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (existing && !existing.password && !existing.loginEmail) {
       if (email && !existing.email) existing.email = email;
       if (password && !existing.password) existing.password = password;
       if (role) existing.role = role;
