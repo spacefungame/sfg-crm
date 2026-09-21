@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Contact, Establishment } from '../types/crm';
-import { ExternalLink, User as UserIcon } from 'lucide-react';
+import { ExternalLink, User as UserIcon, Printer } from 'lucide-react';
 import { storageService } from '../services/storageService';
 interface ProjectsTableViewProps {
   contacts: Contact[];
@@ -196,21 +196,26 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
 
   return (
     <div className="animate-fade-in" style={{ backgroundColor: '#FFF', borderRadius: 'var(--radius-md)', padding: '16px', boxShadow: 'var(--shadow-sm)' }}>
-      <div style={{ marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <span style={{ fontWeight: 600, fontSize: '13px' }}>Filtre Établissement :</span>
-        <select className="input-field" style={{ width: '200px', padding: '6px' }} value={filterEst} onChange={(e) => setFilterEst(e.target.value as any)}>
-          <option value="all">Tous</option>
-          <option value="space_fun_games">Space Fun Games</option>
-          <option value="share_and_fun">Share & Fun</option>
-          <option value="a_determiner">À déterminer</option>
-        </select>
+      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="no-print">
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <span style={{ fontWeight: 600, fontSize: '13px' }}>Filtre Établissement :</span>
+          <select className="input-field" style={{ width: '200px', padding: '6px' }} value={filterEst} onChange={(e) => setFilterEst(e.target.value as any)}>
+            <option value="all">Tous</option>
+            <option value="space_fun_games">Space Fun Games</option>
+            <option value="share_and_fun">Share & Fun</option>
+            <option value="a_determiner">À déterminer</option>
+          </select>
+        </div>
+        <button onClick={() => window.print()} className="btn btn-primary btn-sm">
+          <Printer size={14} /> Imprimer
+        </button>
       </div>
 
-      <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 220px)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+      <div className="responsive-table-container" style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 220px)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px', fontSize: '12px' }}>
           <thead>
             <tr style={{ backgroundColor: '#F0F4F8', borderBottom: '2px solid #D0DCE5', textAlign: 'left' }}>
-              <th style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', width: '70px', textAlign: 'center' }}>Action</th>
+              <th className="no-print" style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', width: '70px', textAlign: 'center' }}>Action</th>
               <th style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', minWidth: '140px' }}>Client / Société</th>
               <th style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', width: '110px' }}>Établissement</th>
               <th style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#F0F4F8', borderRight: '1px solid #D0DCE5', padding: '10px 6px', width: '100px' }}>Date</th>
@@ -274,7 +279,7 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
 
                 rows.push(
                   <tr key={contact.id} style={{ borderBottom: '1px solid #ECE7DE' }}>
-                  <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE', textAlign: 'center' }}>
+                  <td className="no-print" style={{ padding: '6px', borderRight: '1px solid #ECE7DE', textAlign: 'center' }}>
                     <button onClick={() => onContactClick(contact)} className="btn btn-secondary btn-sm" style={{ padding: '4px 6px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       <ExternalLink size={12} /> Fiche
                     </button>
@@ -377,7 +382,7 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
 
       {/* Pagination Controls */}
       {Math.ceil(sortedFiltered.length / itemsPerPage) > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '16px', padding: '10px 0' }}>
+        <div className="no-print" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '16px', padding: '10px 0' }}>
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}

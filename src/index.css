@@ -332,15 +332,46 @@ tr:hover td {
 
 /* Print Optimization */
 @media print {
+  @page {
+    size: landscape;
+    margin: 10mm;
+  }
   body {
     background-color: #FFFFFF !important;
     color: #000000 !important;
+    font-size: 9px !important;
   }
   .no-print {
     display: none !important;
   }
-  .card, table {
+  .card, table, th, td {
     box-shadow: none !important;
-    border: 1px solid #CCCCCC !important;
+  }
+  .responsive-table-container {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  table {
+    min-width: 100% !important;
+    width: 100% !important;
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  th, td {
+    white-space: normal !important;
+    padding: 3px !important;
+    font-size: 9px !important;
+  }
+  textarea, input, select {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    font-size: 9px !important;
+    color: #000 !important;
+    -webkit-appearance: none;
+    resize: none;
   }
 }
