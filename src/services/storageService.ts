@@ -173,13 +173,18 @@ export class StorageService {
     return JSON.parse(JSON.stringify(DEFAULT_CRM_DATA));
   }
 
+  private syncTimeout: ReturnType<typeof setTimeout> | null = null;
+
   private saveToLocalStorage(skipCloudSync = false): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
       this.notifyListeners();
       
       if (!skipCloudSync && this.data.cloudConfig?.enabled) {
-        this.syncToCloud();
+        if (this.syncTimeout) clearTimeout(this.syncTimeout);
+        this.syncTimeout = setTimeout(() => {
+          this.syncToCloud();
+        }, 350);
       }
     } catch (err) {
       console.error('Failed to save CRM data to localStorage:', err);
@@ -576,7 +581,7 @@ export class StorageService {
 
     contact.logs.unshift(newLog);
     if (log.newStatus) contact.status = log.newStatus;
-    if (log.deadline !== undefined) contact.deadline = log.deadline;
+    if (log.deadline !== undefined) contact.deadline = log.deadline || undefined;
     contact.updatedAt = new Date().toISOString();
 
     this.saveContact(contact);

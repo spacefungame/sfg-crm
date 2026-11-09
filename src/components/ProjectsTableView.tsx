@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { Contact, Establishment } from '../types/crm';
 import { ExternalLink, User as UserIcon, Printer } from 'lucide-react';
 import { storageService } from '../services/storageService';
+import { SmartDateInput } from './SmartDateInput';
 interface ProjectsTableViewProps {
   contacts: Contact[];
   onContactClick: (contact: Contact) => void;
@@ -318,10 +319,11 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                     </select>
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
-                    <input 
+                    <SmartDateInput 
+                      commitOnBlurOnly
                       type={ev.dateType === 'month' ? 'month' : 'date'} 
                       value={parseDateString(ev.dateValue || '')} 
-                      onChange={e => handleInlineChange(contact.id, 'dateValue', e.target.value)} 
+                      onChange={val => handleInlineChange(contact.id, 'dateValue', val)} 
                       style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '12px', backgroundColor: 'transparent' }} 
                       onFocus={e => e.target.style.border='1px solid var(--border)'} 
                       onBlur={e => e.target.style.border='1px solid transparent'} 
@@ -356,7 +358,7 @@ export const ProjectsTableView: React.FC<ProjectsTableViewProps> = ({ contacts, 
                   </td>
                   <td style={{ padding: '6px', borderRight: '1px solid #ECE7DE' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <input type="date" value={contact.deadline || ''} onChange={e => handleRootChange(contact.id, 'deadline', e.target.value)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: isDeadlineUrgent ? '#FEE2E2' : 'transparent', color: isDeadlineUrgent ? '#DC2626' : 'var(--text-main)', fontWeight: isDeadlineUrgent ? 'bold' : 'normal' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
+                      <SmartDateInput commitOnBlurOnly type="date" value={contact.deadline || ''} onChange={val => handleRootChange(contact.id, 'deadline', val)} style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: isDeadlineUrgent ? '#FEE2E2' : 'transparent', color: isDeadlineUrgent ? '#DC2626' : 'var(--text-main)', fontWeight: isDeadlineUrgent ? 'bold' : 'normal' }} onFocus={e => e.target.style.border='1px solid var(--border)'} onBlur={e => e.target.style.border='1px solid transparent'} />
                       <AutoResizingTextarea value={ev.followUpComment || ''} onChange={val => handleInlineChange(contact.id, 'followUpComment', val)} placeholder="Commentaire..." style={{ width: '100%', padding: '4px', border: '1px solid transparent', borderRadius: '4px', fontSize: '11px', backgroundColor: 'transparent' }} />
                     </div>
                   </td>

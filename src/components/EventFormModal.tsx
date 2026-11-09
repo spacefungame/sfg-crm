@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Calendar, MapPin, Clock, Users, Coffee, Tag, CreditCard, Save } from 'lucide-react';
 import type { Contact, EventDetails } from '../types/crm';
+import { SmartDateInput } from './SmartDateInput';
 
 interface EventFormModalProps {
   contact: Contact;
@@ -80,10 +81,10 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ contact, onSave,
             </div>
             
             {formData.dateType === 'exact' && (
-              <input type="date" className="input-field" value={formData.dateValue} onChange={e => setFormData({...formData, dateValue: e.target.value})} />
+              <SmartDateInput immediateStateUpdate type="date" className="input-field" value={formData.dateValue} onChange={val => setFormData({...formData, dateValue: val})} />
             )}
             {formData.dateType === 'month' && (
-              <input type="month" className="input-field" value={formData.dateValue} onChange={e => setFormData({...formData, dateValue: e.target.value})} />
+              <SmartDateInput immediateStateUpdate type="month" className="input-field" value={formData.dateValue} onChange={val => setFormData({...formData, dateValue: val})} />
             )}
           </div>
 

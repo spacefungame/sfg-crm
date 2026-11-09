@@ -3,6 +3,7 @@ import type { Contact } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { Phone, Mail, CheckCircle, X, Sparkles } from 'lucide-react';
+import { SmartDateInput } from './SmartDateInput';
 
 interface ReturnPromptModalProps {
   onUpdate: () => void;
@@ -221,11 +222,12 @@ export const ReturnPromptModal: React.FC<ReturnPromptModalProps> = ({ onUpdate }
             </div>
 
             {deadlinePreset === 'custom' && (
-              <input
+              <SmartDateInput
+                immediateStateUpdate
                 type="date"
                 className="input-field"
                 value={customDeadline}
-                onChange={(e) => setCustomDeadline(e.target.value)}
+                onChange={(val) => setCustomDeadline(val)}
               />
             )}
           </div>

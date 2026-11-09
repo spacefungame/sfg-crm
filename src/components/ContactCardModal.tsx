@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Contact, ContactStatus, Establishment, EmailTemplate, TagDefinition } from '../types/crm';
 import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { Phone, Mail, Building2, Clock, X, Save, Plus, Trash2, Rocket, Dices, Sparkles, MessageSquare, Maximize2, Minimize2, Calendar, Copy } from 'lucide-react';
 import { EventFormModal } from './EventFormModal';
+import { SmartDateInput } from './SmartDateInput';
 
 interface ContactCardModalProps {
   contact: Contact | null;
@@ -234,18 +235,42 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
     }
   };
 
+  const prevContactIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (contact) {
-      setFormData(JSON.parse(JSON.stringify(contact)));
-      setIsEditing(false);
+      const isNewContact = prevContactIdRef.current !== contact.id;
+      prevContactIdRef.current = contact.id;
+
+      setFormData(prev => {
+        if (!isNewContact && isEditing && prev) {
+          return {
+            ...prev,
+            status: contact.status,
+            deadline: contact.deadline,
+            assignedTo: contact.assignedTo,
+            tags: contact.tags,
+            eventDetails: contact.eventDetails,
+            logs: contact.logs
+          };
+        }
+        return JSON.parse(JSON.stringify(contact));
+      });
+
       setTagsList(storageService.getTags());
-      setShowTagManager(false);
-      setEditingTagId(null);
       setContactTypesList(storageService.getContactTypes());
-      setShowTypeManager(false);
-      setEditingOldTypeName(null);
+
+      if (isNewContact) {
+        setIsEditing(false);
+        setShowTagManager(false);
+        setEditingTagId(null);
+        setShowTypeManager(false);
+        setEditingOldTypeName(null);
+      }
+    } else {
+      prevContactIdRef.current = null;
     }
-  }, [contact]);
+  }, [contact, isEditing]);
 
   if (!isOpen || !formData || !contact) return null;
 
@@ -449,7 +474,7 @@ export const ContactCardModal: React.FC<ContactCardModalProps> = ({
             </div>
             <div style={{ flex: '1 1 160px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>Dead line</label>
-              <input type="date" className="input-field" value={formData.deadline || ''} onChange={(e) => handleStatusOrDeadlineChange(formData.status, e.target.value)} style={{ padding: '5px 8px', fontSize: '12.5px', height: 'auto' }} />
+              <SmartDateInput type="date" className="input-field" value={formData.deadline || ''} onChange={(val) => handleStatusOrDeadlineChange(formData.status, val)} style={{ padding: '5px 8px', fontSize: '12.5px', height: 'auto' }} />
             </div>
             <div style={{ flex: '1 1 160px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>Attribué à</label>

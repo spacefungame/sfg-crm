@@ -4,6 +4,7 @@ import { storageService } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
 import { Phone, Mail, Building2, ChevronRight, AlertTriangle, Clock, Rocket, Dices, Sparkles, LayoutGrid, List, User as UserIcon } from 'lucide-react';
 import { EventFormModal } from './EventFormModal';
+import { SmartDateInput } from './SmartDateInput';
 
 interface ContactListProps {
   contacts: Contact[];
@@ -87,13 +88,12 @@ export const ContactList: React.FC<ContactListProps> = ({
     onRefresh();
   };
 
-  const handleQuickDeadlineChange = (contact: Contact, newDeadline: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
+  const handleQuickDeadlineChange = (contact: Contact, newDeadline: string) => {
     storageService.addActivityLog(contact.id, {
       employeeName: currentUser ? currentUser.username : 'Collaborateur',
       actionType: 'status_change',
       summary: `Mise à jour manuelle de la dead line : ${newDeadline || 'Aucune'}`,
-      deadline: newDeadline || undefined
+      deadline: newDeadline
     });
     onRefresh();
   };
@@ -340,12 +340,12 @@ export const ContactList: React.FC<ContactListProps> = ({
                   <td onClick={() => onSelectContact(c)} style={{ cursor: 'pointer' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                       {getUrgencyBadge(c.deadline)}
-                      <input
+                      <SmartDateInput
                         type="date"
                         className="input-field"
                         onClick={(e) => e.stopPropagation()}
                         value={c.deadline || ''}
-                        onChange={(e) => handleQuickDeadlineChange(c, e.target.value, e)}
+                        onChange={(val) => handleQuickDeadlineChange(c, val)}
                         style={{ padding: '2px 4px', fontSize: '11px', width: '110px' }}
                       />
                     </div>
@@ -445,12 +445,12 @@ export const ContactList: React.FC<ContactListProps> = ({
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Dead line :</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
                     {getUrgencyBadge(c.deadline)}
-                    <input
+                    <SmartDateInput
                       type="date"
                       className="input-field"
                       onClick={(e) => e.stopPropagation()}
                       value={c.deadline || ''}
-                      onChange={(e) => handleQuickDeadlineChange(c, e.target.value, e)}
+                      onChange={(val) => handleQuickDeadlineChange(c, val)}
                       style={{ padding: '2px 4px', fontSize: '11px' }}
                     />
                   </div>
